@@ -22,6 +22,9 @@ cordova build android
 # Chrome extension
 You can also install the chrome extension: [https://github.com/enimax-anime/enimax-chrome-extension](https://github.com/enimax-anime/enimax-chrome-extension)
 
+# Firefox extension
+You can also install the firefox extension: [https://github.com/enimax-anime/enimax-firefox-extension](https://github.com/enimax-anime/enimax-firefox-extension)
+
 
 # Synchronizing across devices
 
