@@ -19,8 +19,13 @@ To finally build the apk, run:
 cordova build android
 ```
 
+
+
 # Chrome extension
 You can also install the chrome extension: [https://github.com/enimax-anime/enimax-chrome-extension](https://github.com/enimax-anime/enimax-chrome-extension)
+
+# Firefox extension
+You can also install the firefox extension: [https://github.com/enimax-anime/enimax-firefox-extension](https://github.com/enimax-anime/enimax-firefox-extension)
 
 
 # Synchronizing across devices
@@ -40,4 +45,16 @@ After your remote server has been set up:
 
 If you just want to download the pre-built app, go to the [releases](https://github.com/enimax-anime/enimax/releases) page.
 
+
+# Recovering old data
+
+`v1.1.1` uses an SQLite database instead on an IndexedDB to store the data. So if you already have some local data and decide to upgrade to `v1.1.1` from any of the previous versions, do the following to recover your data: 
+1. Open the app and then open the `settings`.
+2. Click on `Restore Data` and it should take care of the rest.
+
+If you have any issues, you can open an issue, or post it on the discord server.
+
+
+# Discord server
+You can join the [discord server](https://discord.gg/cumVkBuU57) if you have any issues, or would like to request a feature.
 
