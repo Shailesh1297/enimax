@@ -10,8 +10,17 @@ function fix_title(x) {
         return x;
     }
 }
+
+function normalise(x){
+    x = x.replace("?watch=","");
+    x = x.split("&engine=")[0];
+    return x;
+}
+
+
 class DownloadVid {
     constructor(vidData, data, success, error, episodes, pause) {
+        console.log(vidData, data);
         this.success = success;
         this.episodes = episodes;
         this.error = error;
@@ -25,7 +34,7 @@ class DownloadVid {
         this.vidData = vidData;
         this.mapping = [];
         this.preferredSource = localStorage.getItem(`${this.engine}-downloadSource`);
-
+        
 
         if (vidData.sources.length > 1) {
             let names = "Choose the source (enter the number):\n";
@@ -119,16 +128,29 @@ class DownloadVid {
                 }
             }, false);
 
+            let localQuery = encodeURIComponent(`/${self.name}/${btoa(self.vidData.ogURL)}`);
+
 
             await actionDexie[2]({
                 "body": {
                     "name": vidData.nameWSeason,
                     "nameUm": vidData.name,
                     "ep": vidData.episode,
-                    "cur": `?watch=/${self.name}`
+                    "cur": `?watch=${localQuery}`
                 }
 
             }, false);
+
+
+
+
+            console.log(await actionDexie[14]({
+                "body": {
+                    "name": vidData.name,                    
+                    "url": `?watch=/${self.name}`,
+                }
+
+            }, false));
 
 
 
@@ -508,7 +530,7 @@ class DownloadVid {
             } else {
                 setTimeout(function () {
                     self.saveToLocal(1, self);
-                }, 100);
+                }, 1000);
             }
         } else {
             if (self.buffers.length > 100 && self.check == 0) {

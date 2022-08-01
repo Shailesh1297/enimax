@@ -2011,7 +2011,7 @@ if (location.search.includes("engine=3")) {
 				return { requestHeaders: details.requestHeaders };
 			},
 			{ urls: ['https://*.dayimage.net/*'] },
-			['blocking', 'requestHeaders', 'extraHeaders']
+			['blocking', 'requestHeaders']
 		);
 	}
 	let socket = io("https://ws1.rapid-cloud.ru", { transports: ["websocket"] });

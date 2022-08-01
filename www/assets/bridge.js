@@ -3,6 +3,29 @@ let frameHistory = [];
 var token;
 
 
+function listDir(path) {
+
+    return (new Promise((resolve, reject) => {
+        window.resolveLocalFileSystemURL(`${cordova.file.externalDataDirectory}${path}`,
+            function (fileSystem) {
+                var reader = fileSystem.createReader();
+                reader.readEntries(
+                    function (entries) {
+                        resolve(entries);
+                    },
+                    function (err) {
+                        reject(err);
+
+                    }
+                );
+            }, function (err) {
+                reject(err);
+            }
+        );
+    }));
+
+}
+
 async function saveAs(fileSys, fileName, blob) {
     fileSys.getFile(fileName, { create: true, exclusive: false }, function (file) {
 
@@ -63,31 +86,31 @@ class downloadQueue {
 
         let self = this;
 
-        setInterval(function(){
+        setInterval(function () {
             self.emitPercent(self);
         }, 1000);
     }
 
-    emitPercent(self){
-        try{
+    emitPercent(self) {
+        try {
             let currentHead = self.queue[0].downloadInstance;
             let downloadPercent = currentHead.downloaded / currentHead.total;
-            downloadPercent = Math.floor(downloadPercent * 10000)/100;
+            downloadPercent = Math.floor(downloadPercent * 10000) / 100;
             document.getElementById("frame").contentWindow.postMessage({
-                "action" : "percentageUpate",
-                "data" : downloadPercent
+                "action": "percentageUpate",
+                "data": downloadPercent
             }, "*");
 
-        }catch(err){
+        } catch (err) {
 
         }
-        
+
 
     }
 
-    isInQueue(self, url){
-        for(var i = 0; i < self.queue.length; i++){
-            if(self.queue[i].data == url){
+    isInQueue(self, url) {
+        for (var i = 0; i < self.queue.length; i++) {
+            if (self.queue[i].data == url) {
                 return true;
             }
         }
@@ -125,53 +148,60 @@ class downloadQueue {
 
         this.startDownload(this);
     }
-    async removeFromDoneQueue(name){
-        if(this.doneQueue.length == 0){
+    async removeFromDoneQueue(name) {
+        if (this.doneQueue.length == 0) {
             return;
         }
-        
+
         let curElem;
         let curElemIndex = 0;
-        for(let i = 0; i < this.doneQueue.length; i++){
-            if(this.doneQueue[i].data == name){
+        for (let i = 0; i < this.doneQueue.length; i++) {
+            if (this.doneQueue[i].data == name) {
                 curElem = this.doneQueue[i];
                 curElemIndex = i;
                 break;
             }
         }
 
-        if(curElem){
-            this.doneQueue.splice(curElemIndex,1);
+        if (curElem) {
+            this.doneQueue.splice(curElemIndex, 1);
             await this.updateLocalDoneQueue(this);
         }
     }
-    async removeFromQueue(name){
-        if(this.queue.length == 0){
+    async removeFromQueue(name) {
+        console.log(name);
+        if (this.queue.length == 0) {
             return;
         }
         let currentHead = this.queue[0];
         let curElem;
         let curElemIndex = 0;
-        for(let i = 0; i < this.queue.length; i++){
-            if(this.queue[i].data == name){
+        for (let i = 0; i < this.queue.length; i++) {
+            console.log(this.queue[i].data, name);
+
+            if (this.queue[i].data == name) {
                 curElem = this.queue[i];
                 curElemIndex = i;
                 break;
             }
         }
+        console.log(curElemIndex, curElem, curElem == currentHead, currentHead);
 
-        if(curElem){
-            if(curElem == currentHead){
-                try{
+        if (curElem) {
+            if (curElem == currentHead) {
+                try {
+                    if (!("downloadInstance" in currentHead)) {
+                        currentHead.downloadInstance = {};
+                    }
                     currentHead.downloadInstance.pause = true;
                     currentHead.downloadInstance.message = "Cancelled by the user.";
                     this.error(this);
 
-                }catch(err){
+                } catch (err) {
 
                 }
-            }else{
-                this.queue.splice(curElemIndex,1);
+            } else {
+                this.queue.splice(curElemIndex, 1);
                 await this.updateLocalStorage(this);
             }
         }
@@ -205,31 +235,31 @@ class downloadQueue {
         }
     }
 
-    pauseIt(self){
+    pauseIt(self) {
         if (self.queue.length == 0) {
             return false;
-        }else{
+        } else {
             self.queue[0].downloadInstance.pause = true;
             self.pause = true;
-            localStorage.setItem("downloadPaused","true");
+            localStorage.setItem("downloadPaused", "true");
             return true;
-        } 
+        }
     }
 
-    playIt(self){
+    playIt(self) {
         if (self.queue.length == 0) {
             return false;
-        }else{
+        } else {
             self.pause = false;
             self.startDownload(self);
-            localStorage.setItem("downloadPaused","false");
+            localStorage.setItem("downloadPaused", "false");
             return true;
-        } 
+        }
     }
 
-    removeActive(self){
-        if(self.queue.length !== 0){
-            if("downloadInstance" in self.queue[0]){
+    removeActive(self) {
+        if (self.queue.length !== 0) {
+            if ("downloadInstance" in self.queue[0]) {
                 self.queue[0].downloadInstance.pause = true;
             }
             self.queue = [];
@@ -237,18 +267,18 @@ class downloadQueue {
         }
     }
 
-    removeDone(self){
-        if(self.doneQueue.length !== 0){
+    removeDone(self) {
+        if (self.doneQueue.length !== 0) {
             self.doneQueue = [];
             self.updateLocalDoneQueue(self);
         }
     }
     async updateLocalStorage(self) {
         document.getElementById("frame").contentWindow.postMessage({
-            "action" : "activeUpdate",
+            "action": "activeUpdate",
         }, "*");
 
-        
+
         let tempLen = await (downloadedDB.keyValue.where({ "key": "localQueue" })).toArray();
 
         if (tempLen.length == 0) {
@@ -262,7 +292,7 @@ class downloadQueue {
 
     async updateLocalDoneQueue(self) {
         document.getElementById("frame").contentWindow.postMessage({
-            "action" : "doneUpdate",
+            "action": "doneUpdate",
         }, "*");
 
 
@@ -278,7 +308,7 @@ class downloadQueue {
     }
 
     startDownload(self) {
-        if(self.pause){
+        if (self.pause) {
             return;
         }
 
@@ -291,7 +321,7 @@ class downloadQueue {
         let curQueueElem = self.queue[0];
         console.log(curQueueElem, self);
 
-        let temp3  = curQueueElem.data.replace("?watch=", "");
+        let temp3 = curQueueElem.data.replace("?watch=", "");
         temp3 = temp3.split("&engine=");
         if (temp3.length == 1) {
             currentEngine = wco;
@@ -306,11 +336,11 @@ class downloadQueue {
             }
         }
         currentEngine.getAnimeInfo(curQueueElem.mainUrl).then(function (episodes) {
-            if(self.pause){
+            if (self.pause) {
                 return;
             }
             currentEngine.getLinkFromUrl(temp3[0]).then(function (temp) {
-                if(self.pause){
+                if (self.pause) {
                     return;
                 }
                 temp.ogURL = temp3[0];
@@ -356,7 +386,7 @@ class downloadQueue {
 
 let downloadQueueInstance;
 
-function returnDownloadQueue(){
+function returnDownloadQueue() {
     return downloadQueueInstance;
 }
 
@@ -574,7 +604,7 @@ function exec_action(x, reqSource) {
 
     } else if (x.action == 403) {
         // console.log(x);
-        downloadQueueInstance.add(x.data, x.anime, x.mainUrl,x.title);
+        downloadQueueInstance.add(x.data, x.anime, x.mainUrl, x.title);
 
     } else if (x.action == 21) {
         window.location = "login.html";
@@ -737,11 +767,11 @@ async function onDeviceReady() {
 
 
     function onBackKeyDown() {
-        try{
-            if(document.getElementById("player").contentWindow.a.locked === true){
+        try {
+            if (document.getElementById("player").contentWindow.a.locked === true) {
                 return;
             }
-        }catch(err){
+        } catch (err) {
 
         }
         let frameLocation = document.getElementById("frame").contentWindow.location.pathname;

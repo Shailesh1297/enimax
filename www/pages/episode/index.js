@@ -35,20 +35,26 @@ function sendNoti(x) {
 }
 
 
-function checkIfExists(localURL){
-    return (new Promise(function (resolve, reject){
-        let timeout = setTimeout(function(){
-            reject("timeout");
-        },1000);
-        console.log(localURL);
-        window.parent.makeLocalRequest("GET", `${localURL}`).then(function(x){
-            clearTimeout(timeout);
-            resolve(x);
-        }).catch(function(err){
-            clearTimeout(timeout);
-            reject(err);
 
-        });
+
+function checkIfExists(localURL, dList, dName){
+    return (new Promise(function (resolve, reject){
+        if(dList.includes(dName)){
+
+            let timeout = setTimeout(function(){
+                reject("timeout");
+            },1000);
+            window.parent.makeLocalRequest("GET", `${localURL}`).then(function(x){
+                clearTimeout(timeout);
+                resolve(x);
+            }).catch(function(err){
+                clearTimeout(timeout);
+                reject(err);
+
+            });
+        }else{
+            reject("Err");
+        }
     }));
         
     
@@ -76,7 +82,6 @@ function ini() {
 
         async function processEpisodeData(data, downloaded, main_url){
             var a = document.getElementsByClassName("card_con");
-            var d_title = [data.description, ""];
             document.getElementById("updateImage").style.display = "inline-table";
             document.getElementById("copyLink").style.display = "inline-table";
             document.getElementById("copyLink").onclick = function () {
@@ -89,33 +94,35 @@ function ini() {
                 });
             };
 
+            let downloadedList = [];
+            if(!config.chrome){
+                try{
+                    downloadedList = await window.parent.listDir(data.mainName);
+                    let tempList = [];
+                    for(let i = 0; i < downloadedList.length; i++){
+                        if(downloadedList[i].isDirectory){
+                            tempList.push(downloadedList[i].name);
+                        }
+                    }
 
-            for (var i = 0; i < 2; i++) {
-                a[i].style.whiteSpace = "normal";
-                a[i].style.display = "block";
-                a[i].innerHTML = "<center>" + d_title[i] + "</center>";
-
+                    downloadedList = tempList;
+                }catch(err){
+                    console.log(err);
+                }
+                
             }
 
 
-            var a = document.getElementsByClassName("title_a");
-            var d_title = [data.name, "Episodes"];
-            for (var i = 0; i < 2; i++) {
-                a[i].innerHTML = d_title[i];
-                a[i].style.display = "inline-table";
-                a[i].style.marginTop = "0";
-            }
 
 
+            
+            document.getElementById("imageTitle").innerText = data.name.trim();
+            document.getElementById("imageDesc").innerText = data.description.trim();
 
-            let new_img = document.createElement("img");
-            new_img.className = "img_1";
-            new_img.src = data.image;
-
-            document.getElementById("con_11").prepend(new_img);
+            document.getElementById("imageMain").style.backgroundImage = `url("${data.image}")`;
             animeEps = data.episodes;
 
-            let epCon = document.getElementsByClassName("card_con")[1];
+            let epCon = document.getElementById("epListCon");
             for (var i = 0; i < animeEps.length; i++) {
                 let trr = animeEps[i].link;
 
@@ -159,7 +166,7 @@ function ini() {
                 if(!config.chrome){
                 
                     try{
-                        await checkIfExists(`/${data.mainName}/${btoa(normalise(trr))}/.downloaded`);
+                        await checkIfExists(`/${data.mainName}/${btoa(normalise(trr))}/.downloaded`, downloadedList, btoa(normalise(trr)));
                         tempDiv4.className = 'episodesDownloaded';
                         tempDiv4.onclick = function () {
                             window.parent.removeDirectory(`/${data.mainName}/${btoa(normalise(trr))}/`).then(function(){
@@ -270,5 +277,3 @@ function changeTheme() {
 
     }
 }
-
-applyTheme();
