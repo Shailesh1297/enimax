@@ -36,9 +36,13 @@
       <div class="menuItem" id="show_room">Reorder categories</div>
       <div class="menuItem" id="queueOpen">Download Queue</div>
       <div class="menuItem" id="restoreData">Restore Data</div>
-      <div class="menuItem" id="accessability">Accessability</div>
+      <div class="menuItem" id="accessability">Settings</div>
       <div class="menuItem" id="changeServerDiv">Change server</div>
       <div class="menuItem" id="logout">Log out</div>
+      <div class="menuItem" id="resetSource" style="display:none;">Reset source preference
+      </div>
+      <div class="menuItem" id="resetQuality" style="display:none;">Reset quality preference
+      </div>
     </div>
 
 
@@ -105,6 +109,13 @@
       <div class="accessItem"> Outline Width : &nbsp;&nbsp;<input type="text"  id="outlineWidth"></div>
 
       <div class="accessItem"> Theme Color : &nbsp;&nbsp;<input type="color" id="themeColor"></div>
+      <div class="accessItem"> Scroll to the current episode : &nbsp;&nbsp;
+        
+        <label class="switch" style="vertical-align: middle;">
+          <input type="checkbox" id="scrollBool">
+          <span class="slider round"></span>
+        </label>
+      </div>
 
     </div>
 
@@ -113,22 +124,18 @@
     <div id="home">
 
 
-      <div style="color: white;text-align: left;margin: 20 20px 0px 20px;display: none;" id="offlineCon">
+      <div style="color: white;text-align: left;margin: 20 20px 0px 20px;display: block;" id="offlineCon">
         Offline Mode: &nbsp;&nbsp;
         <label class="switch" style="vertical-align: middle;">
           <input type="checkbox" id="offline">
           <span class="slider round"></span>
         </label>
 
-        <div class="downloadButton" id="resetSource" style="display:none; margin-top:15px;">Reset source preference
-        </div>
-        <div class="downloadButton" id="resetQuality" style="display:none; margin-top:15px;">Reset quality preference
-        </div>
+        
       </div>
 
-      <div class="title_a">Recently Watched</div>
-      <div id="recently" class="card_con"></div>
-      <div style="width:100%;" id="custom_rooms"></div>
+      <div id="categoriesCon"></div>      
+      <div style="width:100%;height: auto;overflow-y: auto;" id="custom_rooms"></div>
     </div>
 
   </div>

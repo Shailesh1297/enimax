@@ -2,6 +2,16 @@ var socket;
 let frameHistory = [];
 var token;
 
+function setURL(url){
+    document.getElementById("frame").style.opacity = 0;
+    setTimeout(function(){
+        document.getElementById("frame").contentWindow.location = url;
+        setTimeout(function(){
+            document.getElementById("frame").style.opacity = 1;
+            
+        },200);
+    },200);
+}
 
 function listDir(path) {
 
@@ -392,6 +402,8 @@ function returnDownloadQueue() {
 
 let notiCount = 0;
 document.getElementById("frame").onload = function () {
+    document.getElementById("frame").style.opacity = 1;
+
     if (frameHistory.length === 0) {
         frameHistory.push(document.getElementById("frame").contentWindow.location.href);
     }
@@ -616,6 +628,11 @@ function exec_action(x, reqSource) {
 
 
 
+    } else if (x.action == 500) {
+
+        setURL(x.data);
+        
+
     } else if (x.action == 22) {
         window.location = "reset.html";
 
@@ -722,19 +739,32 @@ function exec_action(x, reqSource) {
 
             document.getElementById("player").contentWindow.location = ("pages/player/index.html" + x.data);
 
-        } else {
+        } else if(config.chrome){
             document.getElementById("player").contentWindow.location.replace("pages/player/index.html" + x.data);
 
         }
 
 
+        if(!config.chrome){
+            let checkLock = 0;
 
+            setTimeout(function(){
+                if(checkLock == 0){
+                    document.getElementById("player").contentWindow.location.replace("pages/player/index.html" + x.data);
+                }
+            }, 100);
+            screen.orientation.lock("landscape").then(function () {
+            }).catch(function (error) {
+            }).finally(function(){
+                checkLock = 1;
+                document.getElementById("player").contentWindow.location.replace("pages/player/index.html" + x.data);
+
+            });
+        }
 
         document.getElementById("frame").style.display = "none";
         document.getElementById("frame").style.height = "100%";
         document.getElementById("player").style.display = "block";
-
-
         document.getElementById("player").classList.remove("pop");
 
 
@@ -784,7 +814,7 @@ async function onDeviceReady() {
             document.getElementById("frame").style.display = "block";
 
             if (frameLocation.indexOf("www/pages/homepage/index.html") > -1) {
-                document.getElementById("frame").contentWindow.location.reload();
+                setURL(document.getElementById("frame").contentWindow.location);
             }
 
             document.getElementById("frame").style.height = "100%";
@@ -805,7 +835,7 @@ async function onDeviceReady() {
 
             if (frameHistory.length > 1) {
                 frameHistory.pop();
-                document.getElementById("frame").contentWindow.location = frameHistory[frameHistory.length - 1];
+                setURL(frameHistory[frameHistory.length - 1]);
             }
 
         }

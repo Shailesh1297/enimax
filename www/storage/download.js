@@ -34,7 +34,7 @@ class DownloadVid {
         this.vidData = vidData;
         this.mapping = [];
         this.preferredSource = localStorage.getItem(`${this.engine}-downloadSource`);
-        
+        this.maxBufferLength = 300;
 
         if (vidData.sources.length > 1) {
             let names = "Choose the source (enter the number):\n";
@@ -505,7 +505,7 @@ class DownloadVid {
             self.updateNoti(`Storing downloaded data - Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self, 1);
             if (self.check == 0) {
                 self.check = 1;
-                var data = new Blob(self.buffers.splice(0, Math.min(self.buffers.length, 100)), { "type": "video/mp4" });
+                var data = new Blob(self.buffers.splice(0, Math.min(self.buffers.length, self.maxBufferLength)), { "type": "video/mp4" });
 
                 self.fileEntry.createWriter(function (fileWriter) {
 
@@ -533,9 +533,9 @@ class DownloadVid {
                 }, 1000);
             }
         } else {
-            if (self.buffers.length > 100 && self.check == 0) {
+            if (self.buffers.length > self.maxBufferLength && self.check == 0) {
                 self.check = 1;
-                var data = new Blob(self.buffers.splice(0, 100), { "type": "video/mp4" });
+                var data = new Blob(self.buffers.splice(0, self.maxBufferLength), { "type": "video/mp4" });
                 self.fileEntry.createWriter(function (fileWriter) {
 
                     fileWriter.onwriteend = function (e) {
@@ -606,7 +606,7 @@ class DownloadVid {
                                 const value = result.value;
                                 self.downloaded += value.length;
                                 self.buffers.push(value.buffer);
-                                if (self.buffers.length > 100) {
+                                if (self.buffers.length > self.maxBufferLength) {
                                     self.updateNoti(`Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self);
 
 

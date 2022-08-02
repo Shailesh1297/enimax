@@ -304,12 +304,9 @@ display: inline-block;
   background-position: center;
   background-repeat: no-repeat;
   transition-duration: 0.2s;
-  transform: scale(1);
 }
 
-.card_play:hover {
-  transform: scale(1.1);
-}
+
 
 .card_con {
   overflow-x: scroll;
@@ -574,6 +571,7 @@ display: inline-block;
   display: inline-block;
   margin: 10px;
   user-select: none;
+  white-space: nowrap;
 }
 
 #mainConSearch .s_card{
@@ -621,7 +619,7 @@ display: inline-block;
   /* overflow-y: auto; */
   position: absolute;
   font-family: 'Roboto Slab', serif;
-  font-size: 17px;
+  font-size: 14px;
   width: 100%;
   text-align: left;
   top: 0;
@@ -637,9 +635,10 @@ display: inline-block;
 .s_card_title_main {
   width: 100%;
   white-space: pre-wrap;
-  /* overflow: hidden; */
+  overflow: hidden;
+  max-height: 32px;
+  line-height: 14px;
   text-overflow: ellipsis;
-  /* overflow-y: auto; */
 }
 
 .card_menu_item {
@@ -654,7 +653,6 @@ display: inline-block;
   background-position: center;
   background-repeat: no-repeat;
   transition-duration: 0.2s;
-  transform: scale(1);
 }
 
 .card_menu_icon_delete {
@@ -691,7 +689,6 @@ display: inline-block;
   background-position: center;
   background-repeat: no-repeat;
   transition-duration: 0.2s;
-  transform: scale(1);
 }
 
 .con_main {
@@ -1073,27 +1070,4 @@ input:checked+.slider:before {
   border-radius: 50%;
 }
 
-#updateImage{
-  display: none;
-  background-color: var(--theme-color);
-  color: white;
-  border-radius: 10px;
-  font-family: 'Montserrat', sans-serif;
-  border: 0;
-  margin-top: 20px;
-  padding: 15px 20px 15px 20px;
-  font-size: 17px;
-}
-
-#copyLink{
-  display: none;
-  background-color: var(--theme-color);
-  color: white;
-  border-radius: 10px;
-  font-family: 'Montserrat', sans-serif;
-  border: 0;
-  margin-top: 20px;
-  padding: 15px 20px 15px 20px;
-  font-size: 17px;
-}
 

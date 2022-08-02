@@ -4,7 +4,39 @@ if (config.local || localStorage.getItem("offline") === 'true') {
     window.parent.postMessage({ "action": 20 }, "*");
 }
 
+let lastScrollPos;
+let scrollDownTopDOM = document.getElementById("scrollDownTop");
 
+
+
+
+
+let scrollElem = document.getElementById("con_11");
+scrollElem.addEventListener("scroll", function(){
+    if(lastScrollPos){
+        if(lastScrollPos - scrollElem.scrollTop > 0){
+            scrollDownTopDOM.className = "scrollTopDOM";
+        }else{
+            scrollDownTopDOM.className = "scrollBottomDOM";
+            
+
+        }
+    }
+    lastScrollPos = scrollElem.scrollTop;
+    
+},{
+    "passive" : true
+});
+
+
+
+scrollDownTopDOM.onclick = function(){
+    if(scrollDownTopDOM.className == "scrollTopDOM"){
+        scrollElem.scrollTop = 0;
+    } else if(scrollDownTopDOM.className == "scrollBottomDOM"){
+        scrollElem.scrollTop = scrollElem.scrollHeight;
+    }
+};
 
 
 function normalise(x){
@@ -81,16 +113,39 @@ function ini() {
 
 
         async function processEpisodeData(data, downloaded, main_url){
+
+            let currentLink = '';
+            if(localStorage.getItem("currentLink")){
+                currentLink = localStorage.getItem("currentLink");
+            }
+
+            let scrollTo;
             var a = document.getElementsByClassName("card_con");
-            document.getElementById("updateImage").style.display = "inline-table";
-            document.getElementById("copyLink").style.display = "inline-table";
+            document.getElementById("updateImage").style.display = "inline-block";
+            document.getElementById("copyLink").style.display = "inline-block";
+            document.getElementById("updateLink").style.display = "inline-block";
+            document.getElementById("copyImage").style.display = "inline-block";
+
+
             document.getElementById("copyLink").onclick = function () {
                 window.prompt("Copy it from below:", location.search);
             };
+
+            document.getElementById("copyImage").onclick = function () {
+                window.prompt("Copy it from below:", data.image);
+            };
+
+            document.getElementById("updateLink").onclick = function () {
+                window.parent.apiCall("POST",  { "username": username, "action": 14, "name": data.mainName, "url": location.search }, (x) => {
+                    sendNoti([2, "", "Alert", "Done!"]);
+
+                });
+            };
+
+            
             document.getElementById("updateImage").onclick = function () {
                 window.parent.apiCall("POST", { "username": username, "action": 9, "name": data.mainName, "img": data.image }, (x) => {
                     sendNoti([2, "", "Alert", "Done!"]);
-
                 });
             };
 
@@ -124,8 +179,9 @@ function ini() {
 
             let epCon = document.getElementById("epListCon");
             for (var i = 0; i < animeEps.length; i++) {
+                
                 let trr = animeEps[i].link;
-
+                
                 let tempDiv = document.createElement("div");
                 tempDiv.className = 'episodesCon';
                 tempDiv.setAttribute('data-url', animeEps[i].link);
@@ -208,11 +264,21 @@ function ini() {
 
                 if(check || !downloaded || config.chrome){
                     epCon.append(tempDiv);
+                    if(trr == currentLink){
+                        scrollTo = tempDiv;
+                        tempDiv.style.backgroundColor = "rgba(36,36,36,1)";
+                    }
                 }
             }
 
 
-
+            try{
+                if(!downloaded && localStorage.getItem("scrollBool") !== "false"){
+                    scrollTo.scrollIntoView();
+                }
+            }catch(err){
+                
+            }
             let formation = {};
             formation.method = "POST";
 

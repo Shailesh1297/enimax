@@ -11,8 +11,18 @@
   <link href="../../assets/index.css" rel="stylesheet">
   <style>
     body {
-      background-color: black;
+      background-color: #101010;
       background-image: none !important;
+    }
+
+    #settingsCon {
+      display: block;
+      white-space: nowrap;
+      overflow-x: auto;
+    }
+
+    #settingsCon::-webkit-scrollbar {
+      height: 0px !important;
     }
 
     /* #con_11::-webkit-scrollbar {
@@ -33,8 +43,8 @@
 
     .imageback {
       position: relative;
-      width: calc(100% - 20px);
-      margin: 10px;
+      width: calc(100% - 40px);
+      margin: 20px;
       min-height: var(--image-min-height);
       overflow: hidden;
       border-radius: 30px;
@@ -94,12 +104,57 @@
       align-items: center;
 
     }
+
+    #scrollDownTop {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      height: 50px;
+      z-index: 10;
+      width: 50px;
+      border-radius: 100%;
+      background-color: white;
+      display: none;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: 30px 30px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E");
+
+    }
+
+    .scrollTopDOM {
+      display: block !important;
+      transform: rotate(-90deg);
+
+    }
+
+    .scrollBottomDOM {
+      display: block !important;
+      transform: rotate(90deg);
+
+    }
+
+    .optionButton {
+      display: none;
+      background-color: transparent;
+      color: white;
+      border-radius: 10px;
+      font-family: 'Montserrat', sans-serif;
+      border: 0;
+      padding: 15px 20px 15px 20px;
+      font-size: 14px;
+      margin-left: 10px;
+      margin-right: 10px;
+      border: 1px solid white;
+      border-radius: 35px;
+    }
   </style>
 </head>
 
 <body>
 
   <div id="con_11">
+    <div id="scrollDownTop"></div>
     <div id="noti_con"></div>
     <div id="coverDiv"></div>
     <div id="coverDiv2"></div>
@@ -120,15 +175,14 @@
       </div>
 
 
-      <div style="display: block;">
-        <center>
-          <div id="updateImage">Update cover image</div>
-        </center>
-        <center>
-          <div id="copyLink">Copy link to clipboard</div>
-        </center>
+      <div id="settingsCon">
+        <div id="updateImage" class="optionButton">Update image</div>
+        <div id="copyImage" class="optionButton">Copy image</div>
+        <div id="updateLink" class="optionButton">Update link</div>
+
+        <div id="copyLink" class="optionButton">Copy link</div>
       </div>
-      <div id="epListCon"></div>
+      <div id="epListCon" style="padding-bottom: 50px;"></div>
     </div>
 
   </div>

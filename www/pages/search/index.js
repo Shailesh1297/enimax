@@ -77,7 +77,7 @@ function close_search() {
 
 
 function search() {
-    window.location = 'index.html?query=' + document.getElementById('search_x').value;
+    window.parent.postMessage({ "action": 500, data: 'pages/search/index.html?query=' + document.getElementById('search_x').value }, "*");
 }
 currentEngine.searchApi(location.search.replace("?query=", "")).then(function (x) {
 
@@ -95,10 +95,17 @@ currentEngine.searchApi(location.search.replace("?query=", "")).then(function (x
         let tempDiv2 = createElement({ "class": "s_card_bg"});
         let tempDiv3 = createElement({ "class": "s_card_title"});
         let tempDiv4 = createElement({ "class": "s_card_title_main", "innerText": main_div[i].name });
-        let tempDiv5 = createElement({ "element" : "a" , "class": "s_card_play", "attributes" : {
-            "href" : `../episode/index.html?watch=${main_div[i].link}`
-        
-        }});
+        let tempDiv5 = createElement({ "element" : "div" , "class": "s_card_play", 
+        "attributes" : {
+            "data-href" : `pages/episode/index.html?watch=${main_div[i].link}`        
+        },
+        "listeners": {
+            "click" : function(){
+                window.parent.postMessage({ "action": 500, data: this.getAttribute("data-href") }, "*");
+
+            }
+        }
+        });
         let tempDiv6 = createElement({ "class": "s_card_img_search", "style" : {"backgroundImage" : `url("${main_div[i].image}")`}});
 
 
@@ -148,4 +155,4 @@ function changeTheme() {
     }
 }
 
-applyTheme();
+// applyTheme();
