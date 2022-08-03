@@ -783,6 +783,11 @@ function addCustomRoom() {
         document.getElementById("room_recently").classList.add("active");
         document.getElementById("recentlyCat").classList.add("activeCat");
     }
+    try{
+        document.querySelector(".categories.activeCat").scrollIntoView();
+    }catch(err){
+
+    }
 }
 
 function getUserInfo() {
@@ -1162,6 +1167,15 @@ if (true) {
 
         }
 
+        let catMainDOM = document.getElementsByClassName("categoriesDataMain");
+        for (var i = 0; i < catMainDOM.length; i++) {
+            catMainDOM[i].append(createElement({
+                "style" : {
+                    "width" : "100%",
+                    "height" : "60px"
+                }
+            }));
+        }
 
         last_order = getCurrentOrder();
 

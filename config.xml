@@ -10,6 +10,7 @@
     <content src="index.html" />
     <preference name="StatusBarOverlaysWebView" value="true" />
     <preference name="Fullscreen" value="true" />
+    <preference name="SplashMaintainAspectRatio" value="true" />
     <access origin="*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
@@ -21,8 +22,21 @@
         <allow-intent href="market:*" />
         <icon src="www/assets/images/anime.png" platform="android" density="mdpi" />
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application android:usesCleartextTraffic="true" />
-            <!-- android:debuggable="false" -->
+            <application android:usesCleartextTraffic="true" android:debuggable="false" />
         </edit-config>
+        
+        <splash src="res/land-hdpi.png" density="land-hdpi" />
+        <splash src="res/land-ldpi.png" density="land-ldpi" />
+        <splash src="res/land-mdpi.png" density="land-mdpi" />
+        <splash src="res/land-xhdpi.png" density="land-xhdpi" />
+        <splash src="res/land-xxhdpi.png" density="land-xxhdpi" />
+        <splash src="res/land-xxxhdpi.png" density="land-xxxhdpi" />
+
+        <splash src="res/port-hdpi.png" density="port-hdpi" />
+        <splash src="res/port-ldpi.png" density="port-ldpi" />
+        <splash src="res/port-mdpi.png" density="port-mdpi" />
+        <splash src="res/port-xhdpi.png" density="port-xhdpi" />
+        <splash src="res/port-xxhdpi.png" density="port-xxhdpi" />
+        <splash src="res/port-xxxhdpi.png" density="port-xxxhdpi" /> 
     </platform>
 </widget>
