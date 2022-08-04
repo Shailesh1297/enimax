@@ -9,6 +9,7 @@ var config = {
     "remote": localStorage.getItem("remote"),
     "remoteWOport": localStorage.getItem("remoteWOport"),
     "chrome" : false,
+    "firefox" : false,
 
 };
 
@@ -350,7 +351,7 @@ var wco = {
             var nextPrev = dom.getElementsByClassName("prev-next");
             var data = {};
             for (var npi = 0; npi < nextPrev.length; npi++) {
-                data[nextPrev[npi].children[0].getAttribute("rel")] = nextPrev[npi].children[0].getAttribute("href").replace("https://www.wcoforever.net", "");
+                data[nextPrev[npi].children[0].getAttribute("rel")] = (nextPrev[npi].children[0].getAttribute("href").replace("https://www.wcoforever.net", "")) + "&engine=0";
             }
 
 

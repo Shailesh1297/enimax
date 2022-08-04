@@ -3,6 +3,23 @@ body {
     background-image: none !important;
 }
 
+#catActive{
+    position: relative;
+    line-height: 0;
+    top: 5px;
+    height: 0;
+    width: 0;
+    z-index: 0;
+
+}
+
+#catActiveMain{
+    transition-duration: 0.2s;
+    border-radius: 30px;
+    background-color: var(--theme-color) !important;
+    color: white !important;
+
+}
 #menu {
     display: none;
 
@@ -202,10 +219,14 @@ body {
     color: white;
     padding: 10px 20px 10px 20px;
     font-family: 'Montserrat', sans-serif;
+    position: relative;
+    z-index: 10;
+    transition-duration: 0.2s;
+
 }
 
 .categories.activeCat {
-    background-color: var(--theme-color) !important;
+    background-color: transparent !important;
     color: white !important;
 
 }

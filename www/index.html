@@ -51,7 +51,18 @@
         z-index: 1;
 
     }
-
+    #spotlight{
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background-color: black;
+        pointer-events: none;
+        opacity: 0;
+        z-index: 2;
+        transition-duration: 200ms;
+    }
     .pop{
 
         bottom: 0 !important;
@@ -71,7 +82,6 @@
 
     <iframe src="" id="frame"></iframe>
     <iframe src="fallback.html" id="player" ></iframe>
-
 
 
 

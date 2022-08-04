@@ -3,11 +3,13 @@ let frameHistory = [];
 var token;
 
 function setURL(url){
-    document.getElementById("frame").style.opacity = 0;
+    document.getElementById("frame").style.opacity = "0";
     setTimeout(function(){
         document.getElementById("frame").contentWindow.location = url;
         setTimeout(function(){
-            document.getElementById("frame").style.opacity = 1;
+            document.getElementById("frame").style.opacity = "1";
+            
+
             
         },200);
     },200);
@@ -178,6 +180,23 @@ class downloadQueue {
             await this.updateLocalDoneQueue(this);
         }
     }
+
+    deleteFilesHead(self){
+
+        try{
+            let curElem = self.queue[0];
+            let temp3 = curElem.data.replace("?watch=", "");
+            temp3 = temp3.split("&engine=");
+            window.parent.removeDirectory(`/${curElem.anime.mainName}/${btoa(temp3[0])}/`).then(function(){
+                
+            }).catch(function(){
+                alert("Could not delete the file. You have to delete it manually. Error 1000");
+                
+            });
+        }catch(err){
+            alert("Could not delete the file. You have to delete it manually.");
+        }
+    }
     async removeFromQueue(name) {
         console.log(name);
         if (this.queue.length == 0) {
@@ -199,6 +218,7 @@ class downloadQueue {
 
         if (curElem) {
             if (curElem == currentHead) {
+                this.deleteFilesHead(this);
                 try {
                     if (!("downloadInstance" in currentHead)) {
                         currentHead.downloadInstance = {};
@@ -271,7 +291,9 @@ class downloadQueue {
         if (self.queue.length !== 0) {
             if ("downloadInstance" in self.queue[0]) {
                 self.queue[0].downloadInstance.pause = true;
+
             }
+            self.deleteFilesHead(self);
             self.queue = [];
             self.updateLocalStorage(self);
         }

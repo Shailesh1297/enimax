@@ -39,6 +39,7 @@
       <div class="menuItem" id="accessability">Settings</div>
       <div class="menuItem" id="changeServerDiv">Change server</div>
       <div class="menuItem" id="logout">Log out</div>
+      <div class="menuItem" id="exportData" style="display:none;">Export Data</div>
       <div class="menuItem" id="resetSource" style="display:none;">Reset source preference
       </div>
       <div class="menuItem" id="resetQuality" style="display:none;">Reset quality preference
@@ -86,7 +87,7 @@
 
 
     <div id="queueCon" class="con_main" style="white-space: normal;">
-      <div class="close_con closeDom"></div>
+      <div class="close_con" id="closeDomQueue"></div>
 
       <div id="queueButton" class="queuePause" data-paused="false"></div>
 
@@ -124,7 +125,7 @@
     <div id="home">
 
 
-      <div style="color: white;text-align: left;margin: 20 20px 0px 20px;display: block;" id="offlineCon">
+      <div style="color: white;text-align: left;margin: 20 20px 0px 20px;display: none;" id="offlineCon">
         Offline Mode: &nbsp;&nbsp;
         <label class="switch" style="vertical-align: middle;">
           <input type="checkbox" id="offline">

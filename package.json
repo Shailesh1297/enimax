@@ -57,10 +57,10 @@
       "cordova-plugin-music-controls2": {},
       "cordova-plugin-local-notification": {},
       "cordova-plugin-inappbrowser": {},
-      "cordova-plugin-android-tv": {},
       "cordova-plugin-xhr-local-file": {},
       "cordova-sqlite-storage": {},
-      "cordova-plugin-splashscreen": {}
+      "cordova-plugin-splashscreen": {},
+      "cordova-plugin-android-tv": {}
     },
     "platforms": [
       "android"

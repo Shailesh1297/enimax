@@ -34,7 +34,7 @@ class DownloadVid {
         this.vidData = vidData;
         this.mapping = [];
         this.preferredSource = localStorage.getItem(`${this.engine}-downloadSource`);
-        this.maxBufferLength = 300;
+        this.maxBufferLength = 10;
 
         if (vidData.sources.length > 1) {
             let names = "Choose the source (enter the number):\n";
@@ -513,6 +513,8 @@ class DownloadVid {
                         self.check = 0;
                         if (self.buffers.length != 0) {
                             self.saveToLocal(1, self);
+                        }else{
+                            self.done(self);
                         }
                     };
 
@@ -594,7 +596,6 @@ class DownloadVid {
                                     self.updateNoti(`Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self);
                                     self.saveToLocal(1, self);
                                     self.saved = true;
-                                    self.done(self);
                                     return total;
                                 }
 

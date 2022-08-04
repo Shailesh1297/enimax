@@ -12,8 +12,18 @@ function resetOfflineQual() {
     }
 }
 
+
+
+function exportDataSQL() {
+
+}
+
 document.getElementById("resetQuality").onclick = function () {
     resetOfflineQual();
+}
+
+document.getElementById("exportData").onclick = function () {
+    exportDataSQL();
 }
 
 document.getElementById("accessability").onclick = function () {
@@ -132,11 +142,18 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
         } catch (err) {
 
         }
-        let temp5 = createElement({ "element": "div", "innerHTML": `${queue[i].title + " - "}${queue[i].anime.name.trim()} <span id="downloadingPercent">${(downloadPercent !== undefined && !isDone && i === 0) ? " - " + downloadPercent + "%" : ""}</span>` });
+
+
+        let temp5 = createElement({ "element": "div", "innerHTML": `${queue[i].title} - ${queue[i].anime.name.trim()}` });
 
         temp.append(temp2);
         temp.append(temp4);
         temp2.append(temp5);
+
+        if (!isDone && i === 0) {
+            temp3.id = "downloadingPercent";
+
+        }
 
 
         temp2.append(temp3);
@@ -170,6 +187,8 @@ function reloadQueue(mode = 0) {
 
 
 document.getElementById("queueOpen").onclick = function () {
+    document.getElementById("queueCon").setAttribute("data-conopen", "true");
+
     document.getElementById("queueCon").style.display = "block";
     reloadQueue();
 }
@@ -177,7 +196,8 @@ document.getElementById("queueOpen").onclick = function () {
 
 
 if (!config.chrome) {
-    // document.getElementById("offlineCon").style.display = "block";
+    document.getElementById("offlineCon").style.display = "block";
+    document.getElementById("exportData").style.display = "block";
 }
 
 if (localStorage.getItem("offline") === 'true') {
@@ -234,7 +254,7 @@ async function logout() {
 
         await window.parent.makeRequest("POST", `${config.remote}/logout`, {});
         window.parent.postMessage({ "action": 500, data: "pages/homepage/index.html" }, "*");
-    
+
     } catch (err) {
         sendNoti([2, "red", "Error", err]);
 
@@ -291,6 +311,11 @@ for (let i = 0; i < tempCloseDom.length; i++) {
 document.getElementById("closeRoom").onclick = function () {
     hide_dom2(this);
 };
+document.getElementById("closeDomQueue").onclick = function () {
+    hide_dom(this);
+    document.getElementById("queueCon").setAttribute("data-conopen", "false");
+}
+
 
 document.getElementById("addRoom").onclick = function () {
     ini_api.add_room();
@@ -385,14 +410,21 @@ window.onmessage = function (x) {
             getUserInfo();
 
         }
-    } else if (x.data.action == "activeUpdate") {
-        reloadQueue(1);
-    } else if (x.data.action == "doneUpdate") {
-        reloadQueue(2);
-    }
-    else if (x.data.action == "percentageUpate") {
-        if (document.getElementById("downloadingPercent")) {
-            document.getElementById("downloadingPercent").innerText = " - " + x.data.data + "%";
+    } else if (document.getElementById("queueCon").getAttribute("data-conopen") == "true") {
+        if (x.data.action == "activeUpdate") {
+            reloadQueue(1);
+        } else if (x.data.action == "doneUpdate") {
+            reloadQueue(2);
+        }
+        else if (x.data.action == "percentageUpate") {
+            if (document.getElementById("downloadingPercent")) {
+                if (parseInt(x.data.data) == 100) {
+                    document.getElementById("downloadingPercent").innerText = "Storing the downloaded data...";
+
+                } else {
+                    document.getElementById("downloadingPercent").innerText = x.data.data + "%";
+                }
+            }
         }
     }
 };
@@ -629,40 +661,71 @@ function addCustomRoom() {
 
     rooms2 = rooms.slice(0);
     document.getElementById("custom_rooms").innerHTML = "";
-    document.getElementById("categoriesCon").innerHTML = "";
+    document.getElementById("categoriesCon").innerHTML = `
+    <div id="catActive">
+        <div style="position: absolute;background: red;" id="catActiveMain"></div>
+    <div>`;
 
-    document.getElementById("categoriesCon").append(createElement({
-        "id": "recentlyCat",
-        "class": `categories${(localStorage.getItem("currentCategory") === "room_recently") ? " activeCat" : ""}`,
-        "attributes": {
-            "data-id": `room_recently`
-        },
-        "listeners": {
-            "click": function () {
-                localStorage.setItem("currentCategory", this.getAttribute("data-id"));
-                let tempCatData = document.getElementsByClassName("categoriesDataMain");
-                for (let i = 0; i < tempCatData.length; i++) {
-                    if (tempCatData[i].id == this.getAttribute("data-id")) {
-                        tempCatData[i].classList.add("active");
+    function createCat(dataId, dataText) {
+        return createElement({
+            "class": `categories${(localStorage.getItem("currentCategory") === dataId) ? " activeCat" : ""}`,
+            "attributes": {
+                "data-id": dataId
+            },
+            "listeners": {
+                "click": function () {
 
-                    } else {
-                        tempCatData[i].classList.remove("active");
+
+                    let thisDataId = this.getAttribute("data-id");
+                    localStorage.setItem("currentCategory", thisDataId);
+
+
+                    let tempCat = document.getElementsByClassName("categories");
+                    for (let i = 0; i < tempCat.length; i++) {
+                        if (this == tempCat[i]) {
+                            tempCat[i].classList.add("activeCat");
+                        } else {
+                            tempCat[i].classList.remove("activeCat");
+                        }
+
 
                     }
-                }
 
-                let tempCat = document.getElementsByClassName("categories");
-                for (let i = 0; i < tempCat.length; i++) {
-                    if (this == tempCat[i]) {
-                        tempCat[i].classList.add("activeCat");
-                    } else {
-                        tempCat[i].classList.remove("activeCat");
-                    }
+
+                    let activeCatDOM = document.querySelector(".categories.activeCat");
+                    let temp = document.getElementById("catActiveMain");
+                    window.requestAnimationFrame(function () {
+                        window.requestAnimationFrame(function () {
+                            if (temp && activeCatDOM) {
+                                temp.style.left = activeCatDOM.offsetLeft;
+                                temp.style.height = activeCatDOM.offsetHeight;
+                                temp.style.width = activeCatDOM.offsetWidth;
+                            }
+
+                            setTimeout(function () {
+                                let tempCatData = document.getElementsByClassName("categoriesDataMain");
+                                for (let i = 0; i < tempCatData.length; i++) {
+                                    if (tempCatData[i].id == thisDataId) {
+                                        tempCatData[i].classList.add("active");
+
+                                    } else {
+                                        tempCatData[i].classList.remove("active");
+
+                                    }
+                                }
+                            }, 200);
+
+                        });
+                    });
 
                 }
-            }
-        }, "innerText": "Recently Watched"
-    }));
+            }, "innerText": dataText
+        });
+    }
+
+    let tempRecent = createCat("room_recently", "Recently Watched");
+    tempRecent.id = "recentlyCat";
+    document.getElementById("categoriesCon").append(tempRecent);
 
 
     document.getElementById("custom_rooms").append(createElement({
@@ -681,39 +744,7 @@ function addCustomRoom() {
                 "id": roomID
             });
 
-            let tempDiv2 = createElement({
-                "class": `categories${(localStorage.getItem("currentCategory") === roomID) ? " activeCat" : ""}`,
-                "attributes": {
-                    "data-id": roomID
-                },
-                "listeners": {
-                    "click": function () {
-                        localStorage.setItem("currentCategory", this.getAttribute("data-id"));
-                        let tempCatData = document.getElementsByClassName("categoriesDataMain");
-                        for (let i = 0; i < tempCatData.length; i++) {
-                            if (tempCatData[i].id == this.getAttribute("data-id")) {
-                                tempCatData[i].classList.add("active");
-
-                            } else {
-                                tempCatData[i].classList.remove("active");
-
-                            }
-                        }
-
-                        let tempCat = document.getElementsByClassName("categories");
-                        for (let i = 0; i < tempCat.length; i++) {
-                            if (this == tempCat[i]) {
-                                tempCat[i].classList.add("activeCat");
-                            } else {
-                                tempCat[i].classList.remove("activeCat");
-                            }
-
-                        }
-                    }
-                }, "innerText": rooms2[yye - 1]
-            });
-
-
+            let tempDiv2 = createCat(roomID, rooms2[yye - 1]);
 
 
             document.getElementById("categoriesCon").append(tempDiv2);
@@ -738,40 +769,8 @@ function addCustomRoom() {
             "id": roomID
         });
 
-        let tempDiv2 = createElement({
-            "class": `categories${(localStorage.getItem("currentCategory") === roomID) ? " activeCat" : ""}`,
-            "attributes": {
-                "data-id": roomID
-            },
-            "listeners": {
-                "click": function () {
-                    localStorage.setItem("currentCategory", this.getAttribute("data-id"));
-                    let tempCatData = document.getElementsByClassName("categoriesDataMain");
-                    for (let i = 0; i < tempCatData.length; i++) {
-                        if (tempCatData[i].id == this.getAttribute("data-id")) {
-                            tempCatData[i].classList.add("active");
 
-                        } else {
-                            tempCatData[i].classList.remove("active");
-
-                        }
-                    }
-
-                    let tempCat = document.getElementsByClassName("categories");
-                    for (let i = 0; i < tempCat.length; i++) {
-                        if (this == tempCat[i]) {
-                            tempCat[i].classList.add("activeCat");
-                        } else {
-                            tempCat[i].classList.remove("activeCat");
-                        }
-
-                    }
-                }
-            }, "innerText": rooms2[i]
-        });
-
-
-
+        let tempDiv2 = createCat(roomID, rooms2[i]);
 
         document.getElementById("categoriesCon").append(tempDiv2);
         document.getElementById("custom_rooms").append(tempDiv);
@@ -783,9 +782,20 @@ function addCustomRoom() {
         document.getElementById("room_recently").classList.add("active");
         document.getElementById("recentlyCat").classList.add("activeCat");
     }
-    try{
+    try {
+
+
         document.querySelector(".categories.activeCat").scrollIntoView();
-    }catch(err){
+        let activeCatDOM = document.querySelector(".categories.activeCat");
+        let temp = document.getElementById("catActiveMain");
+        window.requestAnimationFrame(function () {
+            if (temp && activeCatDOM) {
+                temp.style.left = activeCatDOM.offsetLeft;
+                temp.style.height = activeCatDOM.offsetHeight;
+                temp.style.width = activeCatDOM.offsetWidth;
+            }
+        });
+    } catch (err) {
 
     }
 }
@@ -1170,9 +1180,9 @@ if (true) {
         let catMainDOM = document.getElementsByClassName("categoriesDataMain");
         for (var i = 0; i < catMainDOM.length; i++) {
             catMainDOM[i].append(createElement({
-                "style" : {
-                    "width" : "100%",
-                    "height" : "60px"
+                "style": {
+                    "width": "100%",
+                    "height": "60px"
                 }
             }));
         }
@@ -1209,8 +1219,11 @@ if (true) {
 
     let verURL = "https://raw.githubusercontent.com/enimax-anime/enimax/main/version.json";
 
-    if (config.chrome) {
+    if (config.firefox) {
+        verURL = "https://raw.githubusercontent.com/enimax-anime/enimax-firefox-extension/main/version.json";
+    } else if (config.chrome) {
         verURL = "https://raw.githubusercontent.com/enimax-anime/enimax-chrome-extension/main/version.json";
+
     }
 
     fetch(verURL).then((x) => x.json())

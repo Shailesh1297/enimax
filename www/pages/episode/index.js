@@ -81,11 +81,11 @@ function checkIfExists(localURL, dList, dName){
                 resolve(x);
             }).catch(function(err){
                 clearTimeout(timeout);
-                reject(err);
+                reject("notdownloaded");
 
             });
         }else{
-            reject("Err");
+            reject("notinlist");
         }
     }));
         
@@ -231,7 +231,10 @@ function ini() {
                                 }else{
                                     tempDiv4.className ='episodesDownload';
                                     tempDiv4.onclick = function () {
-                                        window.parent.postMessage({ "action": 403, "data": this.getAttribute("data-url"), "anime": data }, "*");
+                                    tempDiv4.className ='episodesLoading';
+
+                                        window.parent.postMessage({ "action": 403, "data": tempDiv4.getAttribute("data-url"), "anime": data, "mainUrl" : main_url, "title" :  tempDiv4.getAttribute("data-title")}, "*");
+
                     
                                     };
                                 }
@@ -240,24 +243,50 @@ function ini() {
                             });
                         }
                         
-                        if(downloaded){
-                            let localQuery = encodeURIComponent(`/${data.mainName}/${btoa(normalise(trr))}`);
-                            tempDiv2.onclick = function () {
-                                window.parent.postMessage({ "action": 4, "data": `?watch=${localQuery}` }, "*");
-                            };
-                        }
+                        
                         check = true;
 
                     }catch(err){
                         if(downloadQueue.isInQueue(downloadQueue, animeEps[i].link)){
                             tempDiv4.className ='episodesLoading';
+                            check = true;
+
+                        }else if(err == "notdownloaded"){
+
+                            
+                            check = true;
+
+                            tempDiv4.className ='episodesBroken';
+                            tempDiv4.onclick = function () {
+                                window.parent.removeDirectory(`/${data.mainName}/${btoa(normalise(trr))}/`).then(function(){
+                                    if(downloaded){
+                                        tempDiv.remove();
+                                    }else{
+                                        tempDiv4.className ='episodesDownload';
+                                        tempDiv4.onclick = function () {
+                                        tempDiv4.className ='episodesLoading';
+    
+                                            window.parent.postMessage({ "action": 403, "data": tempDiv4.getAttribute("data-url"), "anime": data, "mainUrl" : main_url, "title" :  tempDiv4.getAttribute("data-title")}, "*");
+    
+                        
+                                        };
+                                    }
+                                }).catch(function(err){
+                                    alert("Error deleting the files.");
+                                });
+                            }
                         }
 
                     }
                
                 }
 
-                
+                if(downloaded){
+                    let localQuery = encodeURIComponent(`/${data.mainName}/${btoa(normalise(trr))}`);
+                    tempDiv2.onclick = function () {
+                        window.parent.postMessage({ "action": 4, "data": `?watch=${localQuery}` }, "*");
+                    };
+                }
                 if(!config.chrome){
                     tempDiv.append(tempDiv4);
                 }
@@ -267,6 +296,12 @@ function ini() {
                     if(trr == currentLink){
                         scrollTo = tempDiv;
                         tempDiv.style.backgroundColor = "rgba(36,36,36,1)";
+                    }
+                }else{
+                    try{
+                        tempDiv.remove();
+                    }catch(err){
+
                     }
                 }
             }
