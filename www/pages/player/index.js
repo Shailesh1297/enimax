@@ -2,11 +2,29 @@ var username = "hi";
 var lastSrc = "";
 var token;
 var hls;
-
+let doubleTapTime = isNaN(parseInt(localStorage.getItem("doubleTapTime"))) ? 5 : parseInt(localStorage.getItem("doubleTapTime"));
+let skipButTime = isNaN(parseInt(localStorage.getItem("skipButTime"))) ? 30 : parseInt(localStorage.getItem("skipButTime"));
 var CustomXMLHttpRequest = XMLHttpRequest;
 
 
+document.getElementById("doubleTime").oninput = function(){
+	if(isNaN(parseInt(document.getElementById("doubleTime").value))){
+		document.getElementById("doubleTime").value = "";
+	}else{
+		localStorage.setItem("doubleTapTime", document.getElementById("doubleTime").value);
+		doubleTapTime =  isNaN(parseInt(localStorage.getItem("doubleTapTime"))) ? 5 : parseInt(localStorage.getItem("doubleTapTime"));
+	}
+}
 
+
+document.getElementById("skipTime").oninput = function(){
+	if(isNaN(parseInt(document.getElementById("skipTime").value))){
+		document.getElementById("skipTime").value = "";
+	}else{
+		localStorage.setItem("skipButTime", document.getElementById("skipTime").value);
+		skipButTime =  isNaN(parseInt(localStorage.getItem("skipButTime"))) ? 5 : parseInt(localStorage.getItem("skipButTime"));
+	}
+}
 
 var sid;
 
@@ -704,12 +722,12 @@ class vid {
 		} else if (this.doubleMode == 1 && typeof this.doubleClickCoords == 'object' && this.doubleClickCoords.length == 2 && Math.abs(this.doubleClickCoords[0] - coor[0]) < 50 && Math.abs(this.doubleClickCoords[1] - coor[1]) < 50) {
 
 			if (coor[0] > window.innerWidth / 2) {
-				this.vid.currentTime += 5;
+				this.vid.currentTime += doubleTapTime;
 				a.updateTime(a);
 
 
 			} else {
-				this.vid.currentTime -= 5;
+				this.vid.currentTime -= doubleTapTime;
 				a.updateTime(a);
 
 
@@ -1960,7 +1978,7 @@ document.querySelector("#rewatch").addEventListener("change", function () {
 
 
 document.querySelector("#repBack").onclick = function () {
-	a.vid.currentTime -= 30;
+	a.vid.currentTime -= skipButTime;
 	a.updateTime(a);
 
 };
@@ -1977,7 +1995,7 @@ document.querySelector("#closeSetting").onclick = function () {
 
 
 document.querySelector("#repForward").onclick = function () {
-	a.vid.currentTime += 30;
+	a.vid.currentTime += skipButTime;
 	a.updateTime(a);
 
 };
