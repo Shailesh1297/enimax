@@ -904,15 +904,19 @@ var fmovies = {
                         var option23 = {
                             'headers': {
                                 'x-requested-with': 'XMLHttpRequest',
+                                'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36 Edg/98.0.1108.43"
                             }
                         };
 
+                        let host = (new URL(urlS)).origin;
 
                         var link = urlS.split("/");
                         link = link[link.length - 1];
                         link = link.split("?")[0];
 
-                        var second = await MakeCusReqFmovies(`https://streamrapid.ru/ajax/embed-4/getSources?id=${link}&_token=3&_number=${6}`, option23);
+                        console.log(link, host, `${host}/ajax/embed-4/getSources?id=${link}&_token=3&_number=${6}`);
+                        var second = await MakeCusReqFmovies(`${host}/ajax/embed-4/getSources?id=${link}&_token=3&_number=${6}`, option23);
+
                         let jsonq = JSON.parse(second);
                         resolve(jsonq);
 
