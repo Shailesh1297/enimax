@@ -192,6 +192,8 @@ window.onmessage = function (x) {
 		next_ep_func(1);
 	} else if (x.data.action == "previous") {
 		next_ep_func(-1);
+	}else if (x.data.action == "elapsed") {
+		a.vid.currentTime = x.data.elapsed;
 	} else if (parseInt(x.data.action) == 200) {
 		token = x.data.data;
 		if (config.chrome == false && token.indexOf("connect.sid") == -1) {
@@ -372,6 +374,9 @@ class vid {
 
 
 		this.vid.addEventListener("loadedmetadata", function () {
+			if(config.beta){
+				window.parent.postMessage({ "action": 12, nameShow: data_main.name, episode: data_main.episode, prev: true, next: true, "duration" : x.vid.duration, "elapsed" : x.vid.currentTime}, "*");
+			}
 			x.total.innerText = x.timeToString(x.vid.duration);
 
 			let whichFit = parseInt(localStorage.getItem("fillMode")) || 0;
@@ -562,6 +567,9 @@ class vid {
 
 
 		setInterval(function () {
+
+			window.parent.postMessage({ "action": 301,  "elapsed" : x.vid.currentTime, "isPlaying":!x.vid.paused}, "*");
+
 			if (((new Date()).getTime() - x.lastTime) > 3000 && x.open == 1) {
 				x.close_controls();
 			}
@@ -1887,7 +1895,6 @@ async function get_ep(x = 0) {
 
 
 
-		window.parent.postMessage({ "action": 12, nameShow: data_main.name, episode: data_main.episode, prev: true, next: true }, "*");
 
 
 		get_ep_check = 0;

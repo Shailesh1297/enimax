@@ -10,6 +10,7 @@ var config = {
     "remoteWOport": localStorage.getItem("remoteWOport"),
     "chrome" : false,
     "firefox" : false,
+    "beta" : false,
 
 };
 
