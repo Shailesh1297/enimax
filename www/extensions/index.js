@@ -1276,9 +1276,12 @@ var zoro = {
                 }catch(err){
 
                 }
-
                 try{
-                    sourceURLs.push({"url":sourceJSON.sources[0].file , "name":"HLS#"+dom[i].getAttribute('data-type'), "type":"hls"});
+                    let tempSrc = {"url":sourceJSON.sources[0].file , "name":"HLS#"+dom[i].getAttribute('data-type'), "type":"hls"};
+                    if("intro" in sourceJSON && "start" in sourceJSON.intro && "end" in sourceJSON.intro){
+                        tempSrc.skipIntro = sourceJSON.intro;   
+                    }
+                    sourceURLs.push(tempSrc);
                 }catch(err){
                     console.error(err);
                 }

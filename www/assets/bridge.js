@@ -407,7 +407,10 @@ class downloadQueue {
 
 
         if (self.queue.length == 0) {
+            cordova.plugins.backgroundMode.disable();
             return;
+        }else{
+            cordova.plugins.backgroundMode.enable();
         }
         let currentEngine;
         let engineNum;
@@ -970,12 +973,6 @@ async function onDeviceReady() {
     function nope() {
 
     }
-    window.BackgroundService.start(
-        function (fn) { nope(), fn && fn() },
-        function () { console.log('err') }
-    )
-
-    cordova.plugins.backgroundMode.enable();
 
 }
 

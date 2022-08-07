@@ -4,6 +4,8 @@ var token;
 var hls;
 let doubleTapTime = isNaN(parseInt(localStorage.getItem("doubleTapTime"))) ? 5 : parseInt(localStorage.getItem("doubleTapTime"));
 let skipButTime = isNaN(parseInt(localStorage.getItem("skipButTime"))) ? 30 : parseInt(localStorage.getItem("skipButTime"));
+let data_main = {};
+let skipIntroInfo = {};
 var CustomXMLHttpRequest = XMLHttpRequest;
 
 
@@ -584,7 +586,30 @@ class vid {
 
 		setInterval(function () {
 
-			window.parent.postMessage({ "action": 301,  "elapsed" : x.vid.currentTime, "isPlaying":!x.vid.paused}, "*");
+			if(config.beta){
+				window.parent.postMessage({ "action": 301,  "elapsed" : x.vid.currentTime, "isPlaying":!x.vid.paused}, "*");
+			}
+
+			try{
+				if(skipIntroInfo && x.vid.currentTime > skipIntroInfo.start && x.vid.currentTime < skipIntroInfo.end){
+					if(localStorage.getItem("autoIntro") === "true"){
+						x.vid.currentTime = skipIntroInfo.end;
+					}
+
+					if(localStorage.getItem("showIntro") !== "true"){
+						document.getElementById("skipIntroDOM").style.display = "block";
+					}else{
+						document.getElementById("skipIntroDOM").style.display = "none";
+
+					}
+
+				}else{
+					document.getElementById("skipIntroDOM").style.display = "none";
+
+				}
+			}catch(err){
+
+			}
 
 			if (((new Date()).getTime() - x.lastTime) > 3000 && x.open == 1) {
 				x.close_controls();
@@ -1493,6 +1518,8 @@ async function update(x) {
 			errorCount = 0;
 			alert("Time could not be synced with the server.");
 
+		}else if(errorCount == 5){
+			lastUpdate = a.vid.currentTime;
 		}
 
 	});
@@ -1632,7 +1659,12 @@ function chooseQual(x, type, th) {
 	let defURL;
 	if (x !== null) {
 		skipTo = a.vid.currentTime;
-
+		if(th.getAttribute("data-intro") === "true"){
+			skipIntroInfo.start = parseInt(th.getAttribute("data-start"));
+			skipIntroInfo.end = parseInt(th.getAttribute("data-end"));
+		}else{
+			skipIntroInfo = {};	
+		}
 		let qCon = document.getElementById("quality_con").children;
 		for (var i = 0; i < qCon.length; i++) {
 			if (qCon[i] == th) {
@@ -1652,6 +1684,13 @@ function chooseQual(x, type, th) {
 		for (let i = 0; i < qCon.length; i++) {
 			if (sName == qCon[i].innerText) {
 				defURL = data_main.sources[i].url;
+				if(qCon[i].getAttribute("data-intro") === "true"){
+					skipIntroInfo.start = parseInt(qCon[i].getAttribute("data-start"));
+					skipIntroInfo.end = parseInt(qCon[i].getAttribute("data-end"));
+				}else{
+					skipIntroInfo = {};	
+				}
+
 
 				for (let j = 0; j < qCon.length; j++) {
 					if (j == i) {
@@ -1663,6 +1702,7 @@ function chooseQual(x, type, th) {
 					}
 				}
 
+				break;
 			}
 		}
 
@@ -1837,16 +1877,22 @@ async function get_ep(x = 0) {
 			}
 
 			let temp1;
+			let curAttributes = {
+				"data-url": data_main.sources[i].url,
+				"data-type": data_main.sources[i].type,
+				"data-name": data_main.sources[i].name,
+			};
 
+			if("skipIntro" in data_main.sources[i] && "start" in data_main.sources[i].skipIntro && "end" in data_main.sources[i].skipIntro){
+				curAttributes["data-intro"] = "true";
+				curAttributes["data-start"] = data_main.sources[i].skipIntro.start;
+				curAttributes["data-end"] = data_main.sources[i].skipIntro.end;
+			}
 			// if(data_main.sources[i].type != "hls"){			
 			temp1 = createElement({
 				"class": "qual",
 				"innerText": data_main.sources[i].name,
-				"attributes": {
-					"data-url": data_main.sources[i].url,
-					"data-type": data_main.sources[i].type,
-					"data-name": data_main.sources[i].name,
-				},
+				"attributes": curAttributes,
 				"listeners": {
 					"click": function () {
 						localStorage.setItem(`${engine}-sourceName`, this.getAttribute("data-name"));
@@ -1957,6 +2003,19 @@ if (localStorage.getItem("rewatch")) {
 	document.querySelector("#rewatch").checked = false;
 	localStorage.setItem("rewatch", "false");
 }
+
+
+document.querySelector("#showIntroSlider").checked = localStorage.getItem("showIntro") === "true";
+document.querySelector("#autoIntroSlider").checked = localStorage.getItem("autoIntro") === "true";
+
+document.querySelector("#showIntroSlider").onclick = function(){
+	localStorage.setItem("showIntro", document.querySelector("#showIntroSlider").checked === true);
+}
+
+document.querySelector("#autoIntroSlider").onclick = function(){
+	localStorage.setItem("autoIntro", document.querySelector("#autoIntroSlider").checked === true);
+}
+
 
 document.querySelector("#autoplay").addEventListener("change", function () {
 	if (document.querySelector("#autoplay").checked) {
@@ -2136,3 +2195,9 @@ if (config.chrome) {
 document.getElementById("fullscreenToggle").onclick = function () {
 	a.goFullScreen(a);
 };
+document.getElementById("skipIntroDOM").onclick = function(){
+	if("end" in skipIntroInfo && !isNaN(skipIntroInfo.end)){
+		a.vid.currentTime = skipIntroInfo.end;
+		this.style.display = "none";
+	}
+}
