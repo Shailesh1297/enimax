@@ -1898,6 +1898,10 @@ async function get_ep(x = 0) {
 				curAttributes["data-intro"] = "true";
 				curAttributes["data-start"] = data_main.sources[i].skipIntro.start;
 				curAttributes["data-end"] = data_main.sources[i].skipIntro.end;
+				if(i == 0){
+					skipIntroInfo.start = data_main.sources[i].skipIntro.start;
+					skipIntroInfo.end = data_main.sources[i].skipIntro.end;					
+				}
 			}
 			// if(data_main.sources[i].type != "hls"){			
 			temp1 = createElement({
