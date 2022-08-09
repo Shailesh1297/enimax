@@ -1258,6 +1258,7 @@ var zoro = {
         for (var i = 0; i < dom.length; i++) {
                 let sources = await MakeFetch(`https://zoro.to/ajax/v2/episode/sources?id=${dom[i].getAttribute('data-id')}`, {});
                 sources = JSON.parse(sources).link;
+                let urlHost = (new URL(sources)).origin;
 
 
                 let sourceId = sources.split("/");
@@ -1265,7 +1266,7 @@ var zoro = {
                 sourceId = sourceId.split("?")[0];
 
 
-                let sourceJSON = JSON.parse((await MakeFetch(`https://rapid-cloud.ru/ajax/embed-6/getSources?id=${sourceId}&sId=lihgfedcba-abcde`, {})));
+                let sourceJSON = JSON.parse((await MakeFetch(`${urlHost}/ajax/embed-6/getSources?id=${sourceId}&sId=lihgfedcba-abcde`, {})));
                 try{
                     for(let j = 0; j < sourceJSON.tracks.length; j++){
                         sourceJSON.tracks[j].label += " - " +dom[i].getAttribute('data-type');
@@ -1331,6 +1332,11 @@ var zoro = {
         resp.status = 200;
         return resp;
 
+    },
+    "config" : {
+        "socketURL" : "https://ws1.rapid-cloud.co",
+        "origin" : "https://rapid-cloud.co",
+        "referer" : "https://rapid-cloud.co/",
     }
 };
 

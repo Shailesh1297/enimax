@@ -53,8 +53,8 @@ class XMLHttpRequest2 {
 
 		this.delegate = null;
 		this.requestHeaders = {
-			"origin": "https://rapid-cloud.ru",
-			"referer": "https://rapid-cloud.ru/",
+			"origin": extensionList[3].config.origin,
+			"referer": extensionList[3].config.referer,
 			"sid": sid,
 		};
 		this.responseHeaders = {};
@@ -1302,6 +1302,7 @@ function get_ep_ini() {
 		let rootDir = decodeURIComponent(location.search.replace("?watch=", "").split("&")[0]);
 		window.parent.makeLocalRequest("GET", `${rootDir}/viddata.json`).then(function (viddata) {
 			viddata = JSON.parse(viddata).data;
+			console.log(viddata);
 
 			data_main = viddata;
 			if ("next" in data_main) {
@@ -1338,11 +1339,21 @@ function get_ep_ini() {
 				}
 			}
 
+			let skipIntro;
+			if("skipIntro" in viddata.sources[0]){
+				skipIntro = viddata.sources[0].skipIntro;
+			}
 			data_main.sources = [{
 				"name": viddata.sources[0].name,
 				"type": viddata.sources[0].type,
 				"url": viddata.sources[0].type == 'hls' ? `${rootDir}/master.m3u8` : `${window.parent.cordova.file.externalDataDirectory}/${rootDir}/master.m3u8`,
 			}];
+
+			if(skipIntro){
+				data_main.sources[0].skipIntro = skipIntro;
+			}
+
+			
 
 			engine = data_main.engine;
 			get_ep();
@@ -2073,12 +2084,12 @@ if (location.search.includes("engine=3")) {
 			function (details) {
 				details.requestHeaders.push({
 					"name": "origin",
-					"value": "https://rapid-cloud.ru"
+					"value": extensionList[3].config.origin
 				});
 
 				details.requestHeaders.push({
 					"name": "referer",
-					"value": "https://rapid-cloud.ru/"
+					"value": extensionList[3].config.referer
 				});
 
 				details.requestHeaders.push({
@@ -2096,7 +2107,7 @@ if (location.search.includes("engine=3")) {
 			['blocking', 'requestHeaders']
 		);
 	}
-	let socket = io("https://ws1.rapid-cloud.ru", { transports: ["websocket"] });
+	let socket = io(extensionList[3].config.socketURL, { transports: ["websocket"] });
 	socket.on("connect", () => {
 		sid = socket.id;
 		if(socketCalledIni === false){
