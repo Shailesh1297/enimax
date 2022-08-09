@@ -22,7 +22,7 @@
         <allow-intent href="market:*" />
         <icon src="www/assets/images/anime.png" platform="android" density="mdpi" />
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application android:usesCleartextTraffic="true" android:debuggable="true" />
+            <application android:usesCleartextTraffic="true" android:debuggable="false" />
         </edit-config>
         <splash src="res/land-hdpi.png" density="land-hdpi" />
         <splash src="res/land-ldpi.png" density="land-ldpi" />
