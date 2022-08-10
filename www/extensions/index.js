@@ -181,6 +181,7 @@ var wco = {
                 data.episodes = animeEps;
                 data.mainName = animeName;
 
+                temp.remove();
                 resolve(data);
             }).catch(function (err) {
                 reject(err);
@@ -340,7 +341,7 @@ var wco = {
             data.episode = name_ep;
             data.status = 200;
             data.message = "done";
-
+            dom.remove();
             return data;
         } catch (err) {
             console.error(err);
@@ -388,6 +389,7 @@ var animixplay = {
 
                     }
 
+                    temp.remove();
 
                     resolve({
                         "status": 200,
@@ -470,6 +472,7 @@ var animixplay = {
 
                 data.episodes = animeEps;
                 data.mainName = animeName;
+                temp.remove();
                 resolve(data);
             }).catch(function (err) {
                 console.error(err);
@@ -491,7 +494,7 @@ var animixplay = {
             let temp = document.createElement("div");
             temp.innerHTML = DOMPurify.sanitize(response);
             let animeDOM = JSON.parse(temp.querySelector("#epslistplace").innerHTML);
-
+            temp.remove();
             let episode = parseFloat(url.split("ep")[1]);
 
             if ((episode - 1).toString() in animeDOM) {
@@ -970,6 +973,7 @@ var fmovies = {
                             }
 
                         }
+                        temp.remove();
 
                     }
 
@@ -1074,7 +1078,7 @@ var zoro = {
         let response = {};
         let _res = ((await MakeFetch(`https://zoro.to/${url}`, {})));
         let _dom = document.createElement("div");
-        ogDOM = _dom;
+        let ogDOM = _dom;
         _dom.innerHTML = DOMPurify.sanitize(_res);
 
         response.name = _dom.querySelector(".film-name.dynamic-name").innerText;
