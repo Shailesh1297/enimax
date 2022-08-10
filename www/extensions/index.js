@@ -74,90 +74,6 @@ if(config && config.chrome){
 }
 
 
-function getTokenFromUrl(url, key) {
-
-    return (new Promise(async function (resolve, reject) {
-
-
-        const inappRef = cordova.InAppBrowser.open(url, '_blank', 'hidden=yes');
-
-        let messageCallBack = function (params) {
-            if (params.data.status == 200) {
-                resolve(params.data.data);
-                inappRef.close();
-            } else {
-                reject("err");
-                inappRef.show();
-            }
-
-        }
-
-        let loadStopCallback = function () {
-            let captchaKey = key;
-
-            inappRef.executeScript({
-                'code': `window.resultInApp=0;var a1=document.createElement("script");
-                    a1.innerHTML=\`var recaptcha_site_key = '${captchaKey}'\`;
-                    document.body.append(a1);
-                    var a2=document.createElement("script");
-                    a2.src="https://www.google.com/recaptcha/api.js?render=${captchaKey}";
-                    document.body.append(a2);`
-            });
-
-            inappRef.executeScript({
-                'code': `
-            var countTimeout = 0;
-            var timeout = setInterval(function(){
-                countTimeout++;
-                if(countTimeout >= 50){
-                    clearInterval(timeout);
-                }
-                if(typeof grecaptcha!=='undefined' && typeof grecaptcha.execute!=='undefined'){
-                    clearInterval(timeout);
-
-                    grecaptcha.ready(function(){      
-    
-                        grecaptcha.execute(recaptcha_site_key).then(function(x){
-                
-                            let resultInApp={'status':200,'data':x};
-                            webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify(resultInApp));
-                        }).catch(function(x){
-                            let resultInApp={'status':400,'data':x};
-                            webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify(resultInApp));
-
-                        });
-                    });
-                }
-            },200);
-            
-                    
-            `
-            });
-
-        };
-        inappRef.addEventListener('message', messageCallBack);
-        inappRef.addEventListener('loaderror', function () {
-        });
-
-        inappRef.addEventListener('loadstart', function () {
-        });
-
-        inappRef.addEventListener('beforeload', function () {
-        });
-
-        inappRef.addEventListener('loadstop', loadStopCallback);
-
-
-
-
-
-    }));
-
-}
-
-
-
-
 var wco = {
     'searchApi': function (query) {
         return (new Promise(function (resolve, reject) {
@@ -170,7 +86,7 @@ var wco = {
             }).then(response => response.text()).then(function (x) {
 
                 let temp = document.createElement("div");
-                temp.innerHTML = x;
+                temp.innerHTML = DOMPurify.sanitize(x);
 
 
                 var main_div = temp.querySelector(".items").children;
@@ -212,7 +128,7 @@ var wco = {
             url = "https://www.wcoforever.net/" + url;
             fetch(url).then(response => response.text()).then(function (response) {
                 let temp = document.createElement("div");
-                temp.innerHTML = response;
+                temp.innerHTML = DOMPurify.sanitize(response);
                 let data = {};
                 data.name = temp.querySelectorAll(".video-title")[0].innerText;
                 data.image = temp.querySelector("#sidebar_cat").querySelectorAll(".img5")[0].getAttribute("src");
@@ -223,7 +139,7 @@ var wco = {
                 }
 
                 console.log(data.image);
-                data.description = temp.querySelector("#sidebar_cat").querySelectorAll("p")[0].innerHTML;
+                data.description = temp.querySelector("#sidebar_cat").querySelectorAll("p")[0].innerText;
 
                 let episodesDOM = temp.querySelector("#sidebar_right3");
 
@@ -334,12 +250,7 @@ var wco = {
                 "method": "GET",
             };
 
-            var option1 = {
-                'headers': {
-                    'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36 Edg/98.0.1108.43",
-                },
 
-            };
 
 
 
@@ -347,7 +258,7 @@ var wco = {
             let sources = [];
             var d = req1;
             var dom = document.createElement("div");
-            dom.innerHTML = d;
+            dom.innerHTML = DOMPurify.sanitize(d);
 
             var nextPrev = dom.getElementsByClassName("prev-next");
             var data = {};
@@ -355,18 +266,18 @@ var wco = {
                 data[nextPrev[npi].children[0].getAttribute("rel")] = (nextPrev[npi].children[0].getAttribute("href").replace("https://www.wcoforever.net", "")) + "&engine=0";
             }
 
+            let tempReg = /<script>var.+?document\.write\(decodeURIComponent\(escape.+?<\/script>/gis;
+            let tempRegOut = tempReg.exec(req1)[0];
+            let arrayReg = /\[.+\]/gis;
+            let main = "";
 
-            var a = dom.querySelectorAll("script");
-            var main = "";
-            for (var i = 0; i < a.length; i++) {
-                if (a[i].textContent.indexOf("document.write(decodeURIComponent(escape") > -1) {
-                    main = a[i].textContent;
-                }
-            }
+            let arrayRegOut = JSON.parse(arrayReg.exec(tempRegOut)[0]);
+            let num = parseInt(tempRegOut.split(`.replace(\/\\D\/g,'')) -`)[1]);
 
-            main = main.split("document.write")[0];
-            var Var_Name = main.split(" ")[1];
-            var out = eval((main + "\nmain=" + Var_Name));
+            arrayRegOut.forEach(function(value) { 
+                main += String.fromCharCode(parseInt(atob(value).replace(/\D/g,'')) - num); 
+            });
+
             main = "https://www.wcoforever.net" + main.split("src=\"")[1].split("\" ")[0];
 
             var req2 = await MakeFetch(main, {});
@@ -432,6 +343,7 @@ var wco = {
 
             return data;
         } catch (err) {
+            console.error(err);
             alert("Couldn't get the link");
             return { "status": 400, "message": "Couldn't get the link" }
         }
@@ -463,7 +375,7 @@ var animixplay = {
             }).then(response => response.json())
                 .then(response => {
                     let temp = document.createElement("div");
-                    temp.innerHTML = response.result;
+                    temp.innerHTML = DOMPurify.sanitize(response.result);
                     let li = temp.querySelectorAll("li");
                     let data = [];
 
@@ -500,19 +412,20 @@ var animixplay = {
             url = "https://animixplay.to/" + url;
             fetch(url).then(response => response.text()).then(async function (response) {
                 let temp = document.createElement("div");
-                temp.innerHTML = response;
+                temp.innerHTML = DOMPurify.sanitize(response);
                 let data = {};
 
 
                 data.name = url.split("/")[url.split("/").length - 1].split("-").join(" ");
                 data.image = "";
                 data.description = "";
+                let temp2 = document.createElement("div");
 
                 try {
                     let malId = parseInt(response.split("malid = '")[1]);
                     let response2 = await MakeFetch(`https://myanimelist.net/anime/${malId}`, {});
-                    let temp2 = document.createElement("div");
-                    temp2.innerHTML = response2;
+                    console.log(response2);
+                    temp2.innerHTML = DOMPurify.sanitize(response2,{ALLOWED_ATTR: ['itemprop']});
 
                     data.image = temp2.querySelector('[itemprop="image"]').src;
                     
@@ -529,6 +442,8 @@ var animixplay = {
                     data.description = temp2.querySelector('[itemprop="description"]').innerText;
                 } catch (err) {
                     console.error(err);
+                }finally{
+                    temp2.remove();
                 }
 
                 let animeEps = [];
@@ -574,7 +489,7 @@ var animixplay = {
             let data = {};
             let response = await MakeFetch(nextUrl, {});
             let temp = document.createElement("div");
-            temp.innerHTML = response;
+            temp.innerHTML = DOMPurify.sanitize(response);
             let animeDOM = JSON.parse(temp.querySelector("#epslistplace").innerHTML);
 
             let episode = parseFloat(url.split("ep")[1]);
@@ -703,7 +618,7 @@ var fmovies = {
             }).then(response => response.text())
                 .then(response => {
                     let tempDOM = document.createElement("div");
-                    tempDOM.innerHTML = response;
+                    tempDOM.innerHTML = DOMPurify.sanitize(response);
                     let data = [];
 
                     var section = tempDOM.querySelectorAll(".flw-item");
@@ -751,7 +666,7 @@ var fmovies = {
                 let r = await MakeFetch(`https://fmovies.app/ajax/v2/tv/seasons/${x}`);
 
                 let temp = document.createElement("div");
-                temp.innerHTML = r;
+                temp.innerHTML = DOMPurify.sanitize(r);
                 let tempDOM = temp.getElementsByClassName("dropdown-item ss-item");
                 let data = {};
                 for (var i = 0; i < tempDOM.length; i++) {
@@ -762,7 +677,7 @@ var fmovies = {
 
                 r = await MakeFetch(`https://fmovies.app/${showURL}`);
                 let temp2 = document.createElement("div");
-                temp2.innerHTML = r;
+                temp2.innerHTML = DOMPurify.sanitize(r);
                 let data2 = {};
                 data2.name = temp2.querySelector(".movie_information").querySelector(".heading-name").innerText;
                 data2.img = temp2.querySelector(".movie_information").querySelector(".film-poster-img").src;
@@ -789,7 +704,7 @@ var fmovies = {
             try {
                 let r = await MakeFetch(`https://fmovies.app/ajax/v2/season/episodes/${x}`);
                 let temp = document.createElement("div");
-                temp.innerHTML = r;
+                temp.innerHTML = DOMPurify.sanitize(r);
                 let tempDOM = temp.getElementsByClassName("nav-link btn btn-sm btn-secondary eps-item");
                 let data = [];
                 for (var i = 0; i < tempDOM.length; i++) {
@@ -984,7 +899,7 @@ var fmovies = {
 
 
                         var dom = document.createElement("div");
-                        dom.innerHTML = getLink2;
+                        dom.innerHTML = DOMPurify.sanitize(getLink2);
 
                         let tempDOM = dom.getElementsByClassName("nav-link btn btn-sm btn-secondary");
 
@@ -1011,7 +926,7 @@ var fmovies = {
 
 
                         var dom = document.createElement("div");
-                        dom.innerHTML = getLink2;
+                        dom.innerHTML = DOMPurify.sanitize(getLink2);
                         let tempDOM = dom.getElementsByClassName("nav-link btn btn-sm btn-secondary");
 
                         for (var i = 0; i < tempDOM.length; i++) {
@@ -1033,7 +948,7 @@ var fmovies = {
 
                     let tempGetDom = document.createElement("div");
 
-                    tempGetDom.innerHTML = getSeason;
+                    tempGetDom.innerHTML = DOMPurify.sanitize(getSeason);
                     currentSeason = tempGetDom.querySelector(".detail_page-watch").getAttribute("data-season");
                     tempGetDom.remove();
 
@@ -1041,7 +956,7 @@ var fmovies = {
                         let r = await MakeFetch(`https://fmovies.app/ajax/v2/season/episodes/${currentSeason}`);
 
                         let temp = document.createElement("div");
-                        temp.innerHTML = r;
+                        temp.innerHTML = DOMPurify.sanitize(r);
                         let tempDOM = temp.getElementsByClassName("nav-link btn btn-sm btn-secondary eps-item");
                         for (var i = 0; i < tempDOM.length; i++) {
                             if (ep == tempDOM[i].getAttribute("data-id")) {
@@ -1127,7 +1042,7 @@ var zoro = {
             fetch(`https://zoro.to/search?keyword=${query}`).then(res => res.text()).then(function (a) {
                 let dom = document.createElement("div");
                 let orDom = dom;
-                dom.innerHTML = a;
+                dom.innerHTML = DOMPurify.sanitize(a);
                 dom = dom.querySelectorAll('.flw-item');
                 let data = [];
                 for (var i = 0; i < dom.length; i++) {
@@ -1160,7 +1075,7 @@ var zoro = {
         let _res = ((await MakeFetch(`https://zoro.to/${url}`, {})));
         let _dom = document.createElement("div");
         ogDOM = _dom;
-        _dom.innerHTML = _res;
+        _dom.innerHTML = DOMPurify.sanitize(_res);
 
         response.name = _dom.querySelector(".film-name.dynamic-name").innerText;
 
@@ -1183,7 +1098,7 @@ var zoro = {
 
         let dom = document.createElement("div");
         ogDOM = dom;
-        dom.innerHTML = res;
+        dom.innerHTML = DOMPurify.sanitize(res);
         dom = dom.querySelectorAll('.ep-item');
         let data = [];
 
@@ -1211,7 +1126,7 @@ var zoro = {
 
             let dom = document.createElement("div");
             ogDOM = dom;
-            dom.innerHTML = res;
+            dom.innerHTML = DOMPurify.sanitize(res);
             dom = dom.querySelectorAll('.ep-item');
             let data = [];
 
@@ -1247,7 +1162,7 @@ var zoro = {
 
         let dom = document.createElement("div");
         let ogDOM = dom;
-        dom.innerHTML = domIn;
+        dom.innerHTML = DOMPurify.sanitize(domIn);
 
         dom = dom.querySelectorAll('[data-server-id="4"]');
 
