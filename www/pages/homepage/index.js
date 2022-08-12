@@ -433,7 +433,7 @@ document.getElementById("outlineColor").value = localStorage.getItem("outlineCol
 document.getElementById("outlineWidth").value = localStorage.getItem("outlineWidth");
 document.getElementById("themeColor").value = localStorage.getItem("themecolor");
 document.getElementById("scrollBool").checked = localStorage.getItem("scrollBool") !== "false";
-document.getElementById("autoPause").checked = localStorage.getItem("autoPause") !== "false";
+document.getElementById("autoPause").checked = localStorage.getItem("autoPause") === "true";
 
 
 
