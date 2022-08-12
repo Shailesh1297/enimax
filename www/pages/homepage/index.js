@@ -168,6 +168,9 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
 
         let temp3 = createElement({ "element": "div", "innerText": queue[i].message, "class": "queueMessage" });
+
+        let temp4Con = createElement({ "element": "div"});
+        
         let temp4 = createElement({
             "element": "div", "class": "episodesDownloaded", "attributes": {
                 "data-url": queue[i].data
@@ -176,12 +179,28 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
         temp4.onclick = function () {
             if (isDone) {
-                downloadQueue.removeFromDoneQueue(this.getAttribute("data-url"));
+                downloadQueue.removeFromDoneQueue(this.getAttribute("data-url"),downloadQueue);
 
             } else {
-                downloadQueue.removeFromQueue(this.getAttribute("data-url"));
+                downloadQueue.removeFromQueue(this.getAttribute("data-url"), downloadQueue);
 
             }
+
+        }
+        temp4Con.append(temp4);
+
+        if (isDone && queue[i].errored === true) {
+            let temp6 = createElement({
+                "element": "div", "class": "episodesRetry", "attributes": {
+                    "data-url": queue[i].data
+                }
+            });
+
+            temp6.onclick = function () {
+                    downloadQueue.retryFromDoneQueue(this.getAttribute("data-url"), downloadQueue);
+            }
+
+            temp4Con.append(temp6);
 
         }
         let downloadPercent;
@@ -198,7 +217,7 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
         let temp5 = createElement({ "element": "div", "innerHTML": `${queue[i].title} - ${queue[i].anime.name.trim()}` });
 
         temp.append(temp2);
-        temp.append(temp4);
+        temp.append(temp4Con);
         temp2.append(temp5);
 
         if (!isDone && i === 0) {
@@ -216,6 +235,13 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
 function reloadQueue(mode = 0) {
     let downloadQueue = window.parent.returnDownloadQueue();
+    if(downloadQueue.pause){
+        document.getElementById("queueButton").className = "queuePlay";
+        document.getElementById("queueButton").setAttribute("data-paused", "true");
+    }else{
+        document.getElementById("queueButton").className = "queuePause";
+        document.getElementById("queueButton").setAttribute("data-paused", "false");
+    }
 
     if (mode == 0 || mode == 1) {
         let queueDOM = document.getElementById("activeCon");
@@ -398,11 +424,16 @@ document.getElementById("scrollBool").onchange = function () {
     localStorage.setItem("scrollBool", this.checked.toString());
 }
 
+document.getElementById("autoPause").onchange = function () {
+    localStorage.setItem("autoPause", this.checked.toString());
+}
+
 
 document.getElementById("outlineColor").value = localStorage.getItem("outlineColor");
 document.getElementById("outlineWidth").value = localStorage.getItem("outlineWidth");
 document.getElementById("themeColor").value = localStorage.getItem("themecolor");
 document.getElementById("scrollBool").checked = localStorage.getItem("scrollBool") !== "false";
+document.getElementById("autoPause").checked = localStorage.getItem("autoPause") !== "false";
 
 
 
@@ -470,6 +501,9 @@ window.onmessage = function (x) {
             reloadQueue(1);
         } else if (x.data.action == "doneUpdate") {
             reloadQueue(2);
+        }else if (x.data.action == "paused") {
+            document.getElementById("queueButton").className = "queuePlay";
+            document.getElementById("queueButton").setAttribute("data-paused", "true");
         }
         else if (x.data.action == "percentageUpate") {
             if (document.getElementById("downloadingPercent")) {

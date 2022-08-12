@@ -54,6 +54,7 @@ body {
 .accessItem {
     padding: 15px;
     display: inline-block;
+    text-align: center;
 }
 
 #outlineColor {

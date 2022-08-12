@@ -576,12 +576,16 @@ class DownloadVid {
                 self.controller = controller;
                 self.updateNoti("Starting...", self, 1);
 
+                let timeoutId = setTimeout(function(){
+                    controller.abort();
+                }, 60000);
                 fetch(self.url, {
                     headers: {
                         "Range": `bytes=${self.size}-`,
                     },
                     signal: controller.signal,
                 }).then(response => {
+                    clearTimeout(timeoutId);
                     self.total = response.headers.get("content-length");
                     if (response.headers.get("content-length") == self.size) {
                         self.done();
