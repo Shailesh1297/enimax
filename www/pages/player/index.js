@@ -2088,6 +2088,7 @@ if (location.search.includes("engine=3")) {
 	let socket = io(extensionList[3].config.socketURL, { transports: ["websocket"] });
 	socket.on("connect", () => {
 		sid = socket.id;
+		localStorage.setItem("sid", sid);
 		if(socketCalledIni === false){
 			if (config.local || downloaded) {
 				ini_main();

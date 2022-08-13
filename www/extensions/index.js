@@ -62,7 +62,7 @@ if(config && config.chrome){
 
             details.requestHeaders.push({
                 "name": "sid",
-                "value": sid
+                "value": localStorage.getItem("sid")
             });
 
 
