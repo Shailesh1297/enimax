@@ -123,7 +123,9 @@ function ini() {
             let scrollToDOM;
             var a = document.getElementsByClassName("card_con");
             document.getElementById("updateImage").style.display = "inline-block";
-            document.getElementById("downloadAll").style.display = "inline-block";
+            if(!config.chrome){
+                document.getElementById("downloadAll").style.display = "inline-block";
+            }
             document.getElementById("copyLink").style.display = "inline-block";
             document.getElementById("updateLink").style.display = "inline-block";
             document.getElementById("copyImage").style.display = "inline-block";
@@ -300,7 +302,7 @@ function ini() {
                 
             }
 
-            if(scrollToDOM){
+            if(scrollToDOM && !config.chrome){
                 document.getElementById("downloadNext").style.display = "inline-block";
                 document.getElementById("downloadNext").onclick = function(){
                     let howmany = parseInt(prompt("How many episodes do you want to download?", 5));
