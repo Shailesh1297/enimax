@@ -1,7 +1,7 @@
 let localVal = localStorage.getItem("local");
 if (localVal != "true" && localVal != "false") {
     localStorage.setItem("local", "true");
-
+    config.local = true;
 }
 
 
@@ -47,6 +47,33 @@ if(config && config.chrome){
         {urls: ['https://fmovies.app/*','https://streamrapid.ru/*']},
         ['blocking', 'requestHeaders']
       );
+
+    chrome.webRequest.onBeforeSendHeaders.addListener(
+        function (details) {
+            details.requestHeaders.push({
+                "name": "origin",
+                "value": extensionList[3].config.origin
+            });
+
+            details.requestHeaders.push({
+                "name": "referer",
+                "value": extensionList[3].config.referer
+            });
+
+            details.requestHeaders.push({
+                "name": "sid",
+                "value": sid
+            });
+
+
+
+
+
+            return { requestHeaders: details.requestHeaders };
+        },
+        { urls: ['https://*.dayimage.net/*'] },
+        ['blocking', 'requestHeaders']
+    );
 
     MakeCusReqFmovies = async function(url,options){
         if("headers" in options){

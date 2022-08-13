@@ -2084,33 +2084,6 @@ let socketCalledIni = false;
 if (location.search.includes("engine=3")) {
 	if (!config.chrome) {
 		CustomXMLHttpRequest = XMLHttpRequest2;
-	} else {
-		chrome.webRequest.onBeforeSendHeaders.addListener(
-			function (details) {
-				details.requestHeaders.push({
-					"name": "origin",
-					"value": extensionList[3].config.origin
-				});
-
-				details.requestHeaders.push({
-					"name": "referer",
-					"value": extensionList[3].config.referer
-				});
-
-				details.requestHeaders.push({
-					"name": "sid",
-					"value": sid
-				});
-
-
-
-
-
-				return { requestHeaders: details.requestHeaders };
-			},
-			{ urls: ['https://*.dayimage.net/*'] },
-			['blocking', 'requestHeaders']
-		);
 	}
 	let socket = io(extensionList[3].config.socketURL, { transports: ["websocket"] });
 	socket.on("connect", () => {
