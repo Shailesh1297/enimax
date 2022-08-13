@@ -1,3 +1,5 @@
+const extensionList = window.parent.returnExtensionList();
+
 if (config.local || localStorage.getItem("offline") === 'true') {
     ini();
 } else {
@@ -6,7 +8,6 @@ if (config.local || localStorage.getItem("offline") === 'true') {
 
 let lastScrollPos;
 let scrollDownTopDOM = document.getElementById("scrollDownTop");
-
 
 
 

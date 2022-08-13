@@ -3,6 +3,14 @@ let frameHistory = [];
 var token;
 let seekCheck = true;
 
+function returnExtensionList(){
+    return extensionList;
+}
+
+function returnExtensionNames(){
+    return extensionNames;
+}
+
 function setURL(url) {
     document.getElementById("frame").style.opacity = "0";
     setTimeout(function () {

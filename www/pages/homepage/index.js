@@ -291,6 +291,7 @@ if (localStorage.getItem("offline") === 'true') {
 }
 
 document.getElementById("resetSource").onclick = function () {
+    const extensionNames = window.parent.returnExtensionNames();
     let message = `What extension's source do you want to reset?\n`;
     for (let i = 0; i < extensionNames.length; i++) {
         message += `${i}. ${extensionNames[i]}\n`;

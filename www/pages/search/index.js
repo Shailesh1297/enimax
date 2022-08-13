@@ -1,3 +1,5 @@
+const extensionNames = window.parent.returnExtensionNames();
+const extensionList = window.parent.returnExtensionList();
 
 let sourcesNames = extensionNames;
 

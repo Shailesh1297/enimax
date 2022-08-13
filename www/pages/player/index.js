@@ -1,5 +1,6 @@
 var username = "hi";
 var lastSrc = "";
+const extensionList = window.parent.returnExtensionList();
 var token;
 var hls;
 let doubleTapTime = isNaN(parseInt(localStorage.getItem("doubleTapTime"))) ? 5 : parseInt(localStorage.getItem("doubleTapTime"));
