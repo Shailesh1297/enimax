@@ -972,6 +972,9 @@ window.addEventListener('message', function (x) {
 async function onDeviceReady() {
     await SQLInit();
 
+    cordova.plugins.backgroundMode.on('activate', function() {
+        cordova.plugins.backgroundMode.disableWebViewOptimizations(); 
+    });
 
     token = cordova.plugin.http.getCookieString(config.remoteWOport);
     // saveDexieToLocal();

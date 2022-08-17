@@ -33,6 +33,7 @@ class DownloadVid {
         this.pause = (pause === true || pause === false) ? pause : false;
         this.vidData = vidData;
         this.mapping = [];
+        this.sent = false;
         this.preferredSource = localStorage.getItem(`${this.engine}-downloadSource`);
         this.maxBufferLength = 10;
 
@@ -186,19 +187,37 @@ class DownloadVid {
     }
 
     updateNoti(x_name, self, type = 0) {
-        // if (type == 0) {
-        //     cordova.plugins.notification.local.update({
-        //         id: self.id,
-        //         title: x_name,
-        //         progressBar: { value: Math.floor((self.downloaded / self.total) * 100) }
-        //     });
-        // } else {
-        //     cordova.plugins.notification.local.schedule({
-        //         id: self.id,
-        //         title: x_name,
-        //         progressBar: { value: Math.floor((self.downloaded / self.total) * 100) }
-        //     });
-        // }
+        if(cordova.plugins.backgroundMode.isActive() === false){
+            return;
+        }
+        let progNumDeci = (self.downloaded / self.total);
+        let progNum = Math.floor(progNumDeci * 100);
+        progNumDeci = Math.floor(progNumDeci*10000)/100;
+        if(type == 2){            
+        }else if(progNum == 100){
+            x_name = "Storing the downloaded data...";
+        }else{
+            x_name = `${progNumDeci}% - ` + x_name;
+
+        }
+
+        let notiConfig = {
+            id: self.id,
+            title: x_name,
+            progressBar: { value: progNum },
+            vibrate: false,
+            smallIcon : 'res://ic_launcher',
+            color : "blue",
+            wakeup : false,
+            sound: false,
+        };
+        if (self.sent == true) {
+            cordova.plugins.notification.local.update(notiConfig);
+        } else {
+            cordova.plugins.notification.local.schedule(notiConfig);
+        }
+
+        self.sent = true;
     }
 
     ini() {
@@ -784,7 +803,7 @@ class DownloadVid {
             let retryCount = 4;
             let check;
 
-            let settled = "allSettled" in Promise;
+            let settled = false;
 
             while (retryCount > 0) {
                 retryCount--;
@@ -829,41 +848,51 @@ class DownloadVid {
 
                         }
                         let index = 0;
+                        let savePromises = [];
+                        let savePromisesIndex = [];
                         for (let j = i * parallel; j < ((i + 1) * parallel) && j < mapping.length; j++) {
                             if (mapping[j].downloaded === true) {
-
                                 continue;
-
                             }
-                            try {
-                                check = false;
 
-                                let thisRes = response[index++];
-
-                                if (settled) {
-
-                                    if (thisRes.status == "fulfilled") {
-                                        self.updateNoti(`Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self);
-                                        self.downloaded++;
-                                        mapping[j].downloaded = true;
-                                        await Promise.all([self.saveAs(thisRes.value, mapping[j].fileName, self), self.updateDownloadStatus(self)]);
-
-                                    } else {
-                                        mapping[j].downloaded = false;
-                                    }
-                                } else {
-                                    self.updateNoti(`Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self);
-                                    self.downloaded++;
-                                    mapping[j].downloaded = true;
-                                    await Promise.all([self.saveAs(thisRes, mapping[j].fileName, self), self.updateDownloadStatus(self)]);
-                                }
-                            } catch (err) {
-                                mapping[j].downloaded = false;
-                            }
+                            let thisRes = response[index++];
+                            check = false;
+                            savePromises.push(self.saveAs(thisRes.value, mapping[j].fileName, self));
+                            savePromisesIndex.push([index - 1,j]);
                         }
 
-                    } catch (err) {
 
+                        
+                        let saveResponse;
+                        
+                        if (settled) {
+                            saveResponse = await Promise.allSettled(savePromises);
+                        } else {
+                            saveResponse = await Promise.all(savePromises);
+
+                            
+                        }
+                       
+                        for(let saveIndex = 0; saveIndex < savePromisesIndex.length; saveIndex++){
+                            let thisRes = response[savePromisesIndex[saveIndex][0]];
+                            if (settled) {
+                                if (thisRes.status == "fulfilled" && saveResponse[saveIndex].status == "fulfilled") {
+                                    self.downloaded++;
+                                    mapping[savePromisesIndex[saveIndex][1]].downloaded = true;
+
+                                } else {
+                                    mapping[savePromisesIndex[saveIndex][1]].downloaded = false;
+                                }
+                            }else{
+                                self.downloaded++;
+                                mapping[savePromisesIndex[saveIndex][1]].downloaded = true;
+                            }
+                        }
+                        self.updateNoti(`Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self);
+                        await self.updateDownloadStatus(self);
+
+                    } catch (err) {
+                        check = false;
                     }
 
 
@@ -877,8 +906,19 @@ class DownloadVid {
             }
 
             if (check) {
-                self.done(self);
+                let doneFR = true;
+                for (let j = 0; j < mapping.length; j++) {
+                    if(mapping[j].downloaded !== true){
+                        doneFR = false;
+                        break;
+                    }
+                }
 
+                if(doneFR){
+                    self.done(self);
+                }else{
+                    self.errorHandler(self, "Could not download the whole video. Try Again");
+                }
             } else {
                 self.errorHandler(self, "Could not download the whole video. Try Again");
 
@@ -897,8 +937,9 @@ class DownloadVid {
         if (socket) {
             socket.disconnect();
         }
-        console.log(self);
         self.fileDir.getFile(`.downloaded`, { create: true, exclusive: false }, function (dir) {
+            self.updateNoti(`Done - Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self, 2);
+            
             self.pause = true;
             self.message = "Done";
             self.success();
@@ -921,6 +962,9 @@ class DownloadVid {
         if (self.controller) {
             self.controller.abort();
         }
+
+        self.updateNoti(`Error - Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self, 2);
+
         self.pause = true;
         self.message = (x);
         self.error();
