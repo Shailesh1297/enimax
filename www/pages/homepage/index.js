@@ -1,5 +1,11 @@
 window.parent.postMessage({ "action": 1, data: "any" }, "*");
 
+if(config.chrome){
+    let chromeDOM = document.getElementsByClassName("notChrome");
+    for(let i = 0; i < chromeDOM.length; i++){
+        chromeDOM.style.display = "none";
+    }
+}
 
 function resetOfflineQual() {
     let qual = [360, 480, 720, 1080];
@@ -430,11 +436,19 @@ document.getElementById("autoPause").onchange = function () {
 }
 
 
+document.getElementById("hideNotification").onchange = function () {
+    localStorage.setItem("hideNotification", this.checked.toString());
+}
+
+
+
+
 document.getElementById("outlineColor").value = localStorage.getItem("outlineColor");
 document.getElementById("outlineWidth").value = localStorage.getItem("outlineWidth");
 document.getElementById("themeColor").value = localStorage.getItem("themecolor");
 document.getElementById("scrollBool").checked = localStorage.getItem("scrollBool") !== "false";
 document.getElementById("autoPause").checked = localStorage.getItem("autoPause") === "true";
+document.getElementById("hideNotification").checked = localStorage.getItem("hideNotification") === "true";
 
 
 

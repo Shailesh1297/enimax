@@ -53,10 +53,27 @@ body {
 
 .accessItem {
     padding: 15px;
-    display: inline-block;
-    text-align: center;
+    display: table-row;
+    text-align: left;
+}
+#tableCon{
+    width: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+}
+.accessTable{
+    display: table;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    border-spacing: 16px;
+    border-collapse: separate;
 }
 
+.tableCell{
+    display: table-cell;
+
+}
 #outlineColor {
     display: inline-block;
     border: 0px;

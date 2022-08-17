@@ -107,28 +107,56 @@
 
     <div id="accessabilityCon" class="con_main" style="white-space: normal;color: white;flex-direction: column; justify-content: center;">
       <div class="close_con closeDom"></div>
-      <div class="accessItem"> Outline Color : &nbsp;&nbsp;<input type="color" id="outlineColor"></div>
+      <div id="tableCon">
+        <div class="accessTable">
+          <div class="accessItem">
+            <div class="tableCell">Outline Color</div>
+            <div class="tableCell"><input type="color" id="outlineColor"></div>
+          </div>
 
-      <div class="accessItem"> Outline Width : &nbsp;&nbsp;<input type="text"  id="outlineWidth"></div>
+          <div class="accessItem">
+            <div class="tableCell">Theme Color</div>
+            <div class="tableCell"><input type="color" id="themeColor"></div>
+          </div>
 
-      <div class="accessItem"> Theme Color : &nbsp;&nbsp;<input type="color" id="themeColor"></div>
-      <div class="accessItem"> Scroll to the current episode : &nbsp;&nbsp;
-        
-        <label class="switch" style="vertical-align: middle;">
-          <input type="checkbox" id="scrollBool">
-          <span class="slider round"></span>
-        </label>
+          <div class="accessItem">
+            <div class="tableCell">Outline Width</div>
+            <div class="tableCell"><input type="text"  id="outlineWidth"></div>
+          </div>
+
+          <div class="accessItem">
+            <div class="tableCell">Scroll to the current episode</div>
+            <div class="tableCell">          
+              <label class="switch access" style="vertical-align: middle;">
+                <input type="checkbox" id="scrollBool">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+
+
+          <div class="accessItem notChrome">
+            <div class="tableCell">Pause downloads when not on WI-FI </div>
+            <div class="tableCell">
+              <label class="switch access" style="vertical-align: middle;">
+                <input type="checkbox" id="autoPause">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+
+
+          <div class="accessItem notChrome">
+            <div class="tableCell">Hide download notifications when app is in background</div>
+            <div class="tableCell">
+              <label class="switch access" style="vertical-align: middle;">
+                <input type="checkbox" id="hideNotification">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+        </div>
       </div>
-
-
-      <div class="accessItem"> Pause downloads when not on WI-FI : <br/>
-        
-        <label class="switch" style="vertical-align: middle;">
-          <input type="checkbox" id="autoPause">
-          <span class="slider round"></span>
-        </label>
-      </div>
-
     </div>
 
 

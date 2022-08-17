@@ -187,7 +187,7 @@ class DownloadVid {
     }
 
     updateNoti(x_name, self, type = 0) {
-        if(cordova.plugins.backgroundMode.isActive() === false){
+        if(cordova.plugins.backgroundMode.isActive() === false || localStorage.getItem("hideNotification") === "true"){
             return;
         }
         let progNumDeci = (self.downloaded / self.total);
@@ -803,7 +803,7 @@ class DownloadVid {
             let retryCount = 4;
             let check;
 
-            let settled = false;
+            let settled = "allSettled" in Promise;
 
             while (retryCount > 0) {
                 retryCount--;
@@ -931,12 +931,14 @@ class DownloadVid {
     }
 
     done(self) {
-        if (self.pause) {
-            return;
-        }
         if (socket) {
             socket.disconnect();
         }
+
+        if (self.pause) {
+            return;
+        }
+
         self.fileDir.getFile(`.downloaded`, { create: true, exclusive: false }, function (dir) {
             self.updateNoti(`Done - Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self, 2);
             
@@ -952,16 +954,18 @@ class DownloadVid {
 
 
     errorHandler(self, x) {
+        if (socket) {
+            socket.disconnect();
+        } 
+        if (self.controller) {
+            self.controller.abort();
+        }
+        
         if (self.pause) {
             return;
         }
 
-        if (socket) {
-            socket.disconnect();
-        }
-        if (self.controller) {
-            self.controller.abort();
-        }
+        
 
         self.updateNoti(`Error - Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self, 2);
 
