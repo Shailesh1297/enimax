@@ -29,8 +29,8 @@ document.getElementById("searchBox").onclick = function () {
     openSearch();
 }
 
-document.getElementById("s_c").onclick = function () {
-    close_search();
+document.getElementById("s_c").onclick = function (event) {
+    close_search(event);
 
 }
 
@@ -54,7 +54,7 @@ function openSearch() {
     document.getElementsByClassName('searchInput')[0].style.paddingLeft = '40px';
     document.getElementsByClassName('searchButton')[0].onclick = function () { search(); }
 }
-function close_search() {
+function close_search(event) {
     document.getElementById('s_c').style.display = 'none';
     document.getElementsByClassName('searchInput')[0].style.width = '0';
     document.getElementsByClassName('searchBox')[0].style.width = '40px';
@@ -65,6 +65,10 @@ function close_search() {
 
 
 
+document.getElementById("searchForm").onsubmit = function(event){
+    event.preventDefault();
+    search();
+};
 
 function search() {
     document.getElementById("mainConSearch").innerHTML = "<div style='margin:auto;'>Loading...</div>";

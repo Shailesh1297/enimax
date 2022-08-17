@@ -7,6 +7,12 @@ if(config.chrome){
     }
 }
 
+let isSnapSupported = CSS.supports('scroll-snap-align:start') && CSS.supports("scroll-snap-stop: always") && CSS.supports("scroll-snap-type: x mandatory") && localStorage.getItem("fancyHome") !=="true";
+
+
+if(isSnapSupported){
+    document.getElementById("custom_rooms").className = "snappedCustomRooms";
+}
 function resetOfflineQual() {
     let qual = [360, 480, 720, 1080];
     while (true) {
@@ -440,6 +446,12 @@ document.getElementById("hideNotification").onchange = function () {
     localStorage.setItem("hideNotification", this.checked.toString());
 }
 
+document.getElementById("fancyHome").onchange = function () {
+    localStorage.setItem("fancyHome", this.checked.toString());
+    location.reload();
+}
+
+
 
 
 
@@ -449,6 +461,7 @@ document.getElementById("themeColor").value = localStorage.getItem("themecolor")
 document.getElementById("scrollBool").checked = localStorage.getItem("scrollBool") !== "false";
 document.getElementById("autoPause").checked = localStorage.getItem("autoPause") === "true";
 document.getElementById("hideNotification").checked = localStorage.getItem("hideNotification") === "true";
+document.getElementById("fancyHome").checked = localStorage.getItem("fancyHome") === "true";
 
 
 
@@ -760,7 +773,40 @@ function updateRoomAdd() {
 
 
 }
+if(isSnapSupported){
+    let scrollLastIndex;
+    let tempCatDOM = document.getElementsByClassName("categories");
+    let cusRoomDOM = document.getElementById("custom_rooms");
+    cusRoomDOM.addEventListener("scroll", function(){
+        let unRoundedIndex = cusRoomDOM.scrollLeft / cusRoomDOM.offsetWidth;
+        let index = Math.round(unRoundedIndex);
 
+        if(index != scrollLastIndex){
+            for (let i = 0; i < tempCatDOM.length; i++) {
+                if (i == index) {
+                    tempCatDOM[i].classList.add("activeCat");
+                    tempCatDOM[i].scrollIntoView();
+                    localStorage.setItem("currentCategory",tempCatDOM[i].getAttribute("data-id"));
+                } else {
+                    tempCatDOM[i].classList.remove("activeCat");
+                }
+            }
+
+            let activeCatDOM = document.querySelector(".categories.activeCat");
+            let temp = document.getElementById("catActiveMain");
+            window.requestAnimationFrame(function () {
+                window.requestAnimationFrame(function () {
+                    if (temp && activeCatDOM) {
+                        temp.style.left = activeCatDOM.offsetLeft;
+                        temp.style.height = activeCatDOM.offsetHeight;
+                        temp.style.width = activeCatDOM.offsetWidth;
+                    }
+                });
+            });
+        }
+        scrollLastIndex = index;
+    }, {"passive" : true});
+}
 function addCustomRoom() {
 
     rooms2 = rooms.slice(0);
@@ -783,16 +829,15 @@ function addCustomRoom() {
                     let thisDataId = this.getAttribute("data-id");
                     localStorage.setItem("currentCategory", thisDataId);
 
-
-                    let tempCat = document.getElementsByClassName("categories");
-                    for (let i = 0; i < tempCat.length; i++) {
-                        if (this == tempCat[i]) {
-                            tempCat[i].classList.add("activeCat");
-                        } else {
-                            tempCat[i].classList.remove("activeCat");
+                    if(!isSnapSupported){
+                        let tempCat = document.getElementsByClassName("categories");
+                        for (let i = 0; i < tempCat.length; i++) {
+                            if (this == tempCat[i]) {
+                                tempCat[i].classList.add("activeCat");
+                            } else {
+                                tempCat[i].classList.remove("activeCat");
+                            }
                         }
-
-
                     }
 
 
@@ -806,19 +851,36 @@ function addCustomRoom() {
                                 temp.style.width = activeCatDOM.offsetWidth;
                             }
 
-                            setTimeout(function () {
+                            if(isSnapSupported){
                                 let tempCatData = document.getElementsByClassName("categoriesDataMain");
                                 for (let i = 0; i < tempCatData.length; i++) {
                                     if (tempCatData[i].id == thisDataId) {
                                         tempCatData[i].classList.add("active");
-
+                                        window.requestAnimationFrame(function () {
+                                            window.requestAnimationFrame(function () {
+                                                document.getElementById("custom_rooms").scrollTo(tempCatData[i].offsetLeft,0);
+                                            });
+                                        });
+                                        
                                     } else {
                                         tempCatData[i].classList.remove("active");
 
                                     }
                                 }
-                            }, 200);
+                            }else{
+                                setTimeout(function () {
+                                    let tempCatData = document.getElementsByClassName("categoriesDataMain");
+                                    for (let i = 0; i < tempCatData.length; i++) {
+                                        if (tempCatData[i].id == thisDataId) {
+                                            tempCatData[i].classList.add("active");
 
+                                        } else {
+                                            tempCatData[i].classList.remove("active");
+
+                                        }
+                                    }
+                                }, 200);
+                            }
                         });
                     });
 
@@ -833,7 +895,7 @@ function addCustomRoom() {
 
 
     document.getElementById("custom_rooms").append(createElement({
-        "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === "room_recently") ? " active" : ""}`,
+        "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === "room_recently") ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain" : ""}`,
         "id": `room_recently`
     }));
 
@@ -844,7 +906,7 @@ function addCustomRoom() {
 
             let roomID = `room_${rooms2[yye]}`;
             let tempDiv = createElement({
-                "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === roomID) ? " active" : ""}`,
+                "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === roomID) ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain" : ""}`,
                 "id": roomID
             });
 
@@ -869,7 +931,7 @@ function addCustomRoom() {
 
         let roomID = `room_${rooms2[i + 1]}`;
         let tempDiv = createElement({
-            "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === roomID) ? " active" : ""}`,
+            "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === roomID) ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain" : ""}`,
             "id": roomID
         });
 
@@ -894,6 +956,7 @@ function addCustomRoom() {
         let temp = document.getElementById("catActiveMain");
         window.requestAnimationFrame(function () {
             if (temp && activeCatDOM) {
+                activeCatDOM.click();
                 temp.style.left = activeCatDOM.offsetLeft;
                 temp.style.height = activeCatDOM.offsetHeight;
                 temp.style.width = activeCatDOM.offsetWidth;

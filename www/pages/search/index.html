@@ -19,23 +19,15 @@
 <body>
     <div class="con_black"></div>
     <div class="searchBox" id="searchBox">
-        <div style="font-size: 15px; position: absolute; left: 20px; height: 100%; top: 0px; align-items: center; justify-content: center; color: white; display: none; z-index: 10;"
-            id="s_c">&#10005;</div>
-        <input class="searchInput" type="text" name="" placeholder="Search" id="search_x"
-             style="width: 0px; padding-left: 0px;">
-        <button class="searchButton" href="#">
-            <i class="material-icons"> </i>
-        </button>
+        <form id="searchForm">
+            <div id="s_c">&#10005;</div>
+            <input class="searchInput" type="text" placeholder="Search" id="search_x">
+            <div class="searchButton"></div>
+        </form>
     </div>
 
-    <select id="sources">
-
-    </select>
-
-
-    <div id="mainConSearch">
-
-    </div>
+    <select id="sources"></select>
+    <div id="mainConSearch"></div>
     <script type="text/javascript" src="../../assets/purify.js"></script>
     <script type="text/javascript" src="../../assets/config.js"></script>
     <script type="text/javascript" src="index.js"></script>

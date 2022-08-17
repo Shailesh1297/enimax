@@ -96,6 +96,35 @@ body {
 
 }
 
+.snappedCustomRooms{
+    scroll-snap-type: x mandatory;
+    display: flex;
+    flex-direction: row;
+    overflow-y: hidden !important;
+    overflow-x: auto;
+    width:100% !important;
+    height: 100% !important;
+}
+
+.snappedCategoriesDataMain {
+    min-width: 100%;
+    width: 100%;
+    display: flex !important;
+    scroll-snap-align: center;
+    max-height: 100%;
+    height: 100%;
+    overflow-y: auto;
+    scroll-snap-stop: always;
+    flex-flow: row wrap;
+    justify-content: center;
+}
+
+#custom_rooms{
+    width:100%;
+    height: auto;
+    overflow-y: auto;
+}
+
 .queuePlay {
     background-image: url("data:image/svg+xml,%0A%3Csvg xmlns='http://www.w3.org/2000/svg' enable-background='new 0 0 24 24' height='24px' viewBox='0 0 24 24' width='24px' fill='%23FFFFFF'%3E%3Cg%3E%3Crect fill='none' height='24' width='24'/%3E%3C/g%3E%3Cg%3E%3Cpath d='M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M9.5,16.5v-9l7,4.5L9.5,16.5z'/%3E%3C/g%3E%3C/svg%3E");
 }
