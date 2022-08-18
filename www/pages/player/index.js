@@ -2191,3 +2191,4 @@ document.getElementById("skipIntroDOM").onclick = function(){
 		this.style.display = "none";
 	}
 }
+applyTheme();
