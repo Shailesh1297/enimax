@@ -3,7 +3,7 @@ window.parent.postMessage({ "action": 1, data: "any" }, "*");
 if(config.chrome){
     let chromeDOM = document.getElementsByClassName("notChrome");
     for(let i = 0; i < chromeDOM.length; i++){
-        chromeDOM.style.display = "none";
+        chromeDOM[i].style.display = "none";
     }
 }
 
