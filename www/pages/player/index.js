@@ -1,5 +1,6 @@
 var username = "hi";
 var lastSrc = "";
+const extensionList = window.parent.returnExtensionList();
 var token;
 var hls;
 let doubleTapTime = isNaN(parseInt(localStorage.getItem("doubleTapTime"))) ? 5 : parseInt(localStorage.getItem("doubleTapTime"));
@@ -2083,37 +2084,11 @@ let socketCalledIni = false;
 if (location.search.includes("engine=3")) {
 	if (!config.chrome) {
 		CustomXMLHttpRequest = XMLHttpRequest2;
-	} else {
-		chrome.webRequest.onBeforeSendHeaders.addListener(
-			function (details) {
-				details.requestHeaders.push({
-					"name": "origin",
-					"value": extensionList[3].config.origin
-				});
-
-				details.requestHeaders.push({
-					"name": "referer",
-					"value": extensionList[3].config.referer
-				});
-
-				details.requestHeaders.push({
-					"name": "sid",
-					"value": sid
-				});
-
-
-
-
-
-				return { requestHeaders: details.requestHeaders };
-			},
-			{ urls: ['https://*.dayimage.net/*'] },
-			['blocking', 'requestHeaders']
-		);
 	}
 	let socket = io(extensionList[3].config.socketURL, { transports: ["websocket"] });
 	socket.on("connect", () => {
 		sid = socket.id;
+		localStorage.setItem("sid", sid);
 		if(socketCalledIni === false){
 			if (config.local || downloaded) {
 				ini_main();
@@ -2216,3 +2191,4 @@ document.getElementById("skipIntroDOM").onclick = function(){
 		this.style.display = "none";
 	}
 }
+applyTheme();

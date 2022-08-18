@@ -1,3 +1,5 @@
+const extensionList = window.parent.returnExtensionList();
+
 if (config.local || localStorage.getItem("offline") === 'true') {
     ini();
 } else {
@@ -6,7 +8,6 @@ if (config.local || localStorage.getItem("offline") === 'true') {
 
 let lastScrollPos;
 let scrollDownTopDOM = document.getElementById("scrollDownTop");
-
 
 
 
@@ -119,14 +120,17 @@ function ini() {
                 currentLink = localStorage.getItem("currentLink");
             }
 
-            let scrollTo;
+            let scrollToDOM;
             var a = document.getElementsByClassName("card_con");
             document.getElementById("updateImage").style.display = "inline-block";
+            if(!config.chrome){
+                document.getElementById("downloadAll").style.display = "inline-block";
+            }
             document.getElementById("copyLink").style.display = "inline-block";
             document.getElementById("updateLink").style.display = "inline-block";
             document.getElementById("copyImage").style.display = "inline-block";
 
-
+            
             document.getElementById("copyLink").onclick = function () {
                 window.prompt("Copy it from below:", location.search);
             };
@@ -276,7 +280,7 @@ function ini() {
                 if(check || !downloaded || config.chrome){
                     epCon.append(tempDiv);
                     if(trr == currentLink){
-                        scrollTo = tempDiv;
+                        scrollToDOM = tempDiv;
                         tempDiv.style.backgroundColor = "rgba(36,36,36,1)";
                     }
                 }else{
@@ -291,11 +295,42 @@ function ini() {
 
             try{
                 if(!downloaded && localStorage.getItem("scrollBool") !== "false"){
-                    scrollTo.scrollIntoView();
+                    scrollToDOM.scrollIntoView();
+                    
                 }
             }catch(err){
                 
             }
+
+            if(scrollToDOM && !config.chrome){
+                document.getElementById("downloadNext").style.display = "inline-block";
+                document.getElementById("downloadNext").onclick = function(){
+                    let howmany = parseInt(prompt("How many episodes do you want to download?", 5));
+                    if(isNaN(howmany)){
+                        alert("Not a valid number");
+                    }else{
+                        let cur = scrollToDOM;
+                        let count = howmany;
+                        while(cur != null && count > 0){
+                            cur = cur.nextElementSibling;
+                            let temp = cur.querySelector(".episodesDownload");
+                            if(temp){
+                                temp.click();
+                            }
+                            count--;
+                        } 
+                    }
+                };
+            }
+
+            document.getElementById("downloadAll").onclick = function(){
+                let allEps = document.querySelectorAll(".episodesDownload");
+                for (let index = 0; index < allEps.length; index++) {
+                    const element = allEps[index];
+                    element.click();                    
+                }
+
+            };
             let formation = {};
             formation.method = "POST";
 
@@ -340,23 +375,5 @@ function ini() {
 
 
 
-function applyTheme() {
-    var themeColorL = localStorage.getItem("themecolor");
-    if (themeColorL && themeColorL != undefined && themeColorL != null) {
-        document.documentElement.style.setProperty('--theme-color', themeColorL);
-    } else {
-        document.documentElement.style.setProperty('--theme-color', "#4b4bc2");
 
-    }
-
-}
-
-function changeTheme() {
-    let promptT = prompt("Enter the theme color", "#4b4bc2");
-    if (promptT.trim() != "" && promptT != null && promptT != undefined) {
-        localStorage.setItem("themecolor", promptT);
-        applyTheme()
-    } else {
-
-    }
-}
+applyTheme();

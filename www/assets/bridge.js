@@ -3,6 +3,14 @@ let frameHistory = [];
 var token;
 let seekCheck = true;
 
+function returnExtensionList(){
+    return extensionList;
+}
+
+function returnExtensionNames(){
+    return extensionNames;
+}
+
 function setURL(url) {
     document.getElementById("frame").style.opacity = "0";
     setTimeout(function () {
@@ -161,6 +169,9 @@ class downloadQueue {
 
         setInterval(function () {
             self.emitPercent(self);
+            if(self.shouldPause()){
+                self.pauseIt(self);
+            }
         }, 1000);
 
         setInterval(function(){
@@ -227,24 +238,55 @@ class downloadQueue {
 
         this.startDownload(this);
     }
-    async removeFromDoneQueue(name) {
-        if (this.doneQueue.length == 0) {
+    async removeFromDoneQueue(name, self) {
+        if (self.doneQueue.length == 0) {
             return;
         }
 
         let curElem;
         let curElemIndex = 0;
-        for (let i = 0; i < this.doneQueue.length; i++) {
-            if (this.doneQueue[i].data == name) {
-                curElem = this.doneQueue[i];
+        for (let i = 0; i < self.doneQueue.length; i++) {
+            if (self.doneQueue[i].data == name) {
+                curElem = self.doneQueue[i];
                 curElemIndex = i;
                 break;
             }
         }
 
         if (curElem) {
-            this.doneQueue.splice(curElemIndex, 1);
-            await this.updateLocalDoneQueue(this);
+            self.doneQueue.splice(curElemIndex, 1);
+            await self.updateLocalDoneQueue(self);
+        }
+    }
+
+
+    async retryFromDoneQueue(name, self) {
+        if (self.doneQueue.length == 0) {
+            return;
+        }
+
+        let curElem;
+        let curElemIndex = 0;
+        for (let i = 0; i < self.doneQueue.length; i++) {
+            if (self.doneQueue[i].data == name) {
+                curElem = self.doneQueue[i];
+                curElemIndex = i;
+                break;
+            }
+        }
+
+        if (curElem) {
+            let temp = self.doneQueue.splice(curElemIndex, 1)[0];
+            await self.updateLocalDoneQueue(self);
+
+            
+            self.add(
+                temp.data,
+                temp.anime,
+                temp.mainUrl,
+                temp.title,
+                self,
+            );
         }
     }
 
@@ -264,49 +306,52 @@ class downloadQueue {
             alert("Could not delete the file. You have to delete it manually.");
         }
     }
-    async removeFromQueue(name) {
+    async removeFromQueue(name, self) {
         console.log(name);
-        if (this.queue.length == 0) {
+        if (self.queue.length == 0) {
             return;
         }
-        let currentHead = this.queue[0];
+        let currentHead = self.queue[0];
         let curElem;
         let curElemIndex = 0;
-        for (let i = 0; i < this.queue.length; i++) {
-            console.log(this.queue[i].data, name);
+        for (let i = 0; i < self.queue.length; i++) {
+            console.log(self.queue[i].data, name);
 
-            if (this.queue[i].data == name) {
-                curElem = this.queue[i];
+            if (self.queue[i].data == name) {
+                curElem = self.queue[i];
                 curElemIndex = i;
                 break;
             }
         }
-        console.log(curElemIndex, curElem, curElem == currentHead, currentHead);
+        
 
         if (curElem) {
             if (curElem == currentHead) {
-                this.deleteFilesHead(this);
+                self.deleteFilesHead(self);
                 try {
                     if (!("downloadInstance" in currentHead)) {
                         currentHead.downloadInstance = {};
                     }
                     currentHead.downloadInstance.pause = true;
                     currentHead.downloadInstance.message = "Cancelled by the user.";
-                    this.error(this);
+                    self.error(self);
 
                 } catch (err) {
 
                 }
             } else {
-                this.queue.splice(curElemIndex, 1);
-                await this.updateLocalStorage(this);
+                self.queue.splice(curElemIndex, 1);
+                await self.updateLocalStorage(self);
             }
         }
     }
-    async add(data, anime, mainUrl, title) {
+    async add(data, anime, mainUrl, title, self) {
+        if(!self){
+            self = this;
+        }
         let flag = true;
-        for (let i = 0; i < this.queue.length; i++) {
-            if (this.queue[i].data == data) {
+        for (let i = 0; i < self.queue.length; i++) {
+            if (self.queue[i].data == data) {
                 alert("This is already in the queue");
                 flag = false;
                 break;
@@ -318,33 +363,42 @@ class downloadQueue {
         }
 
         if (flag) {
-            this.queue.push({
+            self.queue.push({
                 "data": data,
                 "anime": anime,
                 "mainUrl": mainUrl,
                 "title": title,
             });
-            if (this.queue.length == 1) {
-                this.startDownload(this);
+            if (self.queue.length == 1) {
+                self.startDownload(self);
             }
 
-            await this.updateLocalStorage(this);
+            await self.updateLocalStorage(self);
         }
     }
 
     pauseIt(self) {
+        document.getElementById("frame").contentWindow.postMessage({
+            "action": "paused",
+        }, "*");
         if (self.queue.length == 0) {
-            return false;
+            self.pause = true;
+            localStorage.setItem("downloadPaused", "true");
+            return true;
         } else {
-            self.queue[0].downloadInstance.pause = true;
+            if("downloadInstance" in self.queue[0]){
+                self.queue[0].downloadInstance.pause = true;
+            }
             self.pause = true;
             localStorage.setItem("downloadPaused", "true");
             return true;
         }
+
+        
     }
 
     playIt(self) {
-        if (self.queue.length == 0) {
+        if (self.queue.length == 0 || self.shouldPause()) {
             return false;
         } else {
             self.pause = false;
@@ -352,6 +406,10 @@ class downloadQueue {
             localStorage.setItem("downloadPaused", "false");
             return true;
         }
+    }
+
+    shouldPause(){
+        return (localStorage.getItem("autoPause") === "true" && navigator.connection.type !== Connection.WIFI);        
     }
 
     removeActive(self) {
@@ -422,7 +480,6 @@ class downloadQueue {
         let engineNum;
         let curQueueElem = self.queue[0];
         console.log(curQueueElem, self);
-
         let temp3 = curQueueElem.data.replace("?watch=", "");
         temp3 = temp3.split("&engine=");
         if (temp3.length == 1) {
@@ -462,21 +519,28 @@ class downloadQueue {
         });
     }
 
-    async error(self) {
-        self.doneQueue.push(await self.remove(self));
-        self.updateLocalDoneQueue(self);
-        self.startDownload(self);
+    error(self) {
+        setTimeout(async function(){
+            if(self.shouldPause()){
+                self.pauseIt(self);
+            }else{
+                self.doneQueue.push((await self.remove(self, true)));
+                self.updateLocalDoneQueue(self);
+                self.startDownload(self);
+            }
+        }, 1000);
+       
     }
 
     async done(self) {
-        self.doneQueue.push(await self.remove(self));
+        self.doneQueue.push((await self.remove(self)));
         self.updateLocalDoneQueue(self);
 
         self.startDownload(self);
     }
-    async remove(self) {
+    async remove(self, error = false) {
         let temp = self.queue.shift();
-
+        temp.errored = error;
         if ("downloadInstance" in temp) {
             temp.message = temp.downloadInstance.message;
             delete temp["downloadInstance"];
@@ -908,6 +972,9 @@ window.addEventListener('message', function (x) {
 async function onDeviceReady() {
     await SQLInit();
 
+    cordova.plugins.backgroundMode.on('activate', function() {
+        cordova.plugins.backgroundMode.disableWebViewOptimizations(); 
+    });
 
     token = cordova.plugin.http.getCookieString(config.remoteWOport);
     // saveDexieToLocal();
