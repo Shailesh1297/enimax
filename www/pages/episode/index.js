@@ -10,7 +10,9 @@ let lastScrollPos;
 let scrollDownTopDOM = document.getElementById("scrollDownTop");
 
 
+let pullTabArray = [];
 
+pullTabArray.push(new pullToRefresh(document.getElementById("con_11")));
 
 let scrollElem = document.getElementById("con_11");
 scrollElem.addEventListener("scroll", function(){

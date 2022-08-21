@@ -7,6 +7,56 @@ if(config.chrome){
     }
 }
 
+let pullTabArray = [];
+
+async function testIt(){
+    let extensionList = window.parent.returnExtensionList();
+    let extensionNames = window.parent.returnExtensionNames();
+    let searchQuery = "odd";
+    let errored = false;
+    for(let i = 0; i < extensionList.length; i++){
+        let searchResult, episodeResult, playerResult;
+        try{
+            searchResult = (await extensionList[i].searchApi(searchQuery)).data;
+        }catch(err){
+            errored = true;
+            alert(`${extensionNames[i]} - search :  ${err.toString()}`);
+        }
+
+        try{
+            let tempSea = searchResult[0].link;
+            if(tempSea[0] == "/"){
+                tempSea = tempSea.substring(1);
+            }
+            episodeResult = (await extensionList[i].getAnimeInfo(tempSea));
+        }catch(err){
+            errored = true;
+            alert(`${extensionNames[i]} - episode :  ${err.toString()}`);
+        }
+
+        try{
+            playerResult = await extensionList[i].getLinkFromUrl(episodeResult.episodes[0].link.replace("?watch=", ""));
+        }catch(err){
+            console.log(err);
+            errored = true;
+            alert(`${extensionNames[i]} - player :  ${err.toString()}`);
+        }
+
+        alert(`${extensionNames[i]} - Here's the link: ${playerResult.sources[0].url}`);
+    }
+
+    if(!errored){
+        alert("Everything seems to be working fine");
+    }
+}
+
+if(localStorage.getItem("devmode") === "true"){
+    document.getElementById("testExtensions").style.display = "block";
+    document.getElementById("testExtensions").onclick = function(){
+        testIt();
+    }
+}
+
 let isSnapSupported = CSS.supports('scroll-snap-align:start') && CSS.supports("scroll-snap-stop: always") && CSS.supports("scroll-snap-type: x mandatory") && localStorage.getItem("fancyHome") !=="true";
 
 
@@ -1344,8 +1394,10 @@ if (true) {
 
         }
 
+        pullTabArray = [];
         let catMainDOM = document.getElementsByClassName("categoriesDataMain");
         for (var i = 0; i < catMainDOM.length; i++) {
+            pullTabArray.push(new pullToRefresh(catMainDOM[i]));
             catMainDOM[i].append(createElement({
                 "style": {
                     "width": "100%",

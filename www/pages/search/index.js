@@ -2,6 +2,9 @@ const extensionNames = window.parent.returnExtensionNames();
 const extensionList = window.parent.returnExtensionList();
 
 let sourcesNames = extensionNames;
+let pullTabArray = [];
+
+pullTabArray.push(new pullToRefresh(document.getElementById("mainConSearch")));
 
 for (var i = 0; i < extensionList.length; i++) {
     let atr = {
@@ -85,7 +88,9 @@ function search() {
             currentEngine = extensionList[currentEngine];
         }
     }
-
+    if(document.getElementById('search_x').value === "devmode"){
+        localStorage.setItem("devmode", "true");
+    }
     currentEngine.searchApi(document.getElementById('search_x').value).then(function (x) {
 
         let main_div = x.data;

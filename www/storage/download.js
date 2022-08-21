@@ -460,9 +460,6 @@ class DownloadVid {
 
                     fileWriter.onerror = function (e) {
                         reject("err");
-                        self.errorHandler(self, "Error while writing the file. Code: 7002");
-
-
                     };
 
 
@@ -470,15 +467,11 @@ class DownloadVid {
 
                 }, (err) => {
                     reject("err");
-                    self.errorHandler(self, "Error while writing the file. Code: 7001");
                 });
 
 
             }, function (x) {
                 reject("err");
-
-                self.errorHandler(self, "Error while writing the file. Code: 7000");
-
             });
         });
     }
@@ -857,7 +850,11 @@ class DownloadVid {
 
                             let thisRes = response[index++];
                             check = false;
-                            savePromises.push(self.saveAs(thisRes.value, mapping[j].fileName, self));
+                            if (settled) {
+                                savePromises.push(self.saveAs(thisRes.value, mapping[j].fileName, self));
+                            }else{
+                                savePromises.push(self.saveAs(thisRes, mapping[j].fileName, self));
+                            }
                             savePromisesIndex.push([index - 1,j]);
                         }
 

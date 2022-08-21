@@ -653,8 +653,16 @@ var fmovies = {
                         let poster = current.querySelector(".film-poster");
                         let detail = current.querySelector(".film-detail");
 
+                        let temlLink = poster.querySelector("a").getAttribute("href");
+
+                        if(temlLink.includes("http")){
+                            temlLink = new URL(temlLink);
+                            temlLink = temlLink.pathname;
+                        }
+
+
                         dataCur.image = poster.querySelector("img").getAttribute("data-src");
-                        dataCur.link = poster.querySelector("a").getAttribute("href").replace("https://www.fmovies.app", "") + "&engine=2";
+                        dataCur.link = temlLink + "&engine=2";
                         dataCur.name = detail.querySelector(".film-name").innerText.trim();
 
 
