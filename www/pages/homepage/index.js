@@ -8,7 +8,7 @@ if(config.chrome){
 }
 
 let pullTabArray = [];
-
+let errDOM = document.getElementById("errorCon");
 async function testIt(){
     let extensionList = window.parent.returnExtensionList();
     let extensionNames = window.parent.returnExtensionNames();
@@ -192,7 +192,12 @@ document.getElementById("activeRemove").onclick = function () {
 
 document.getElementById("doneRemove").onclick = function () {
     let downloadQueue = window.parent.returnDownloadQueue();
-    downloadQueue.removeDone(downloadQueue);
+    downloadQueue.removeDone(downloadQueue, true);
+}
+
+document.getElementById("errorRemove").onclick = function () {
+    let downloadQueue = window.parent.returnDownloadQueue();
+    downloadQueue.removeDone(downloadQueue, false);
 }
 
 if (config.chrome) {
@@ -203,7 +208,7 @@ if (config.chrome) {
 function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
 
-    if (queue.length == 0) {
+    if (!isDone && queue.length == 0) {
         queueDOM.append(createElement(
             {
                 "style": {
@@ -289,8 +294,39 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
 
         temp2.append(temp3);
-        queueDOM.append(temp);
+        if(isDone){
+            if(queue[i].errored === true){
+                errDOM.prepend(temp);
+            }else{
+                queueDOM.prepend(temp);
+            }            
+        }else{
+            queueDOM.append(temp);
+        }
     }
+
+    errDOM.children.length == 0 ? errDOM.append(createElement(
+        {
+            "style": {
+                "color": "white",
+                "fontSize": "15px",
+                "margin": "10px 0 30px 0",
+            },
+            "innerText": "Empty"
+        }
+    )) : null;
+
+
+    queueDOM.children.length == 0 ? queueDOM.append(createElement(
+        {
+            "style": {
+                "color": "white",
+                "fontSize": "15px",
+                "margin": "10px 0 30px 0",
+            },
+            "innerText": "Empty"
+        }
+    )) : null;
 }
 
 
@@ -316,6 +352,7 @@ function reloadQueue(mode = 0) {
     if (mode == 0 || mode == 2) {
         let doneQueueDOM = document.getElementById("doneCon");
         doneQueueDOM.innerHTML = "";
+        errDOM.innerHTML = "";
         let doneQueue = downloadQueue.doneQueue;
         addQueue(doneQueue, doneQueueDOM, downloadQueue, true);
     }

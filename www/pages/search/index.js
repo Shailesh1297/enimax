@@ -4,7 +4,7 @@ const extensionList = window.parent.returnExtensionList();
 let sourcesNames = extensionNames;
 let pullTabArray = [];
 
-pullTabArray.push(new pullToRefresh(document.getElementById("mainConSearch")));
+// pullTabArray.push(new pullToRefresh(document.getElementById("mainConSearch")));
 
 for (var i = 0; i < extensionList.length; i++) {
     let atr = {

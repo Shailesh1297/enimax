@@ -12,6 +12,7 @@
     <preference name="Fullscreen" value="true" />
     <preference name="SplashMaintainAspectRatio" value="true" />
     <preference name="AndroidXEnabled" value="true" />
+    <preference name="AndroidLaunchMode" value="singleTask" />
     <access origin="*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />

@@ -424,9 +424,20 @@ class downloadQueue {
         }
     }
 
-    removeDone(self) {
+    removeDone(self, isDone) {
         if (self.doneQueue.length !== 0) {
-            self.doneQueue = [];
+            let tempDoneQueue = [];
+            for(let i = 0; i < self.doneQueue.length; i++){
+                if(!isDone){
+                    console.log(self.doneQueue[i]);
+                }
+                if(isDone && self.doneQueue[i].errored === true){
+                    tempDoneQueue.push(self.doneQueue[i]);
+                }else if(!isDone && self.doneQueue[i].errored !== true){
+                    tempDoneQueue.push(self.doneQueue[i]);
+                }
+            }
+            self.doneQueue = tempDoneQueue;
             self.updateLocalDoneQueue(self);
         }
     }
@@ -971,6 +982,7 @@ window.addEventListener('message', function (x) {
 
 async function onDeviceReady() {
     await SQLInit();
+    await SQLInitDownloaded();
 
     cordova.plugins.backgroundMode.on('activate', function() {
         cordova.plugins.backgroundMode.disableWebViewOptimizations(); 
