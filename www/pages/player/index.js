@@ -199,10 +199,61 @@ class XMLHttpRequest2 {
 
 }
 
-window.onmessage = function (x) {
+function normalise(x){
+    x = x.replace("?watch=","");
+    x = x.split("&engine=")[0];
+    return x;
+}
+function checkIfExists(localURL){
+	return (new Promise(function(resolve, reject){
+		let timeout = setTimeout(function(){
+			reject("timeout");
+		},1000);
+
+		window.parent.makeLocalRequest("GET", `${localURL}`).then(function(x){
+			clearTimeout(timeout);
+			resolve("yes");
+		}).catch(function(err){
+			clearTimeout(timeout);
+			reject("no");
+		});
+	}));
+}
+window.onmessage = async function (x) {
 	if (x.data.action == 1) {
 		data_main = x.data;
-		get_ep();
+		if(config.chrome){
+			get_ep();
+		}else{
+			let mainName = localStorage.getItem("mainName");
+			let rootDir = `/${mainName}/${btoa(normalise(location.search))}`;
+			let localURL = `${rootDir}/.downloaded`;
+
+			try{
+				await checkIfExists(localURL);
+				let res;
+				if(localStorage.getItem("alwaysDown") === "true"){
+					res = true;
+				}else{
+					res = confirm("Want to open the downloaded version?");
+				}
+				if(res){
+					let viddata = (await window.parent.makeLocalRequest("GET", `${rootDir}/viddata.json`));
+					console.log(viddata);
+					viddata = JSON.parse(viddata).data;
+					data_main.sources = [{
+						"name": viddata.sources[0].name,
+						"type": viddata.sources[0].type,
+						"url": viddata.sources[0].type == 'hls' ? `${rootDir}/master.m3u8` : `${window.parent.cordova.file.externalDataDirectory}/${rootDir}/master.m3u8`,
+					}];
+					CustomXMLHttpRequest = window.parent.XMLHttpRequest;
+				}
+			}catch(err){
+				console.error(err);
+			}finally{
+				get_ep();
+			}
+		}
 	} else if (x.data.action == "play") {
 		a.vid.play();
 	} else if (x.data.action == "pause") {
@@ -1458,6 +1509,20 @@ function ini_main() {
 
 		get_ep_ini();
 
+		try {
+			navigator.mediaSession.setActionHandler('nexttrack', () => {
+				next_ep_func(1);
+		
+			});
+			navigator.mediaSession.setActionHandler('previoustrack', () => {
+				next_ep_func(-1);
+		
+			});
+		}
+		catch (error) {
+		
+		}
+
 	}
 }
 
@@ -2123,19 +2188,6 @@ for (var i = 0; i < playerFitDOM.length; i++) {
 
 
 
-try {
-	navigator.mediaSession.setActionHandler('nexttrack', () => {
-		next_ep_func(1);
-
-	});
-	navigator.mediaSession.setActionHandler('previoustrack', () => {
-		next_ep_func(-1);
-
-	});
-}
-catch (error) {
-
-}
 window.addEventListener("keydown", function (event) {
 
 	if (event.keyCode == 32) {

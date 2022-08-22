@@ -8,6 +8,7 @@ class pullToRefresh {
     this.flag = true;
     this.pullNum = 0;
     this.threshold = 200;
+    self.down = false;
     this.sensitivity = 50;
     this.scrollTopZero = false;
     this.iniY;
@@ -17,7 +18,7 @@ class pullToRefresh {
 
     this.dom.addEventListener("touchmove", function (event) {
       self.touchMove(event, self);
-    });
+    }, { passive: true });
 
     this.dom.addEventListener("touchend", function (event) {
       self.touchEnd(self);
@@ -33,6 +34,7 @@ class pullToRefresh {
     if(self.dom.scrollTop <= 0){
       self.scrollTopZero = true;
       self.flag = true;
+      self.down = false;
       self.iniY = targetTouches[0].screenY;
     }
   }
@@ -40,7 +42,10 @@ class pullToRefresh {
   touchMove(event, self) {
     const targetTouches = event.targetTouches;
     let y = targetTouches[0].screenY;
-
+    if(!self.down && (y - self.iniY) < 0){
+      self.scrollTopZero = false;
+    }
+    self.down = true;
     if (targetTouches.length == 1 && self.scrollTopZero && (y - self.iniY) > self.sensitivity) {
       if (self.flag) {
         self.flag = false;
@@ -88,6 +93,7 @@ class pullToRefresh {
       return;
     }
     self.flag = true;
+    self.down = false;
     self.pullend(self);
     if(self.pullNum > self.threshold){
       self.pullrefresh();

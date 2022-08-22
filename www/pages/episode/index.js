@@ -197,6 +197,7 @@ function ini() {
                 tempDiv2.className = 'episodesPlay';
 
                 tempDiv2.onclick = function () {
+                    localStorage.setItem("mainName", data.mainName);
                     window.parent.postMessage({ "action": 4, "data": trr }, "*");
                 };
 

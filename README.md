@@ -4,7 +4,6 @@ After cloning the repository, run the following commands:
 
 ```
 npm install -g cordova
-npm install
 ```
 
 ```

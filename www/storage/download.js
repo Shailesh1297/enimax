@@ -208,6 +208,7 @@ class DownloadVid {
             vibrate: false,
             smallIcon : 'res://ic_launcher',
             color : "blue",
+            lockscreen : true,
             wakeup : false,
             sound: false,
         };
@@ -805,7 +806,7 @@ class DownloadVid {
                     break;
                 }
                 self.downloaded = 0;
-                let parallel = 5;
+                let parallel = isNaN(parseInt(localStorage.getItem("parallel"))) ? 20 : parseInt(localStorage.getItem("parallel"));
                 let iters = Math.ceil(mapping.length / parallel);
                 for (let i = 0; i < iters; i++) {
 
@@ -818,6 +819,7 @@ class DownloadVid {
 
                     let data;
                     let promises = [];
+                    let response;
                     for (let j = i * parallel; j < ((i + 1) * parallel) && j < mapping.length; j++) {
                         if (mapping[j].downloaded === true) {
                             self.downloaded++;
@@ -832,8 +834,6 @@ class DownloadVid {
                         }
                     }
                     try {
-
-                        let response;
                         if (settled) {
                             response = await Promise.allSettled(promises);
                         } else {
@@ -887,8 +887,9 @@ class DownloadVid {
                         }
                         self.updateNoti(`Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self);
                         await self.updateDownloadStatus(self);
-
+                        // response.splice(0);
                     } catch (err) {
+                        // response.splice(0);
                         check = false;
                     }
 

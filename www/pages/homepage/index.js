@@ -501,6 +501,9 @@ document.getElementById("fancyHome").onchange = function () {
     location.reload();
 }
 
+document.getElementById("alwaysDown").onchange = function () {
+    localStorage.setItem("alwaysDown", this.checked.toString());
+}
 
 
 
@@ -512,6 +515,7 @@ document.getElementById("scrollBool").checked = localStorage.getItem("scrollBool
 document.getElementById("autoPause").checked = localStorage.getItem("autoPause") === "true";
 document.getElementById("hideNotification").checked = localStorage.getItem("hideNotification") === "true";
 document.getElementById("fancyHome").checked = localStorage.getItem("fancyHome") === "true";
+document.getElementById("alwaysDown").checked = localStorage.getItem("alwaysDown") === "true";
 
 
 
@@ -1306,6 +1310,9 @@ if (true) {
             tempDiv3.textContent = fix_title(data[i][0]);
             tempDiv3.setAttribute("data-href", data[i][5]);
             tempDiv3.setAttribute("data-current", data[i][3]);
+            tempDiv3.setAttribute("data-mainname", data[i][0]);
+
+            
 
             tempDiv3.onclick = function () {
                 localStorage.setItem("currentLink", this.getAttribute("data-current"));
@@ -1327,9 +1334,11 @@ if (true) {
 
             let tempDiv6 = createElement({
                 "class": "s_card_play", "attributes": {
-                    "data-href": data[i][3]
+                    "data-href": data[i][3],
+                    "data-mainname": data[i][0]
                 }, "listeners": {
                     "click": function () {
+                        localStorage.setItem("mainName", this.getAttribute("data-mainname"));
                         window.parent.postMessage({ "action": 4, "data": this.getAttribute("data-href") }, "*");
                     }
                 }, "element": "div"

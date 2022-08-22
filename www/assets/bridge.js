@@ -974,6 +974,7 @@ async function onDeviceReady() {
 
     cordova.plugins.backgroundMode.on('activate', function() {
         cordova.plugins.backgroundMode.disableWebViewOptimizations(); 
+        cordova.plugins.backgroundMode.disableBatteryOptimizations();
     });
 
     token = cordova.plugin.http.getCookieString(config.remoteWOport);
