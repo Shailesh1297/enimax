@@ -480,17 +480,22 @@ class DownloadVid {
     downloadFileTransfer(filename, uri, self, headers = {}) {
         return new Promise(function (resolve, reject) {
             self.fileDir.getFile(filename, { create: true, exclusive: false }, function (fileEntry) {
-                console.log(uri);
                 var fileTransfer = new FileTransfer();
                 var fileURL = fileEntry.toURL();
                 headers.suppressProgress = true;
+                let timeout = setTimeout(function(){
+                    fileTransfer.abort();
+                    reject("timeout");      
+                }, 60000);
                 fileTransfer.download(
                     uri,
                     fileURL,
                     function (entry) {
+                        clearTimeout(timeout);
                         resolve("done");
                     },
                     function (error) {
+                        clearTimeout(timeout);
                         reject(error);                        
                     },
                     null,
