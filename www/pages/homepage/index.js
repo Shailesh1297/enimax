@@ -7,8 +7,24 @@ if(config.chrome){
     }
 }
 
+let downloadedFolders = {};
 let pullTabArray = [];
 let errDOM = document.getElementById("errorCon");
+
+async function populateDownloadedArray(){
+    try{
+        downloadedFolders = {};
+        let temp = await window.parent.listDir("");
+        for(let i = 0; i < temp.length; i++){
+            if(temp[i].isDirectory){
+                downloadedFolders[temp[i].name] = true;
+            }
+        }
+    }catch(err){
+
+    }
+}
+
 async function testIt(){
     let extensionList = window.parent.returnExtensionList();
     let extensionNames = window.parent.returnExtensionNames();
@@ -1296,11 +1312,16 @@ if (true) {
         x.parentElement.parentElement.parentElement.remove();
     }
 
-    function get_userinfo_callback(x, y, z) {
+    async function get_userinfo_callback(x, y, z) {
 
 
         document.getElementById("room_dis_child").innerHTML = "";
         document.getElementById("room_add_child").innerHTML = "";
+        let offlineMode = localStorage.getItem("offline") === "true";
+
+        if(offlineMode){
+            await populateDownloadedArray();
+        }
         let a = x.data;
 
         rooms = a[1].slice(0);
@@ -1328,6 +1349,12 @@ if (true) {
 
         for (var i = 0; i < data.length; i++) {
             let domToAppend;
+
+            if(offlineMode){
+                if(data[i][0] in downloadedFolders){
+                    delete downloadedFolders[data[i][0]];
+                }
+            }
 
             if (document.getElementById(`room_${data[i][4]}`)) {
                 domToAppend = document.getElementById(`room_${data[i][4]}`);
@@ -1461,7 +1488,64 @@ if (true) {
             }
         }
 
+        if(offlineMode){
+            for(let showname in downloadedFolders){
+                if(showname == "socialsharing-downloads"){
+                    continue;
+                }
 
+                let domToAppend = document.getElementById('room_recently');
+
+                let tempDiv = createElement({ "class": "s_card", "attributes": {}, "listeners": {} });
+                tempDiv.style.backgroundImage = `url("../../assets/images/placeholder.jpg")`;
+
+                let tempDiv1 = createElement({ "class": "s_card_bg", "attributes": {}, "listeners": {} });
+                let tempDiv2 = createElement({ "class": "s_card_title", "attributes": {}, "listeners": {} });
+
+
+                let tempDiv3 = document.createElement("div");
+                tempDiv3.className = "s_card_title_main";
+                tempDiv3.textContent = fix_title(showname);
+                tempDiv3.setAttribute("data-href", "?watch=/"+ showname);
+
+                let tempDiv7 = createElement({ "class": "card_menu", "attributes": {}, "listeners": {} });
+
+                let tempDiv9 = createElement({
+                    "class": "card_menu_item card_menu_icon_delete", "attributes": {
+                    "data-showname": showname
+                    }, 
+                    "listeners": {
+                        "click": async function () {
+                            try{
+                                await window.parent.removeDirectory(`${showname}`);
+                                tempDiv.remove();
+                            }catch(err){
+                                alert("Could not delete the files. You have to manually delete it by going to the show's page.");
+                            }
+                        }
+                    }
+                });
+
+                tempDiv3.onclick = function () {
+                    window.parent.postMessage({ "action": 500, data: "pages/episode/index.html" + this.getAttribute("data-href") }, "*");
+
+                };
+
+               
+
+
+                tempDiv2.append(tempDiv3);
+
+                tempDiv1.append(tempDiv2);
+                tempDiv7.append(tempDiv9);
+                
+                tempDiv1.append(tempDiv7);
+
+                tempDiv.append(tempDiv1);
+
+                domToAppend.append(tempDiv);
+            }
+        }
 
 
     }
