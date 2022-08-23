@@ -129,7 +129,7 @@ async function saveAs(fileSys, fileName, blob) {
 
 
     }, function (x) {
-        console.log(x);
+        console.error(x);
     });
 }
 
@@ -139,7 +139,6 @@ async function saveDexieToLocal() {
     if (c > 10) {
         window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory, function (fs) {
             offlineDB.export().then(function (data) {
-                console.log(data);
                 saveAs(fs, `offlineDB-${(new Date()).getTime()}.json`, data);
                 localStorage.setItem("lastBackup", (new Date()).getTime());
 
@@ -151,7 +150,7 @@ async function saveDexieToLocal() {
 
 
         }, function (x) {
-            console.log(x);
+            console.error(x);
         });
     }
 }
@@ -213,27 +212,16 @@ class downloadQueue {
         try {
             let temp2 = (await downloadedDB.keyValue.get({ "key": "localQueue" })).value;
             let temp = JSON.parse(temp2);
-
-            console.log(temp, temp2);
-
-            console.log(JSON.parse(temp2));
             this.queue = temp ? temp : [];
         } catch (err) {
             console.error(err);
         }
 
         try {
-            let temp = JSON.parse(
-                (await downloadedDB.keyValue.get({ "key": "localDoneQueue" })).value
-
-            );
-
-            console.log(temp);
-
+            let temp = JSON.parse((await downloadedDB.keyValue.get({ "key": "localDoneQueue" })).value);
             this.doneQueue = temp ? temp : [];
         } catch (err) {
             console.error(err);
-
         }
 
         this.startDownload(this);
@@ -307,7 +295,6 @@ class downloadQueue {
         }
     }
     async removeFromQueue(name, self) {
-        console.log(name);
         if (self.queue.length == 0) {
             return;
         }
@@ -315,8 +302,6 @@ class downloadQueue {
         let curElem;
         let curElemIndex = 0;
         for (let i = 0; i < self.queue.length; i++) {
-            console.log(self.queue[i].data, name);
-
             if (self.queue[i].data == name) {
                 curElem = self.queue[i];
                 curElemIndex = i;
@@ -428,9 +413,6 @@ class downloadQueue {
         if (self.doneQueue.length !== 0) {
             let tempDoneQueue = [];
             for(let i = 0; i < self.doneQueue.length; i++){
-                if(!isDone){
-                    console.log(self.doneQueue[i]);
-                }
                 if(isDone && self.doneQueue[i].errored === true){
                     tempDoneQueue.push(self.doneQueue[i]);
                 }else if(!isDone && self.doneQueue[i].errored !== true){
@@ -490,7 +472,6 @@ class downloadQueue {
         let currentEngine;
         let engineNum;
         let curQueueElem = self.queue[0];
-        console.log(curQueueElem, self);
         let temp3 = curQueueElem.data.replace("?watch=", "");
         temp3 = temp3.split("&engine=");
         if (temp3.length == 1) {
@@ -513,7 +494,6 @@ class downloadQueue {
                 if (self.pause) {
                     return;
                 }
-                console.log(temp);
                 temp.ogURL = temp3[0];
                 temp.engine = engineNum;
                 curQueueElem.downloadInstance = new DownloadVid(temp, curQueueElem.anime, () => { self.done(self) }, () => { self.error(self) }, episodes.episodes, self.pause);
@@ -523,7 +503,6 @@ class downloadQueue {
                 self.error(self);
             });
         }).catch(function (err) {
-            console.log(err);
             curQueueElem.downloadInstance = {}
             curQueueElem.downloadInstance.message = "Couldn't get the episode list.";
             self.error(self);
@@ -583,7 +562,6 @@ document.getElementById("frame").onload = function () {
 
 
 function sendNoti(x) {
-    console.log(x);
     return new notification(document.getElementById("noti_con"), {
         "perm": x[0],
         "color": x[1],
@@ -783,7 +761,6 @@ function exec_action(x, reqSource) {
 
 
     } else if (x.action == 403) {
-        // console.log(x);
         downloadQueueInstance.add(x.data, x.anime, x.mainUrl, x.title);
 
     } else if (x.action == 21) {
@@ -1008,7 +985,6 @@ async function onDeviceReady() {
         }
         let frameLocation = document.getElementById("frame").contentWindow.location.pathname;
         if (frameLocation.indexOf("www/pages/homepage/index.html") > -1 || (document.getElementById("player").className.indexOf("pop") == -1 && document.getElementById("player").contentWindow.location.pathname.indexOf("www/pages/player/index.html") > -1)) {
-            console.log("BACK1");
             document.getElementById("player").contentWindow.location.replace("fallback.html");
             document.getElementById("player").classList.remove("pop");
 
@@ -1020,7 +996,7 @@ async function onDeviceReady() {
             }
 
             document.getElementById("frame").style.height = "100%";
-            MusicControls.destroy((x) => console.log(x), (x) => console.log(x));
+            MusicControls.destroy((x) => {}, (x) => {});
 
 
             screen.orientation.lock("any").then(function () {
@@ -1033,7 +1009,6 @@ async function onDeviceReady() {
 
 
         } else {
-            console.log("BACK2");
 
             if (frameHistory.length > 1) {
                 frameHistory.pop();

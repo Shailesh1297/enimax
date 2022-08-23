@@ -37,7 +37,7 @@ async function testIt(){
         try{
             playerResult = await extensionList[i].getLinkFromUrl(episodeResult.episodes[0].link.replace("?watch=", ""));
         }catch(err){
-            console.log(err);
+            console.error(err);
             errored = true;
             alert(`${extensionNames[i]} - player :  ${err.toString()}`);
         }

@@ -39,7 +39,6 @@ document.getElementById("s_c").onclick = function (event) {
 
 
 document.getElementById("search_x").onkeydown = function (event) {
-    console.log(event);
     if (event.keyCode == 13) {
         search();
     }
@@ -138,9 +137,8 @@ function search() {
 
 
     }).catch(function (x) {
-        console.log(x);
+        console.error(x);
         document.getElementById("mainConSearch").innerHTML = "Error";
-
         sendNoti([0, null, "Message", x.data]);
 
     });

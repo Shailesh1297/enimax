@@ -67,7 +67,6 @@ async function dexieToSQLite() {
                 fieldNames = fieldNames.join(",");
                 questionMarks = questionMarks.join(",");
                 command.push([`INSERT INTO video (${fieldNames}) VALUES (${questionMarks})`, fieldValues]);
-                console.log(command);
 
             }
         }
@@ -102,7 +101,6 @@ async function dexieToSQLite() {
                 fieldNames = fieldNames.join(",");
                 questionMarks = questionMarks.join(",");
                 command.push([`INSERT INTO playlist (${fieldNames}) VALUES (${questionMarks})`, fieldValues]);
-                console.log(command);
 
             }
         }
@@ -112,7 +110,7 @@ async function dexieToSQLite() {
         alert("Done! You can now safely reload the page.");
         window.location.reload();
     }catch(err){
-        console.log(err);
+        console.error(err);
         alert("Some unexpected error has occurred. Contact the developer.");
     }
 
@@ -134,9 +132,8 @@ async function SQLInit() {
     for (let i = 0; i < initQueries.length; i++) {
         try {
             let temp = await mysql_query(initQueries[i], [], db);
-            console.log(temp);
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
     }
 }
@@ -150,9 +147,8 @@ async function SQLInitDownloaded() {
     for (let i = 0; i < initQueries.length; i++) {
         try {
             let temp = await mysql_query(initQueries[i], [], downloadedSqlite);
-            console.log(temp);
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
     }
 }
@@ -285,7 +281,7 @@ function makeRequest(method, url, form, timeout) {
                 reject(x.message);
             }
         }).catch(function (error) {
-            console.log(error);
+            console.error(error);
             reject(error);
         });
     });
@@ -380,7 +376,7 @@ if (true) {
             }
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
             return { "status": 500, "errorCode": 10000, "message": "Database error." };
         }
 
@@ -466,7 +462,7 @@ if (true) {
             }
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
 
             return { "status": 500, "errorCode": 10000, "message": "Database error." };
         }
@@ -544,7 +540,7 @@ if (true) {
             }
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
             return { "status": 500, "errorCode": 10000, "message": "Database error." };
         }
 
@@ -759,7 +755,7 @@ if (true) {
             }
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
             return { "status": 500, "errorCode": 10000, "message": "Database error." };
         }
 
@@ -843,7 +839,7 @@ if (true) {
             }
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
             return { "status": 500, "errorCode": 10000, "message": "Database error." };
         }
 
@@ -887,7 +883,7 @@ if (true) {
             }
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
             return { "status": 500, "errorCode": 10000, "message": "Database error." };
         }
 
@@ -984,7 +980,7 @@ if(true){
         }
 
         try {
-            console.log(req.body);
+            console.error(req.body);
             if ("cur" in req.body && "name" in req.body && "ep" in req.body) {
                 var cur = req.body.cur;
                 var name = req.body.name;
@@ -1065,7 +1061,7 @@ if(true){
             }
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
             return { "status": 500, "errorCode": 10000, "message": "Database error." };
         }
 
@@ -1154,7 +1150,7 @@ if(true){
 
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
             return { "status": 500, "errorCode": 10000, "message": "Database error." };
         }
 
@@ -1471,7 +1467,7 @@ if(true){
             }
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
             return { "status": 500, "errorCode": 10000, "message": "Database error." };
         }
 
@@ -1519,7 +1515,7 @@ if(true){
             }
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
             return { "status": 500, "errorCode": 10000, "message": "Database error." };
         }
 

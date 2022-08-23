@@ -20,7 +20,6 @@ function normalise(x){
 
 class DownloadVid {
     constructor(vidData, data, success, error, episodes, pause) {
-        console.log(vidData, data);
         this.success = success;
         this.episodes = episodes;
         this.error = error;
@@ -68,9 +67,7 @@ class DownloadVid {
                         localStorage.setItem(`${this.engine}-downloadSource`, vidData.sources[i].name);
                         this.type = vidData.sources[i].type;
 
-                        console.log(vidData);
                         vidData.sources = [vidData.sources[i]];
-                        console.log(vidData);
 
                         break;
                     }
@@ -89,7 +86,6 @@ class DownloadVid {
 
         }
 
-        console.log(vidData, this.vidData);
 
 
 
@@ -145,13 +141,13 @@ class DownloadVid {
 
 
 
-            console.log(await actionSQLite[14]({
+            await actionSQLite[14]({
                 "body": {
                     "name": vidData.name,                    
                     "url": `?watch=/${self.name}`,
                 }
 
-            }, true));
+            }, true);
 
 
 
@@ -244,7 +240,6 @@ class DownloadVid {
 
                         }
                     }
-                    console.log(nameDir);
 
                     epDir.getFile(`.downloaded`, { create: false, exclusive: false }, function (dir) {
                         self.errorHandler(self, "Has already been downloaded");
@@ -313,7 +308,7 @@ class DownloadVid {
 
 
         }, function (x) {
-            console.log(x);
+            console.error(x);
         });
     }
 
@@ -502,11 +497,9 @@ class DownloadVid {
                     headers,
                 );
 
-                fileTransfer.onprogress = function(progressEvent) {
-                    console.log(progressEvent);
-                };
+                fileTransfer.onprogress = function(progressEvent) {};
             }, function (x) {
-                console.log(x);
+                console.error(x);
                 reject("err");
             });
         });
@@ -619,7 +612,6 @@ class DownloadVid {
             fileEntry.getMetadata(function (x) {
                 self.buffers = [];
                 self.size = x.size;
-                console.log(self.size);
                 const controller = new AbortController();
                 self.controller = controller;
                 self.updateNoti("Starting...", self, 1);
@@ -705,7 +697,6 @@ class DownloadVid {
             parser.end();
 
             if ("playlists" in parser.manifest) {
-                console.log(parser.manifest);
                 let url = parser.manifest.playlists[0].uri;
 
                 // preferredResolution
@@ -723,13 +714,11 @@ class DownloadVid {
                     }
                 }
 
-                console.log(res, resIndex);
                 let differences = [];
                 for (let i = 0; i < res.length; i++) {
                     differences.push(Math.abs(self.preferredResolution - res[i]));
                 }
 
-                console.log(differences);
 
                 let min = differences[0];
                 let minIndex = 0;
@@ -740,7 +729,6 @@ class DownloadVid {
                         min = differences[i];
                     }
                 }
-                console.log(min, minIndex);
 
 
 
@@ -778,7 +766,7 @@ class DownloadVid {
                 }
 
             } catch (err) {
-                console.log(err);
+                console.error(err);
             }
 
 
@@ -981,7 +969,7 @@ class DownloadVid {
 
             }
         } catch (err) {
-            console.log(err);
+            console.error(err);
             self.errorHandler(self, "Unexpected error has occurred. Code: 2000");
         }
 
@@ -1005,7 +993,7 @@ class DownloadVid {
             self.error = () => { };
             self.success = () => { };
         }, function (x) {
-            console.log(x);
+            console.error(x);
         });
     }
 

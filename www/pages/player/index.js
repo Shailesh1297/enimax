@@ -239,7 +239,6 @@ window.onmessage = async function (x) {
 				}
 				if(res){
 					let viddata = (await window.parent.makeLocalRequest("GET", `${rootDir}/viddata.json`));
-					console.log(viddata);
 					viddata = JSON.parse(viddata).data;
 					data_main.sources = [{
 						"name": viddata.sources[0].name,
@@ -1354,7 +1353,6 @@ function get_ep_ini() {
 		let rootDir = decodeURIComponent(location.search.replace("?watch=", "").split("&")[0]);
 		window.parent.makeLocalRequest("GET", `${rootDir}/viddata.json`).then(function (viddata) {
 			viddata = JSON.parse(viddata).data;
-			console.log(viddata);
 
 			data_main = viddata;
 			if ("next" in data_main) {
@@ -1363,12 +1361,11 @@ function get_ep_ini() {
 				temp = temp.join("&");
 				delete data_main["next"];
 				try {
-					console.log(`${rootDir.split("/")[1]}/${temp}`);
 					window.parent.makeLocalRequest("GET", `/${rootDir.split("/")[1]}/${btoa(temp)}/.downloaded`).then((x) => {
 						data_main.next = encodeURIComponent(`/${rootDir.split("/")[1]}/${btoa(temp)}`);
 						document.getElementById("next_ep").style.display = "table-cell";
 
-					}).catch((x) => console.log(x));
+					}).catch((x) => console.error(x));
 				} catch (err) {
 
 				}
@@ -1380,12 +1377,11 @@ function get_ep_ini() {
 				temp = temp.join("&");
 				delete data_main["prev"];
 				try {
-					console.log(`${rootDir.split("/")[1]}/${temp}`);
 					window.parent.makeLocalRequest("GET", `/${rootDir.split("/")[1]}/${btoa(temp)}/.downloaded`).then((x) => {
 						data_main.prev = encodeURIComponent(`/${rootDir.split("/")[1]}/${btoa(temp)}`);
 						document.getElementById("prev_ep").style.display = "table-cell";
 
-					}).catch((x) => console.log(x));
+					}).catch((x) => console.error(x));
 				} catch (err) {
 
 				}
@@ -1434,7 +1430,6 @@ function next_ep_func(t, msg) {
 		document.getElementById("ep_dis").innerHTML = "loading...";
 		document.getElementById("total").innerHTML = "";
 		ini_main();
-		console.log("inimain 1");
 
 	} else if (t == -1 && typeof data_main.prev != "undefined") {
 		history.replaceState({ page: 1 }, "", "?watch=" + (data_main.prev));
@@ -1448,7 +1443,6 @@ function next_ep_func(t, msg) {
 		document.getElementById("ep_dis").innerHTML = "loading...";
 		document.getElementById("total").innerHTML = "";
 		ini_main();
-		console.log("inimain 2");
 
 	} else if (t == 0) {
 		history.replaceState({ page: 1 }, "", msg);
@@ -1462,7 +1456,6 @@ function next_ep_func(t, msg) {
 		document.getElementById("ep_dis").innerHTML = "loading...";
 		document.getElementById("total").innerHTML = "";
 		ini_main();
-		console.log("inimain 3");
 
 	}
 }
@@ -1485,7 +1478,6 @@ document.querySelector("#prev_ep").onclick = function () {
 
 var update_int, get_ep_check, lastUpdate, update_check, int_up, cur_link, name_ep_main, source;
 function ini_main() {
-	console.log("ini_main 4");
 	if (get_ep_check != 1) {
 
 		clearInterval(update_int);
