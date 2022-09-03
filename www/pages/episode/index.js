@@ -307,50 +307,52 @@ function ini() {
                 }
             }
 
-            for(let downloadIndex = 0; downloadIndex < downloadedList.length; downloadIndex++){
+            if(downloaded){
+                for(let downloadIndex = 0; downloadIndex < downloadedList.length; downloadIndex++){
 
-                let thisLink = downloadedList[downloadIndex];
-                let localQuery = encodeURIComponent(`/${data.mainName}/${thisLink}`);
+                    let thisLink = downloadedList[downloadIndex];
+                    let localQuery = encodeURIComponent(`/${data.mainName}/${thisLink}`);
 
-                let tempDiv = document.createElement("div");
-                tempDiv.className = 'episodesCon';
+                    let tempDiv = document.createElement("div");
+                    tempDiv.className = 'episodesCon';
 
 
-                let tempDiv2 = document.createElement("div");
-                tempDiv2.className = 'episodesPlay';
+                    let tempDiv2 = document.createElement("div");
+                    tempDiv2.className = 'episodesPlay';
 
-                tempDiv2.onclick = function () {
-                    localStorage.setItem("mainName", data.mainName);
-                    window.parent.postMessage({ "action": 4, "data": `?watch=${localQuery}` }, "*");
+                    tempDiv2.onclick = function () {
+                        localStorage.setItem("mainName", data.mainName);
+                        window.parent.postMessage({ "action": 4, "data": `?watch=${localQuery}` }, "*");
 
-                };
+                    };
 
-                let tempDiv4 = document.createElement("div");
-                tempDiv4.className = 'episodesDownloaded';
-                tempDiv4.onclick = function(){
-                    window.parent.removeDirectory(`/${data.mainName}/${thisLink}`).then(function(){
-                        tempDiv.remove();
-                    }).catch(function(){
-                        alert("Error deleting the files");
-                    });
+                    let tempDiv4 = document.createElement("div");
+                    tempDiv4.className = 'episodesDownloaded';
+                    tempDiv4.onclick = function(){
+                        window.parent.removeDirectory(`/${data.mainName}/${thisLink}`).then(function(){
+                            tempDiv.remove();
+                        }).catch(function(){
+                            alert("Error deleting the files");
+                        });
+                    }
+
+
+                    let tempDiv3 = document.createElement("div");
+                    tempDiv3.className = 'episodesTitle';
+                    try{
+                        tempDiv3.innerText = fix_title(atob(thisLink));
+                    }catch(err){
+                        tempDiv3.innerText = "Could not parse the titles";
+                    }
+
+
+
+                    tempDiv.append(tempDiv2);
+                    tempDiv.append(tempDiv3);
+                    tempDiv.append(tempDiv4);
+                    epCon.append(tempDiv);
+
                 }
-
-
-                let tempDiv3 = document.createElement("div");
-                tempDiv3.className = 'episodesTitle';
-                try{
-                    tempDiv3.innerText = fix_title(atob(thisLink));
-                }catch(err){
-                    tempDiv3.innerText = "Could not parse the titles";
-                }
-
-
-
-                tempDiv.append(tempDiv2);
-                tempDiv.append(tempDiv3);
-                tempDiv.append(tempDiv4);
-                epCon.append(tempDiv);
-
             }
 
             try{

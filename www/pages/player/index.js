@@ -8,8 +8,42 @@ let skipButTime = isNaN(parseInt(localStorage.getItem("skipButTime"))) ? 30 : pa
 let data_main = {};
 let skipIntroInfo = {};
 var CustomXMLHttpRequest = XMLHttpRequest;
+let curTrack = undefined;
+let marginApplied = false;
+function setSubtitleMarginMain(track){
+    let success = -1;
+    try{
+        let subMargin = parseInt(localStorage.getItem("sub-margin"));
+        if(track && "cues" in track) { 
+            if(!isNaN(subMargin) && subMargin !== 0){
+                for (let j = 0; j < track.cues.length; j++) {
+                    success = 1;
+                    track.cues[j].line = subMargin;
+                }
+            }else{
+                success = -2;
+            }
+        }
+    }catch(err){
+        success = -1;
+        console.error(err);
+    }
 
+    return success;
+}
 
+function setSubtitleMargin(track, count = 0){
+    let status = setSubtitleMarginMain(track);
+    if(status === -1 && count < 20){
+        setTimeout(function(){
+            setSubtitleMargin(track, ++count);
+        }, 400);
+    }
+}
+
+document.getElementById("doubleTime").value = doubleTapTime;
+document.getElementById("skipTime").value = skipButTime;
+document.getElementById("subMar").value = isNaN(parseInt(localStorage.getItem("sub-margin"))) ? 0 : parseInt(localStorage.getItem("sub-margin")) ;
 document.getElementById("doubleTime").oninput = function(){
 	if(isNaN(parseInt(document.getElementById("doubleTime").value))){
 		document.getElementById("doubleTime").value = "";
@@ -29,12 +63,17 @@ document.getElementById("skipTime").oninput = function(){
 	}
 }
 
+document.getElementById("subMar").oninput = function(){
+	localStorage.setItem("sub-margin", this.value);
+    setSubtitleMargin(curTrack);
+}
+
+
 var sid;
 
 let engineTemp = location.search.split("engine=");
 let engine;
 let nextTrackTime;
-let curTrack = undefined;
 if (engineTemp.length == 1) {
 	engine = 0;
 } else {
@@ -1672,6 +1711,8 @@ function loadSubs() {
 			if (a.vid.textTracks[i].label == localStorage.getItem(`${engine}-subtitle`) && check) {
 				selectDOM.value = i;
 				curTrack = a.vid.textTracks[i];
+                setSubtitleMargin(curTrack);
+
 				document.getElementById("fastFor").style.display = "block";
 
 				a.vid.textTracks[i].mode = "showing";
@@ -1693,13 +1734,12 @@ function loadSubs() {
 
 			}
 
-			for (var i = 0; i < a.vid.textTracks.length; i++) {
+			for (let i = 0; i < a.vid.textTracks.length; i++) {
 				if (i == parseInt(value)) {
 					a.vid.textTracks[i].mode = "showing";
 					curTrack = a.vid.textTracks[i];
+                    setSubtitleMargin(curTrack);
 					document.getElementById("fastFor").style.display = "block";
-
-
 					localStorage.setItem(`${engine}-subtitle`, a.vid.textTracks[i].label);
 				} else {
 					a.vid.textTracks[i].mode = "hidden";

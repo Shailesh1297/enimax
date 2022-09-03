@@ -105,3 +105,56 @@ class pullToRefresh {
   }
 
 }
+
+
+class menuPull {
+  constructor(dom){
+    this.dom = dom;
+    let self = this;
+    this.iniX = 0;
+    this.dom.addEventListener("touchstart", function (event) {
+      self.touchStart(event, self);
+    }, { passive: true });
+
+    this.dom.addEventListener("touchmove", function (event) {
+      self.touchMove(event, self);
+    }, { passive: true });
+
+    this.dom.addEventListener("touchend", function (event) {
+      self.touchEnd(self);
+    });
+
+    this.dom.addEventListener("touchcancel", function (event) {
+      self.touchEnd(self);
+    });
+
+    self.scrollCon = document.getElementById("custom_rooms");
+    self.shouldStart = false;
+  }
+
+  touchStart(event, self){
+    const targetTouches = event.targetTouches;
+    let x = targetTouches[0].screenX;
+    self.iniX = x;
+    if(self.scrollCon.offsetLeft == 0){
+      self.shouldStart = true;
+    }else{
+      self.shouldStart = false;
+    }
+  }
+
+  touchMove(event, self){
+    if(self.scrollCon.scrollLeft > 0 || self.shouldStart === false){
+      return;
+    }
+    const targetTouches = event.targetTouches;
+    let x = targetTouches[0].screenX;
+    if((x - self.iniX) > 0){
+      self.dom.style.left = (x - self.iniX) + "px";
+    }
+  }
+
+  touchEnd(self){
+
+  }
+}

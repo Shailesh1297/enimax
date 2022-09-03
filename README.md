@@ -47,11 +47,11 @@ If you just want to download the pre-built app, go to the [releases](https://git
 
 # Recovering old data
 
-`v1.1.1` uses an SQLite database instead on an IndexedDB to store the data. So if you already have some local data and decide to upgrade to `v1.1.1` from any of the previous versions, do the following to recover your data: 
+`v1.1.6` uses an SQLite database instead on an IndexedDB to store downloaded-videos' data. Do the following to recover your data: 
 1. Open the app and then open the `settings`.
 2. Click on `Restore Data` and it should take care of the rest.
 
-If you have any issues, you can open an issue, or post it on the discord server.
+If you have any issues, you can create an issue, or post it on the discord server.
 
 
 # Discord server
