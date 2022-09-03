@@ -2,6 +2,9 @@ const extensionNames = window.parent.returnExtensionNames();
 const extensionList = window.parent.returnExtensionList();
 
 let sourcesNames = extensionNames;
+let pullTabArray = [];
+
+pullTabArray.push(new pullToRefresh(document.getElementById("mainConSearch")));
 
 for (var i = 0; i < extensionList.length; i++) {
     let atr = {
@@ -36,7 +39,6 @@ document.getElementById("s_c").onclick = function (event) {
 
 
 document.getElementById("search_x").onkeydown = function (event) {
-    console.log(event);
     if (event.keyCode == 13) {
         search();
     }
@@ -85,7 +87,9 @@ function search() {
             currentEngine = extensionList[currentEngine];
         }
     }
-
+    if(document.getElementById('search_x').value === "devmode"){
+        localStorage.setItem("devmode", "true");
+    }
     currentEngine.searchApi(document.getElementById('search_x').value).then(function (x) {
 
         let main_div = x.data;
@@ -133,9 +137,8 @@ function search() {
 
 
     }).catch(function (x) {
-        console.log(x);
+        console.error(x);
         document.getElementById("mainConSearch").innerHTML = "Error";
-
         sendNoti([0, null, "Message", x.data]);
 
     });

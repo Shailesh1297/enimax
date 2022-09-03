@@ -151,13 +151,11 @@ var wco = {
                 let data = {};
                 data.name = temp.querySelectorAll(".video-title")[0].innerText;
                 data.image = temp.querySelector("#sidebar_cat").querySelectorAll(".img5")[0].getAttribute("src");
-                console.log(data.image);
                 
                 if(data.image.indexOf("//") == 0){
                     data.image = "https:" + data.image;
                 }
 
-                console.log(data.image);
                 data.description = temp.querySelector("#sidebar_cat").querySelectorAll("p")[0].innerText;
 
                 let episodesDOM = temp.querySelector("#sidebar_right3");
@@ -445,7 +443,6 @@ var animixplay = {
                 try {
                     let malId = parseInt(response.split("malid = '")[1]);
                     let response2 = await MakeFetch(`https://myanimelist.net/anime/${malId}`, {});
-                    console.log(response2);
                     temp2.innerHTML = DOMPurify.sanitize(response2,{ALLOWED_ATTR: ['itemprop']});
 
                     data.image = temp2.querySelector('[itemprop="image"]').src;
@@ -653,8 +650,16 @@ var fmovies = {
                         let poster = current.querySelector(".film-poster");
                         let detail = current.querySelector(".film-detail");
 
+                        let temlLink = poster.querySelector("a").getAttribute("href");
+
+                        if(temlLink.includes("http")){
+                            temlLink = new URL(temlLink);
+                            temlLink = temlLink.pathname;
+                        }
+
+
                         dataCur.image = poster.querySelector("img").getAttribute("data-src");
-                        dataCur.link = poster.querySelector("a").getAttribute("href").replace("https://www.fmovies.app", "") + "&engine=2";
+                        dataCur.link = temlLink + "&engine=2";
                         dataCur.name = detail.querySelector(".film-name").innerText.trim();
 
 
@@ -850,7 +855,6 @@ var fmovies = {
                         link = link[link.length - 1];
                         link = link.split("?")[0];
 
-                        console.log(link, host, `${host}/ajax/embed-4/getSources?id=${link}&_token=3&_number=${6}`);
                         var second = await MakeCusReqFmovies(`${host}/ajax/embed-4/getSources?id=${link}&_token=3&_number=${6}`, option23);
 
                         let jsonq = JSON.parse(second);
@@ -1283,7 +1287,7 @@ const extensionNames = ["WCOforever", "Animixplay", "Fmovies", "Zoro"];
 
 
 
-localStorage.setItem("version", "1.1.5");
+localStorage.setItem("version", "1.1.6");
 if (localStorage.getItem("lastUpdate") === null) {
     localStorage.setItem("lastUpdate", "0");
 

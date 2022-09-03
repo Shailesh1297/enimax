@@ -13,11 +13,13 @@
   <script type="text/javascript" src="../../notification/noti.js"></script>
   <script type="text/javascript" src="../../assets/dexie.js"></script>
   <script type="text/javascript" src="../../assets/index.js"></script>
+  <script type="text/javascript" src="../../assets/pull.js"></script>
 
 </head>
 
 <body>
   <div class="con_black"></div>
+  <div id="pullTab"></div>
   <div id="con_11">
 
 
@@ -41,6 +43,7 @@
       <div class="menuItem" id="changeServerDiv">Change server</div>
       <div class="menuItem" id="logout">Log out</div>
       <div class="menuItem" id="exportData" style="display:none;">Export Data</div>
+      <div class="menuItem" id="testExtensions" style="display:none;">Test Extensions</div>
       <div class="menuItem" id="importData" style="display:none;"><label for="importFile">Import Data</label><input type="file" id="importFile"></div>
       <div class="menuItem" id="resetSource" style="display:none;">Reset source preference
       </div>
@@ -100,9 +103,17 @@
       <div id="activeCon"></div>
 
       <div style="color:white;font-size: 30px;">
-        <div class="queueRemove" id="doneRemove"></div> Done Queue
+        <div class="queueRemove" id="errorRemove"></div> Errored
+      </div>
+      <div id="errorCon"></div>
+      
+      <div style="color:white;font-size: 30px;">
+        <div class="queueRemove" id="doneRemove"></div> Done
       </div>
       <div id="doneCon"></div>
+
+
+      
     </div>
 
     <div id="accessabilityCon" class="con_main" style="white-space: normal;color: white;flex-direction: column; justify-content: center;">
@@ -161,6 +172,16 @@
             <div class="tableCell">
               <label class="switch access" style="vertical-align: middle;">
                 <input type="checkbox" id="fancyHome">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="accessItem notChrome">
+            <div class="tableCell">Use the downloaded version of a video even when offline-mode is off.</div>
+            <div class="tableCell">
+              <label class="switch access" style="vertical-align: middle;">
+                <input type="checkbox" id="alwaysDown">
                 <span class="slider round"></span>
               </label>
             </div>

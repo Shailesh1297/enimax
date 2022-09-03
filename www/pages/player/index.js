@@ -8,8 +8,42 @@ let skipButTime = isNaN(parseInt(localStorage.getItem("skipButTime"))) ? 30 : pa
 let data_main = {};
 let skipIntroInfo = {};
 var CustomXMLHttpRequest = XMLHttpRequest;
+let curTrack = undefined;
+let marginApplied = false;
+function setSubtitleMarginMain(track){
+    let success = -1;
+    try{
+        let subMargin = parseInt(localStorage.getItem("sub-margin"));
+        if(track && "cues" in track) { 
+            if(!isNaN(subMargin) && subMargin !== 0){
+                for (let j = 0; j < track.cues.length; j++) {
+                    success = 1;
+                    track.cues[j].line = subMargin;
+                }
+            }else{
+                success = -2;
+            }
+        }
+    }catch(err){
+        success = -1;
+        console.error(err);
+    }
 
+    return success;
+}
 
+function setSubtitleMargin(track, count = 0){
+    let status = setSubtitleMarginMain(track);
+    if(status === -1 && count < 20){
+        setTimeout(function(){
+            setSubtitleMargin(track, ++count);
+        }, 400);
+    }
+}
+
+document.getElementById("doubleTime").value = doubleTapTime;
+document.getElementById("skipTime").value = skipButTime;
+document.getElementById("subMar").value = isNaN(parseInt(localStorage.getItem("sub-margin"))) ? 0 : parseInt(localStorage.getItem("sub-margin")) ;
 document.getElementById("doubleTime").oninput = function(){
 	if(isNaN(parseInt(document.getElementById("doubleTime").value))){
 		document.getElementById("doubleTime").value = "";
@@ -29,12 +63,17 @@ document.getElementById("skipTime").oninput = function(){
 	}
 }
 
+document.getElementById("subMar").oninput = function(){
+	localStorage.setItem("sub-margin", this.value);
+    setSubtitleMargin(curTrack);
+}
+
+
 var sid;
 
 let engineTemp = location.search.split("engine=");
 let engine;
 let nextTrackTime;
-let curTrack = undefined;
 if (engineTemp.length == 1) {
 	engine = 0;
 } else {
@@ -199,10 +238,60 @@ class XMLHttpRequest2 {
 
 }
 
-window.onmessage = function (x) {
+function normalise(x){
+    x = x.replace("?watch=","");
+    x = x.split("&engine=")[0];
+    return x;
+}
+function checkIfExists(localURL){
+	return (new Promise(function(resolve, reject){
+		let timeout = setTimeout(function(){
+			reject("timeout");
+		},1000);
+
+		window.parent.makeLocalRequest("GET", `${localURL}`).then(function(x){
+			clearTimeout(timeout);
+			resolve("yes");
+		}).catch(function(err){
+			clearTimeout(timeout);
+			reject("no");
+		});
+	}));
+}
+window.onmessage = async function (x) {
 	if (x.data.action == 1) {
 		data_main = x.data;
-		get_ep();
+		if(config.chrome){
+			get_ep();
+		}else{
+			let mainName = localStorage.getItem("mainName");
+			let rootDir = `/${mainName}/${btoa(normalise(location.search))}`;
+			let localURL = `${rootDir}/.downloaded`;
+
+			try{
+				await checkIfExists(localURL);
+				let res;
+				if(localStorage.getItem("alwaysDown") === "true"){
+					res = true;
+				}else{
+					res = confirm("Want to open the downloaded version?");
+				}
+				if(res){
+					let viddata = (await window.parent.makeLocalRequest("GET", `${rootDir}/viddata.json`));
+					viddata = JSON.parse(viddata).data;
+					data_main.sources = [{
+						"name": viddata.sources[0].name,
+						"type": viddata.sources[0].type,
+						"url": viddata.sources[0].type == 'hls' ? `${rootDir}/master.m3u8` : `${window.parent.cordova.file.externalDataDirectory}/${rootDir}/master.m3u8`,
+					}];
+					CustomXMLHttpRequest = window.parent.XMLHttpRequest;
+				}
+			}catch(err){
+				console.error(err);
+			}finally{
+				get_ep();
+			}
+		}
 	} else if (x.data.action == "play") {
 		a.vid.play();
 	} else if (x.data.action == "pause") {
@@ -1303,7 +1392,6 @@ function get_ep_ini() {
 		let rootDir = decodeURIComponent(location.search.replace("?watch=", "").split("&")[0]);
 		window.parent.makeLocalRequest("GET", `${rootDir}/viddata.json`).then(function (viddata) {
 			viddata = JSON.parse(viddata).data;
-			console.log(viddata);
 
 			data_main = viddata;
 			if ("next" in data_main) {
@@ -1312,12 +1400,11 @@ function get_ep_ini() {
 				temp = temp.join("&");
 				delete data_main["next"];
 				try {
-					console.log(`${rootDir.split("/")[1]}/${temp}`);
 					window.parent.makeLocalRequest("GET", `/${rootDir.split("/")[1]}/${btoa(temp)}/.downloaded`).then((x) => {
 						data_main.next = encodeURIComponent(`/${rootDir.split("/")[1]}/${btoa(temp)}`);
 						document.getElementById("next_ep").style.display = "table-cell";
 
-					}).catch((x) => console.log(x));
+					}).catch((x) => console.error(x));
 				} catch (err) {
 
 				}
@@ -1329,12 +1416,11 @@ function get_ep_ini() {
 				temp = temp.join("&");
 				delete data_main["prev"];
 				try {
-					console.log(`${rootDir.split("/")[1]}/${temp}`);
 					window.parent.makeLocalRequest("GET", `/${rootDir.split("/")[1]}/${btoa(temp)}/.downloaded`).then((x) => {
 						data_main.prev = encodeURIComponent(`/${rootDir.split("/")[1]}/${btoa(temp)}`);
 						document.getElementById("prev_ep").style.display = "table-cell";
 
-					}).catch((x) => console.log(x));
+					}).catch((x) => console.error(x));
 				} catch (err) {
 
 				}
@@ -1383,7 +1469,6 @@ function next_ep_func(t, msg) {
 		document.getElementById("ep_dis").innerHTML = "loading...";
 		document.getElementById("total").innerHTML = "";
 		ini_main();
-		console.log("inimain 1");
 
 	} else if (t == -1 && typeof data_main.prev != "undefined") {
 		history.replaceState({ page: 1 }, "", "?watch=" + (data_main.prev));
@@ -1397,7 +1482,6 @@ function next_ep_func(t, msg) {
 		document.getElementById("ep_dis").innerHTML = "loading...";
 		document.getElementById("total").innerHTML = "";
 		ini_main();
-		console.log("inimain 2");
 
 	} else if (t == 0) {
 		history.replaceState({ page: 1 }, "", msg);
@@ -1411,7 +1495,6 @@ function next_ep_func(t, msg) {
 		document.getElementById("ep_dis").innerHTML = "loading...";
 		document.getElementById("total").innerHTML = "";
 		ini_main();
-		console.log("inimain 3");
 
 	}
 }
@@ -1434,7 +1517,6 @@ document.querySelector("#prev_ep").onclick = function () {
 
 var update_int, get_ep_check, lastUpdate, update_check, int_up, cur_link, name_ep_main, source;
 function ini_main() {
-	console.log("ini_main 4");
 	if (get_ep_check != 1) {
 
 		clearInterval(update_int);
@@ -1457,6 +1539,20 @@ function ini_main() {
 
 
 		get_ep_ini();
+
+		try {
+			navigator.mediaSession.setActionHandler('nexttrack', () => {
+				next_ep_func(1);
+		
+			});
+			navigator.mediaSession.setActionHandler('previoustrack', () => {
+				next_ep_func(-1);
+		
+			});
+		}
+		catch (error) {
+		
+		}
 
 	}
 }
@@ -1615,6 +1711,8 @@ function loadSubs() {
 			if (a.vid.textTracks[i].label == localStorage.getItem(`${engine}-subtitle`) && check) {
 				selectDOM.value = i;
 				curTrack = a.vid.textTracks[i];
+                setSubtitleMargin(curTrack);
+
 				document.getElementById("fastFor").style.display = "block";
 
 				a.vid.textTracks[i].mode = "showing";
@@ -1636,13 +1734,12 @@ function loadSubs() {
 
 			}
 
-			for (var i = 0; i < a.vid.textTracks.length; i++) {
+			for (let i = 0; i < a.vid.textTracks.length; i++) {
 				if (i == parseInt(value)) {
 					a.vid.textTracks[i].mode = "showing";
 					curTrack = a.vid.textTracks[i];
+                    setSubtitleMargin(curTrack);
 					document.getElementById("fastFor").style.display = "block";
-
-
 					localStorage.setItem(`${engine}-subtitle`, a.vid.textTracks[i].label);
 				} else {
 					a.vid.textTracks[i].mode = "hidden";
@@ -2123,19 +2220,6 @@ for (var i = 0; i < playerFitDOM.length; i++) {
 
 
 
-try {
-	navigator.mediaSession.setActionHandler('nexttrack', () => {
-		next_ep_func(1);
-
-	});
-	navigator.mediaSession.setActionHandler('previoustrack', () => {
-		next_ep_func(-1);
-
-	});
-}
-catch (error) {
-
-}
 window.addEventListener("keydown", function (event) {
 
 	if (event.keyCode == 32) {

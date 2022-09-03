@@ -20,7 +20,6 @@ function normalise(x){
 
 class DownloadVid {
     constructor(vidData, data, success, error, episodes, pause) {
-        console.log(vidData, data);
         this.success = success;
         this.episodes = episodes;
         this.error = error;
@@ -68,9 +67,7 @@ class DownloadVid {
                         localStorage.setItem(`${this.engine}-downloadSource`, vidData.sources[i].name);
                         this.type = vidData.sources[i].type;
 
-                        console.log(vidData);
                         vidData.sources = [vidData.sources[i]];
-                        console.log(vidData);
 
                         break;
                     }
@@ -89,7 +86,6 @@ class DownloadVid {
 
         }
 
-        console.log(vidData, this.vidData);
 
 
 
@@ -121,18 +117,18 @@ class DownloadVid {
         }).catch(function (err) {
             self.base64Image = "../../assets/images/placeholder.jpg";
         }).finally(async function () {
-            await actionDexie[5]({
+            await actionSQLite[5]({
                 "body": {
                     "img": self.base64Image,
                     "name": self.name,
                     "url": `?watch=/${self.name}`
                 }
-            }, false);
+            }, true);
 
             let localQuery = encodeURIComponent(`/${self.name}/${btoa(self.vidData.ogURL)}`);
 
 
-            await actionDexie[2]({
+            await actionSQLite[2]({
                 "body": {
                     "name": vidData.nameWSeason,
                     "nameUm": vidData.name,
@@ -140,18 +136,18 @@ class DownloadVid {
                     "cur": `?watch=${localQuery}`
                 }
 
-            }, false);
+            }, true);
 
 
 
 
-            console.log(await actionDexie[14]({
+            await actionSQLite[14]({
                 "body": {
                     "name": vidData.name,                    
                     "url": `?watch=/${self.name}`,
                 }
 
-            }, false));
+            }, true);
 
 
 
@@ -208,6 +204,7 @@ class DownloadVid {
             vibrate: false,
             smallIcon : 'res://ic_launcher',
             color : "blue",
+            lockscreen : true,
             wakeup : false,
             sound: false,
         };
@@ -243,7 +240,6 @@ class DownloadVid {
 
                         }
                     }
-                    console.log(nameDir);
 
                     epDir.getFile(`.downloaded`, { create: false, exclusive: false }, function (dir) {
                         self.errorHandler(self, "Has already been downloaded");
@@ -312,7 +308,7 @@ class DownloadVid {
 
 
         }, function (x) {
-            console.log(x);
+            console.error(x);
         });
     }
 
@@ -460,9 +456,6 @@ class DownloadVid {
 
                     fileWriter.onerror = function (e) {
                         reject("err");
-                        self.errorHandler(self, "Error while writing the file. Code: 7002");
-
-
                     };
 
 
@@ -470,15 +463,44 @@ class DownloadVid {
 
                 }, (err) => {
                     reject("err");
-                    self.errorHandler(self, "Error while writing the file. Code: 7001");
                 });
 
 
             }, function (x) {
                 reject("err");
+            });
+        });
+    }
 
-                self.errorHandler(self, "Error while writing the file. Code: 7000");
+    downloadFileTransfer(filename, uri, self, headers = {}) {
+        return new Promise(function (resolve, reject) {
+            self.fileDir.getFile(filename, { create: true, exclusive: false }, function (fileEntry) {
+                var fileTransfer = new FileTransfer();
+                var fileURL = fileEntry.toURL();
+                headers.suppressProgress = true;
+                let timeout = setTimeout(function(){
+                    fileTransfer.abort();
+                    reject("timeout");      
+                }, 60000);
+                fileTransfer.download(
+                    uri,
+                    fileURL,
+                    function (entry) {
+                        clearTimeout(timeout);
+                        resolve("done");
+                    },
+                    function (error) {
+                        clearTimeout(timeout);
+                        reject(error);                        
+                    },
+                    null,
+                    headers,
+                );
 
+                fileTransfer.onprogress = function(progressEvent) {};
+            }, function (x) {
+                console.error(x);
+                reject("err");
             });
         });
     }
@@ -590,7 +612,6 @@ class DownloadVid {
             fileEntry.getMetadata(function (x) {
                 self.buffers = [];
                 self.size = x.size;
-                console.log(self.size);
                 const controller = new AbortController();
                 self.controller = controller;
                 self.updateNoti("Starting...", self, 1);
@@ -676,7 +697,6 @@ class DownloadVid {
             parser.end();
 
             if ("playlists" in parser.manifest) {
-                console.log(parser.manifest);
                 let url = parser.manifest.playlists[0].uri;
 
                 // preferredResolution
@@ -694,13 +714,11 @@ class DownloadVid {
                     }
                 }
 
-                console.log(res, resIndex);
                 let differences = [];
                 for (let i = 0; i < res.length; i++) {
                     differences.push(Math.abs(self.preferredResolution - res[i]));
                 }
 
-                console.log(differences);
 
                 let min = differences[0];
                 let minIndex = 0;
@@ -711,7 +729,6 @@ class DownloadVid {
                         min = differences[i];
                     }
                 }
-                console.log(min, minIndex);
 
 
 
@@ -738,14 +755,18 @@ class DownloadVid {
                 tempMapping = (JSON.parse(tempMapping)).data;
                 for (let i = 0; i < tempMapping.length; i++) {
                     let cur = tempMapping[i];
+                    let tempDownloaded = cur.downloaded;
+                    if(tempDownloaded === -1){
+                        tempDownloaded = false;
+                    }
                     localMapping[cur.fileName] = {
-                        "downloaded": cur.downloaded,
+                        "downloaded": tempDownloaded,
                         "uri": cur.uri,
                     }
                 }
 
             } catch (err) {
-                console.log(err);
+                console.error(err);
             }
 
 
@@ -812,7 +833,7 @@ class DownloadVid {
                     break;
                 }
                 self.downloaded = 0;
-                let parallel = 5;
+                let parallel = isNaN(parseInt(localStorage.getItem("parallel"))) ? 5 : parseInt(localStorage.getItem("parallel"));
                 let iters = Math.ceil(mapping.length / parallel);
                 for (let i = 0; i < iters; i++) {
 
@@ -823,73 +844,63 @@ class DownloadVid {
 
 
 
-                    let data;
                     let promises = [];
+                    let response;
                     for (let j = i * parallel; j < ((i + 1) * parallel) && j < mapping.length; j++) {
                         if (mapping[j].downloaded === true) {
                             self.downloaded++;
                             continue;
+                        }else if(mapping[j].downloaded === -1){
+                            continue;
                         }
 
                         if (self.engine == 3) {
-                            promises.push(self.makeRequestZoro(mapping[j].uri, self));
+                            promises.push(self.downloadFileTransfer(mapping[j].fileName, mapping[j].uri, self, {
+                                "headers": {
+                                "origin": extensionList[3].config.origin,
+                                "referer": extensionList[3].config.referer,
+                                "sid": self.sid
+                                }
+                            }));
+
                         } else {
-                            promises.push(self.makeRequest(mapping[j].uri, (x) => x.blob()));
+                            promises.push(self.downloadFileTransfer(mapping[j].fileName, mapping[j].uri, self, {}));
 
                         }
                     }
                     try {
-
-                        let response;
                         if (settled) {
                             response = await Promise.allSettled(promises);
                         } else {
                             response = await Promise.all(promises);
 
                         }
+
                         let index = 0;
-                        let savePromises = [];
-                        let savePromisesIndex = [];
                         for (let j = i * parallel; j < ((i + 1) * parallel) && j < mapping.length; j++) {
-                            if (mapping[j].downloaded === true) {
+                            if (mapping[j].downloaded === true || mapping[j].downloaded === -1) {
                                 continue;
                             }
 
                             let thisRes = response[index++];
                             check = false;
-                            savePromises.push(self.saveAs(thisRes.value, mapping[j].fileName, self));
-                            savePromisesIndex.push([index - 1,j]);
-                        }
-
-
-                        
-                        let saveResponse;
-                        
-                        if (settled) {
-                            saveResponse = await Promise.allSettled(savePromises);
-                        } else {
-                            saveResponse = await Promise.all(savePromises);
-
-                            
-                        }
-                       
-                        for(let saveIndex = 0; saveIndex < savePromisesIndex.length; saveIndex++){
-                            let thisRes = response[savePromisesIndex[saveIndex][0]];
                             if (settled) {
-                                if (thisRes.status == "fulfilled" && saveResponse[saveIndex].status == "fulfilled") {
+                                if(thisRes.status == "fulfilled"){
+                                    mapping[j].downloaded = true;
                                     self.downloaded++;
-                                    mapping[savePromisesIndex[saveIndex][1]].downloaded = true;
+                                }else{
+                                    mapping[j].downloaded = false;
 
-                                } else {
-                                    mapping[savePromisesIndex[saveIndex][1]].downloaded = false;
                                 }
                             }else{
                                 self.downloaded++;
-                                mapping[savePromisesIndex[saveIndex][1]].downloaded = true;
+                                mapping[j].downloaded = true;
                             }
                         }
-                        self.updateNoti(`Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self);
+
                         await self.updateDownloadStatus(self);
+                        self.updateNoti(`Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self);
+
 
                     } catch (err) {
                         check = false;
@@ -907,24 +918,58 @@ class DownloadVid {
 
             if (check) {
                 let doneFR = true;
-                for (let j = 0; j < mapping.length; j++) {
-                    if(mapping[j].downloaded !== true){
-                        doneFR = false;
-                        break;
-                    }
-                }
 
-                if(doneFR){
-                    self.done(self);
-                }else{
-                    self.errorHandler(self, "Could not download the whole video. Try Again");
-                }
+                let lastSum = 0;
+                let count = 0;
+                let interval;
+
+                interval = setInterval(function(){
+
+                    if(self.pause){
+                        clearInterval(interval);
+                        return;
+                    }
+                    let sum = 0;
+                    for (let j = 0; j < mapping.length; j++) {
+                        if(mapping[j].downloaded === -1){
+                            sum++;
+                        }
+                    }
+
+                    if(sum == lastSum){
+                        count++;
+                    }
+                    lastSum = sum;
+
+                    if(sum == 0){                    
+                        for (let j = 0; j < mapping.length; j++) {
+                            if(mapping[j].downloaded !== true){
+                                doneFR = false;
+                                break;
+                            }
+                        }
+        
+                        if(doneFR){
+                            clearInterval(interval);                            
+                            self.done(self);
+                        }else{
+                            clearInterval(interval);                            
+                            self.errorHandler(self, "Could not download the whole video. Try Again");
+                        }
+                    }else if(count > 4){
+                        clearInterval(interval);
+                        self.errorHandler(self, "Could not download the whole video. Try Again");
+                    }
+                }, 1000);
+
+                
+                
             } else {
                 self.errorHandler(self, "Could not download the whole video. Try Again");
 
             }
         } catch (err) {
-            console.log(err);
+            console.error(err);
             self.errorHandler(self, "Unexpected error has occurred. Code: 2000");
         }
 
@@ -948,7 +993,7 @@ class DownloadVid {
             self.error = () => { };
             self.success = () => { };
         }, function (x) {
-            console.log(x);
+            console.error(x);
         });
     }
 

@@ -10,7 +10,9 @@ let lastScrollPos;
 let scrollDownTopDOM = document.getElementById("scrollDownTop");
 
 
+let pullTabArray = [];
 
+pullTabArray.push(new pullToRefresh(document.getElementById("con_11")));
 
 let scrollElem = document.getElementById("con_11");
 scrollElem.addEventListener("scroll", function(){
@@ -30,7 +32,18 @@ scrollElem.addEventListener("scroll", function(){
 });
 
 
-
+function fix_title(x) {
+    try {
+        x = x.split("-");
+        temp = "";
+        for (var i = 0; i < x.length; i++) {
+            temp = temp + x[i].substring(0, 1).toUpperCase() + x[i].substring(1) + " ";
+        }
+        return temp;
+    } catch (err) {
+        return x;
+    }
+}
 scrollDownTopDOM.onclick = function(){
     if(scrollDownTopDOM.className == "scrollTopDOM"){
         scrollElem.scrollTop = 0;
@@ -72,8 +85,9 @@ function sendNoti(x) {
 
 function checkIfExists(localURL, dList, dName){
     return (new Promise(function (resolve, reject){
-        if(dList.includes(dName)){
-
+        let index = dList.indexOf(dName);
+        if(index > -1){
+            dList.splice(index, 1);
             let timeout = setTimeout(function(){
                 reject("timeout");
             },1000);
@@ -166,7 +180,7 @@ function ini() {
 
                     downloadedList = tempList;
                 }catch(err){
-                    console.log(err);
+                    console.error(err);
                 }
                 
             }
@@ -195,6 +209,7 @@ function ini() {
                 tempDiv2.className = 'episodesPlay';
 
                 tempDiv2.onclick = function () {
+                    localStorage.setItem("mainName", data.mainName);
                     window.parent.postMessage({ "action": 4, "data": trr }, "*");
                 };
 
@@ -292,6 +307,53 @@ function ini() {
                 }
             }
 
+            if(downloaded){
+                for(let downloadIndex = 0; downloadIndex < downloadedList.length; downloadIndex++){
+
+                    let thisLink = downloadedList[downloadIndex];
+                    let localQuery = encodeURIComponent(`/${data.mainName}/${thisLink}`);
+
+                    let tempDiv = document.createElement("div");
+                    tempDiv.className = 'episodesCon';
+
+
+                    let tempDiv2 = document.createElement("div");
+                    tempDiv2.className = 'episodesPlay';
+
+                    tempDiv2.onclick = function () {
+                        localStorage.setItem("mainName", data.mainName);
+                        window.parent.postMessage({ "action": 4, "data": `?watch=${localQuery}` }, "*");
+
+                    };
+
+                    let tempDiv4 = document.createElement("div");
+                    tempDiv4.className = 'episodesDownloaded';
+                    tempDiv4.onclick = function(){
+                        window.parent.removeDirectory(`/${data.mainName}/${thisLink}`).then(function(){
+                            tempDiv.remove();
+                        }).catch(function(){
+                            alert("Error deleting the files");
+                        });
+                    }
+
+
+                    let tempDiv3 = document.createElement("div");
+                    tempDiv3.className = 'episodesTitle';
+                    try{
+                        tempDiv3.innerText = fix_title(atob(thisLink));
+                    }catch(err){
+                        tempDiv3.innerText = "Could not parse the titles";
+                    }
+
+
+
+                    tempDiv.append(tempDiv2);
+                    tempDiv.append(tempDiv3);
+                    tempDiv.append(tempDiv4);
+                    epCon.append(tempDiv);
+
+                }
+            }
 
             try{
                 if(!downloaded && localStorage.getItem("scrollBool") !== "false"){
@@ -352,7 +414,7 @@ function ini() {
 
             }).catch(function (err) {
                 console.error(err);
-                alert(err);
+                alert("Could not find info.json");
             });
 
         }else{

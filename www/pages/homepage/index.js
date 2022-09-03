@@ -7,6 +7,72 @@ if(config.chrome){
     }
 }
 
+let downloadedFolders = {};
+let pullTabArray = [];
+let errDOM = document.getElementById("errorCon");
+
+async function populateDownloadedArray(){
+    try{
+        downloadedFolders = {};
+        let temp = await window.parent.listDir("");
+        for(let i = 0; i < temp.length; i++){
+            if(temp[i].isDirectory){
+                downloadedFolders[temp[i].name] = true;
+            }
+        }
+    }catch(err){
+
+    }
+}
+
+async function testIt(){
+    let extensionList = window.parent.returnExtensionList();
+    let extensionNames = window.parent.returnExtensionNames();
+    let searchQuery = "odd";
+    let errored = false;
+    for(let i = 0; i < extensionList.length; i++){
+        let searchResult, episodeResult, playerResult;
+        try{
+            searchResult = (await extensionList[i].searchApi(searchQuery)).data;
+        }catch(err){
+            errored = true;
+            alert(`${extensionNames[i]} - search :  ${err.toString()}`);
+        }
+
+        try{
+            let tempSea = searchResult[0].link;
+            if(tempSea[0] == "/"){
+                tempSea = tempSea.substring(1);
+            }
+            episodeResult = (await extensionList[i].getAnimeInfo(tempSea));
+        }catch(err){
+            errored = true;
+            alert(`${extensionNames[i]} - episode :  ${err.toString()}`);
+        }
+
+        try{
+            playerResult = await extensionList[i].getLinkFromUrl(episodeResult.episodes[0].link.replace("?watch=", ""));
+        }catch(err){
+            console.error(err);
+            errored = true;
+            alert(`${extensionNames[i]} - player :  ${err.toString()}`);
+        }
+
+        alert(`${extensionNames[i]} - Here's the link: ${playerResult.sources[0].url}`);
+    }
+
+    if(!errored){
+        alert("Everything seems to be working fine");
+    }
+}
+
+if(localStorage.getItem("devmode") === "true"){
+    document.getElementById("testExtensions").style.display = "block";
+    document.getElementById("testExtensions").onclick = function(){
+        testIt();
+    }
+}
+
 let isSnapSupported = CSS.supports('scroll-snap-align:start') && CSS.supports("scroll-snap-stop: always") && CSS.supports("scroll-snap-type: x mandatory") && localStorage.getItem("fancyHome") !=="true";
 
 
@@ -142,7 +208,12 @@ document.getElementById("activeRemove").onclick = function () {
 
 document.getElementById("doneRemove").onclick = function () {
     let downloadQueue = window.parent.returnDownloadQueue();
-    downloadQueue.removeDone(downloadQueue);
+    downloadQueue.removeDone(downloadQueue, true);
+}
+
+document.getElementById("errorRemove").onclick = function () {
+    let downloadQueue = window.parent.returnDownloadQueue();
+    downloadQueue.removeDone(downloadQueue, false);
 }
 
 if (config.chrome) {
@@ -153,7 +224,7 @@ if (config.chrome) {
 function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
 
-    if (queue.length == 0) {
+    if (!isDone && queue.length == 0) {
         queueDOM.append(createElement(
             {
                 "style": {
@@ -239,8 +310,39 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
 
         temp2.append(temp3);
-        queueDOM.append(temp);
+        if(isDone){
+            if(queue[i].errored === true){
+                errDOM.prepend(temp);
+            }else{
+                queueDOM.prepend(temp);
+            }            
+        }else{
+            queueDOM.append(temp);
+        }
     }
+
+    errDOM.children.length == 0 ? errDOM.append(createElement(
+        {
+            "style": {
+                "color": "white",
+                "fontSize": "15px",
+                "margin": "10px 0 30px 0",
+            },
+            "innerText": "Empty"
+        }
+    )) : null;
+
+
+    queueDOM.children.length == 0 ? queueDOM.append(createElement(
+        {
+            "style": {
+                "color": "white",
+                "fontSize": "15px",
+                "margin": "10px 0 30px 0",
+            },
+            "innerText": "Empty"
+        }
+    )) : null;
 }
 
 
@@ -266,6 +368,7 @@ function reloadQueue(mode = 0) {
     if (mode == 0 || mode == 2) {
         let doneQueueDOM = document.getElementById("doneCon");
         doneQueueDOM.innerHTML = "";
+        errDOM.innerHTML = "";
         let doneQueue = downloadQueue.doneQueue;
         addQueue(doneQueue, doneQueueDOM, downloadQueue, true);
     }
@@ -451,6 +554,9 @@ document.getElementById("fancyHome").onchange = function () {
     location.reload();
 }
 
+document.getElementById("alwaysDown").onchange = function () {
+    localStorage.setItem("alwaysDown", this.checked.toString());
+}
 
 
 
@@ -462,6 +568,7 @@ document.getElementById("scrollBool").checked = localStorage.getItem("scrollBool
 document.getElementById("autoPause").checked = localStorage.getItem("autoPause") === "true";
 document.getElementById("hideNotification").checked = localStorage.getItem("hideNotification") === "true";
 document.getElementById("fancyHome").checked = localStorage.getItem("fancyHome") === "true";
+document.getElementById("alwaysDown").checked = localStorage.getItem("alwaysDown") === "true";
 
 
 
@@ -1205,11 +1312,16 @@ if (true) {
         x.parentElement.parentElement.parentElement.remove();
     }
 
-    function get_userinfo_callback(x, y, z) {
+    async function get_userinfo_callback(x, y, z) {
 
 
         document.getElementById("room_dis_child").innerHTML = "";
         document.getElementById("room_add_child").innerHTML = "";
+        let offlineMode = localStorage.getItem("offline") === "true";
+
+        if(offlineMode){
+            await populateDownloadedArray();
+        }
         let a = x.data;
 
         rooms = a[1].slice(0);
@@ -1238,6 +1350,12 @@ if (true) {
         for (var i = 0; i < data.length; i++) {
             let domToAppend;
 
+            if(offlineMode){
+                if(data[i][0] in downloadedFolders){
+                    delete downloadedFolders[data[i][0]];
+                }
+            }
+
             if (document.getElementById(`room_${data[i][4]}`)) {
                 domToAppend = document.getElementById(`room_${data[i][4]}`);
             } else {
@@ -1256,6 +1374,9 @@ if (true) {
             tempDiv3.textContent = fix_title(data[i][0]);
             tempDiv3.setAttribute("data-href", data[i][5]);
             tempDiv3.setAttribute("data-current", data[i][3]);
+            tempDiv3.setAttribute("data-mainname", data[i][0]);
+
+            
 
             tempDiv3.onclick = function () {
                 localStorage.setItem("currentLink", this.getAttribute("data-current"));
@@ -1277,9 +1398,11 @@ if (true) {
 
             let tempDiv6 = createElement({
                 "class": "s_card_play", "attributes": {
-                    "data-href": data[i][3]
+                    "data-href": data[i][3],
+                    "data-mainname": data[i][0]
                 }, "listeners": {
                     "click": function () {
+                        localStorage.setItem("mainName", this.getAttribute("data-mainname"));
                         window.parent.postMessage({ "action": 4, "data": this.getAttribute("data-href") }, "*");
                     }
                 }, "element": "div"
@@ -1344,8 +1467,10 @@ if (true) {
 
         }
 
+        pullTabArray = [];
         let catMainDOM = document.getElementsByClassName("categoriesDataMain");
         for (var i = 0; i < catMainDOM.length; i++) {
+            pullTabArray.push(new pullToRefresh(catMainDOM[i]));
             catMainDOM[i].append(createElement({
                 "style": {
                     "width": "100%",
@@ -1363,7 +1488,64 @@ if (true) {
             }
         }
 
+        if(offlineMode){
+            for(let showname in downloadedFolders){
+                if(showname == "socialsharing-downloads"){
+                    continue;
+                }
 
+                let domToAppend = document.getElementById('room_recently');
+
+                let tempDiv = createElement({ "class": "s_card", "attributes": {}, "listeners": {} });
+                tempDiv.style.backgroundImage = `url("../../assets/images/placeholder.jpg")`;
+
+                let tempDiv1 = createElement({ "class": "s_card_bg", "attributes": {}, "listeners": {} });
+                let tempDiv2 = createElement({ "class": "s_card_title", "attributes": {}, "listeners": {} });
+
+
+                let tempDiv3 = document.createElement("div");
+                tempDiv3.className = "s_card_title_main";
+                tempDiv3.textContent = fix_title(showname);
+                tempDiv3.setAttribute("data-href", "?watch=/"+ showname);
+
+                let tempDiv7 = createElement({ "class": "card_menu", "attributes": {}, "listeners": {} });
+
+                let tempDiv9 = createElement({
+                    "class": "card_menu_item card_menu_icon_delete", "attributes": {
+                    "data-showname": showname
+                    }, 
+                    "listeners": {
+                        "click": async function () {
+                            try{
+                                await window.parent.removeDirectory(`${showname}`);
+                                tempDiv.remove();
+                            }catch(err){
+                                alert("Could not delete the files. You have to manually delete it by going to the show's page.");
+                            }
+                        }
+                    }
+                });
+
+                tempDiv3.onclick = function () {
+                    window.parent.postMessage({ "action": 500, data: "pages/episode/index.html" + this.getAttribute("data-href") }, "*");
+
+                };
+
+               
+
+
+                tempDiv2.append(tempDiv3);
+
+                tempDiv1.append(tempDiv2);
+                tempDiv7.append(tempDiv9);
+                
+                tempDiv1.append(tempDiv7);
+
+                tempDiv.append(tempDiv1);
+
+                domToAppend.append(tempDiv);
+            }
+        }
 
 
     }
