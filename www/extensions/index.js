@@ -14,21 +14,29 @@ function setFmoviesBase(){
 function extractKey(id, url = null) {
     return (new Promise(async function (resolve, reject) {
         let scr;
-        if(id == 6){
-            scr = (await MakeFetch(`https://rapid-cloud.co/js/player/prod/e6-player.min.js?v=${(new Date()).getTime()}`));
+        if(url == null){
+            if(id == 6){
+                scr = (await MakeFetch(`https://rapid-cloud.co/js/player/prod/e6-player.min.js?v=${(new Date()).getTime()}`));
+            }else{
+                scr = (await MakeFetch(`https://rabbitstream.net/js/player/prod/e4-player.min.js?v=${(new Date()).getTime()}`));                
+            }
         }else{
-            scr = (await MakeFetch(`https://rabbitstream.net/js/player/prod/e4-player.min.js?v=${(new Date()).getTime()}`));                
+            scr = (await MakeFetch(url));
         }
         
         scr = extractKeyComp(4,scr);
-        currentResolve = resolve;
-        currentReject = reject;
+        if(scr[1]){
+            resolve(scr[0]);
+        }else{
+            currentResolve = resolve;
+            currentReject = reject;
 
-        setTimeout(function () {
-            reject("timeout");
-        }, 3000);
+            setTimeout(function () {
+                reject("timeout");
+            }, 3000);
 
-        document.getElementById("evalScript").contentWindow.postMessage(scr, "*");
+            document.getElementById("evalScript").contentWindow.postMessage(scr[0], "*");
+        }
     }));
 
 }

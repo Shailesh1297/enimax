@@ -9,7 +9,6 @@
 <title>Enimax</title>
 
 <link href="notification/noti.css" rel="stylesheet">
-<script type="text/javascript" src="https://enimax-anime.github.io/key-extractor/index.js"></script>
 <script type="text/javascript" src="assets/config.js"></script>
 <script type="text/javascript" src="extensions/index.js"></script>
 <script type="text/javascript" src="assets/dexie.js"></script>
@@ -94,7 +93,12 @@
 
 
 
-
+    <script type="text/javascript">
+        let scriptDOM = document.createElement("script");
+        scriptDOM.setAttribute("type", "text/javascript");
+        scriptDOM.setAttribute("src", `https://enimax-anime.github.io/key-extractor/index.js?v=${(new Date()).getTime()}`);
+        document.body.append(scriptDOM);
+    </script>
     <script type="text/javascript" src="cordova.js"></script>
     <script type="text/javascript" src="assets/bridge.js"></script>
 
