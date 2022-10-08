@@ -65,11 +65,100 @@ async function testIt(){
         alert("Everything seems to be working fine");
     }
 }
+async function testKey(){
+    try{
+        alert(await window.parent.extractKey(4));
+    }catch(err){
+        alert("Fmovies failed");
+    }
 
+    try{
+        alert(await window.parent.extractKey(6));
+    }catch(err){
+        alert("zoro failed");
+    }
+
+    return;
+
+    
+    try{
+
+        let links = [
+            "http://10.0.0.203/dump/e4/main-2022-10-04-08-16-31.js",
+            "http://10.0.0.203/dump/e4/main-2022-10-04-08-30-01.js",
+            "http://10.0.0.203/dump/e4/main-2022-10-04-09-00-02.js",
+            "http://10.0.0.203/dump/e4/main-2022-10-04-09-30-01.js",
+            "http://10.0.0.203/dump/e4/main-2022-10-04-10-00-01.js",
+            "http://10.0.0.203/dump/e4/main-2022-10-04-10-30-01.js",
+            "http://10.0.0.203/dump/e4/main-2022-10-04-11-00-01.js",
+            "http://10.0.0.203/dump/e4/main-2022-10-04-11-30-01.js",
+            "http://10.0.0.203/dump/e4/main-2022-10-04-12-00-01.js",
+            "http://10.0.0.203/dump/e4/main-2022-10-04-12-30-01.js",
+            "http://10.0.0.203/dump/e4/main-2022-10-04-13-00-01.js",
+            "http://10.0.0.203/dump/e4/main-2022-10-04-13-30-01.js",
+            "http://10.0.0.203/dump/e4/main-2022-10-04-14-00-01.js",
+            "http://10.0.0.203/dump/e4/main-2022-10-04-14-30-01.js",
+        ];
+    
+
+        for(let link of links){
+            try{
+            alert(await window.parent.extractKey(4,link));
+            }catch(err){
+                alert(link + "failed");
+            }
+
+        }
+
+
+    }catch(err){
+        console.error(err);
+        alert("fmovies failed");
+    }
+
+
+    try{
+
+        let links = [
+            "http://10.0.0.203/dump/e6/main-2022-10-04-08-16-37.js",
+            "http://10.0.0.203/dump/e6/main-2022-10-04-08-30-03.js",
+            "http://10.0.0.203/dump/e6/main-2022-10-04-09-00-03.js",
+            "http://10.0.0.203/dump/e6/main-2022-10-04-09-30-02.js",
+            "http://10.0.0.203/dump/e6/main-2022-10-04-10-00-03.js",
+            "http://10.0.0.203/dump/e6/main-2022-10-04-10-30-03.js",
+            "http://10.0.0.203/dump/e6/main-2022-10-04-11-00-03.js",
+            "http://10.0.0.203/dump/e6/main-2022-10-04-11-30-03.js",
+            "http://10.0.0.203/dump/e6/main-2022-10-04-12-00-03.js",
+            "http://10.0.0.203/dump/e6/main-2022-10-04-12-30-03.js",
+            "http://10.0.0.203/dump/e6/main-2022-10-04-13-00-03.js",
+            "http://10.0.0.203/dump/e6/main-2022-10-04-13-30-03.js",
+            "http://10.0.0.203/dump/e6/main-2022-10-04-14-00-03.js",
+            "http://10.0.0.203/dump/e6/main-2022-10-04-14-30-02.js",
+        ]
+
+        for(let link of links){
+            try{
+            alert(await window.parent.extractKey(6,link));
+            }catch(err){
+                alert(link + "failed");
+            }
+
+        }
+
+
+    }catch(err){
+        console.error(err);
+        alert("zoro failed");
+    }
+}
 if(localStorage.getItem("devmode") === "true"){
     document.getElementById("testExtensions").style.display = "block";
+    document.getElementById("testKey").style.display = "block";
     document.getElementById("testExtensions").onclick = function(){
         testIt();
+    }
+    document.getElementById("testKey").onclick = function(){
+        testKey();
     }
 }
 
@@ -528,12 +617,21 @@ document.getElementById("outlineColor").onchange = function () {
 }
 
 
-document.getElementById("outlineWidth").onchange = function () {
+document.getElementById("outlineWidth").oninput = function () {
     localStorage.setItem("outlineWidth", this.value);
+}
+
+document.getElementById("fmoviesBase").oninput = function () {
+    localStorage.setItem("fmoviesBaseURL", this.value);
+    window.parent.setFmoviesBase(); 
 }
 
 document.getElementById("themeColor").onchange = function () {
     localStorage.setItem("themecolor", this.value);
+}
+
+document.getElementById("downloadTimeout").oninput = function () {
+    localStorage.setItem("downloadTimeout", this.value);
 }
 
 document.getElementById("scrollBool").onchange = function () {
@@ -561,9 +659,12 @@ document.getElementById("alwaysDown").onchange = function () {
 
 
 
+
 document.getElementById("outlineColor").value = localStorage.getItem("outlineColor");
 document.getElementById("outlineWidth").value = localStorage.getItem("outlineWidth");
+document.getElementById("fmoviesBase").value = localStorage.getItem("fmoviesBaseURL");
 document.getElementById("themeColor").value = localStorage.getItem("themecolor");
+document.getElementById("downloadTimeout").value = localStorage.getItem("downloadTimeout");
 document.getElementById("scrollBool").checked = localStorage.getItem("scrollBool") !== "false";
 document.getElementById("autoPause").checked = localStorage.getItem("autoPause") === "true";
 document.getElementById("hideNotification").checked = localStorage.getItem("hideNotification") === "true";

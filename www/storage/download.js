@@ -478,10 +478,12 @@ class DownloadVid {
                 var fileTransfer = new FileTransfer();
                 var fileURL = fileEntry.toURL();
                 headers.suppressProgress = true;
+                let timeoutMS = parseInt(localStorage.getItem("downloadTimeout"));
+                timeoutMS = isNaN(timeoutMS) ? 20000 : timeoutMS*1000;
                 let timeout = setTimeout(function(){
                     fileTransfer.abort();
                     reject("timeout");      
-                }, 60000);
+                }, timeoutMS);
                 fileTransfer.download(
                     uri,
                     fileURL,
@@ -869,12 +871,15 @@ class DownloadVid {
                         }
                     }
                     try {
+                        console.log("start");
                         if (settled) {
                             response = await Promise.allSettled(promises);
                         } else {
                             response = await Promise.all(promises);
 
                         }
+                        console.log("end", response);
+
 
                         let index = 0;
                         for (let j = i * parallel; j < ((i + 1) * parallel) && j < mapping.length; j++) {

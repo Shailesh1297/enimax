@@ -951,7 +951,15 @@ function exec_action(x, reqSource) {
 
 
 window.addEventListener('message', function (x) {
-    exec_action(x.data, x.source);
+    if(x.data.action == "eval"){
+        if(x.data.value == "error"){
+            currentReject("error");
+        }else{
+            currentResolve(x.data.value);
+        }
+    }else{
+        exec_action(x.data, x.source);
+    }
 });
 
 

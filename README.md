@@ -47,7 +47,7 @@ If you just want to download the pre-built app, go to the [releases](https://git
 
 # Recovering old data
 
-`v1.1.6` uses an SQLite database instead on an IndexedDB to store downloaded-videos' data. Do the following to recover your data: 
+`v1.1.6` uses an SQLite database instead of an IndexedDB to store downloaded-videos' data. Do the following to recover your data: 
 1. Open the app and then open the `settings`.
 2. Click on `Restore Data` and it should take care of the rest.
 

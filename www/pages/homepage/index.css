@@ -89,6 +89,24 @@ body {
     width: 100px;
 }
 
+#fmoviesBase {
+    display: inline-block;
+    border-radius: 10px;
+    height: 30px;
+    padding: 20px;
+    border: 0;
+    width: 150px;
+}
+
+#downloadTimeout {
+    display: inline-block;
+    border-radius: 10px;
+    height: 30px;
+    padding: 20px;
+    border: 0;
+    width: 100px;
+}
+
 #themeColor {
     display: inline-block;
     border: 0px;

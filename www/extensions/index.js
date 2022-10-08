@@ -3,10 +3,139 @@ if (localVal != "true" && localVal != "false") {
     localStorage.setItem("local", "true");
     config.local = true;
 }
+let currentResolve;
+let currentReject;
+let fmoviesBaseURL = !localStorage.getItem("fmoviesBaseURL") ? "fmovies.app" : localStorage.getItem("fmoviesBaseURL");
 
+function setFmoviesBase(){
+    fmoviesBaseURL = !localStorage.getItem("fmoviesBaseURL") ? "fmovies.app" : localStorage.getItem("fmoviesBaseURL");
+}
 
+function extractKey(id, url = null) {
+    return (new Promise(async function (resolve, reject) {
 
+        String.prototype.substringAfter = function substringAfter(toFind) {
+            let str = this;
+            let index = str.indexOf(toFind);
+            return index == -1 ? "" : str.substring(index + toFind.length);
+        }
 
+        String.prototype.substringBefore = function substringBefore(toFind) {
+            let str = this;
+            let index = str.indexOf(toFind);
+            return index == -1 ? "" : str.substring(0, index);
+        }
+
+        String.prototype.substringAfterLast = function substringAfterLast(toFind) {
+            let str = this;
+            let index = str.lastIndexOf(toFind);
+            return index == -1 ? "" : str.substring(index + toFind.length);
+        }
+
+        String.prototype.substringBeforeLast = function substringBeforeLast(toFind) {
+            let str = this;
+            let index = str.lastIndexOf(toFind);
+            return index == -1 ? "" : str.substring(0, index);
+        }
+
+        function getPassword(js) {
+            try {
+                let passVar = js.substringAfter("CryptoJS[")
+                    .substringBefore("),")
+                    .substringAfterLast(",");
+
+                let passValue = js.substringAfter(`const ${passVar}=`, "").substringBefore(";", "");
+                if (!passValue == "") {
+                    if (passValue.startsWith("'")) {
+                        passValue = passValue.substring(1, passValue.length - 1);
+                        resolve(passValue);
+                        return;
+                    }
+
+                    getPasswordFromJS(js, "(" + passValue.substringAfter("("));
+                    return;
+                }
+
+                let jsEnd = js.substringBefore("jwplayer(").substringBeforeLast("var");
+                let suspiciousPass = jsEnd.substringBeforeLast("'").substringAfterLast("'")
+                if (suspiciousPass.length < 8) {
+                    let funcArgs;
+                    if (id == 4) {
+                        let funcName = "0x" + js.substringBeforeLast("=($(document)['on']").substringAfterLast("0x");
+                        funcArgs = (js.substringAfter(funcName).substringBefore(")") + ")").substringAfter(",");
+                        if (funcArgs[0] == "'") {
+                            funcArgs = funcArgs.split("'")[1];
+                            resolve(funcArgs);
+                            return;
+                        } else {
+                            funcArgs = "(" + funcArgs.substringAfter("(");
+                        }
+                    } else {
+                        funcArgs = jsEnd.substringAfterLast("(0x").substringBefore(")");
+                    }
+                    getPasswordFromJS(js, funcArgs);
+                    return;
+                }
+                resolve(suspiciousPass);
+                return;
+            } catch (err) {
+                reject("error");
+            }
+        }
+
+        function getPasswordFromJS(js, getKeyArgs) {
+            let script = js.substringBefore(",(!function") + ")";
+
+            let decoderFunName = script.substringBefore(";(func").substringAfterLast("=");
+            if (decoderFunName == "") {
+                decoderFunName = script.substringAfter("=").substringBefore(";");
+            }
+
+            if (decoderFunName.substring(0, 3) != "_0x") {
+                decoderFunName = script.substringBefore(";func").substringAfterLast("=");
+            }
+            let decoderFunPrefix = "function " + decoderFunName;
+            let decoderFunBody = decoderFunPrefix + js.substringAfter(decoderFunPrefix);
+            let decoderFunSuffix = `,${decoderFunName}(`;
+            let decoderFunCall = decoderFunSuffix + decoderFunBody
+                .substringAfter(decoderFunSuffix)
+                .substringBefore(");}") + ");}";
+            decoderFunBody = decoderFunBody.substringBefore(decoderFunCall) + decoderFunCall;
+            if (!script.substring(0, 20).includes("=[")) {
+                let superArrName = decoderFunBody.substringAfter("=").substringBefore(";");
+                let superArrPrefix = "function " + superArrName;
+                let superArrSuffix = "return " + superArrName + ";}";
+                let superArrBody = superArrPrefix + js.substringAfter(superArrPrefix)
+                    .substringBefore(superArrSuffix) + superArrSuffix;
+                script += "\n" + superArrBody + "\n";
+            }
+
+            script += "\n" + decoderFunBody;
+            script += `\n${decoderFunName}${getKeyArgs}`;
+            currentResolve = resolve;
+            currentReject = reject;
+
+            setTimeout(function () {
+                reject("timeout");
+            }, 3000);
+
+            console.log(script, id);
+            document.getElementById("evalScript").contentWindow.postMessage(script, "*");
+        }
+        if(url == null){
+            if(id == 6){
+                getPassword(await MakeFetch(`https://rapid-cloud.co/js/player/prod/e6-player.min.js?v=${(new Date()).getTime()}`));
+            }else{
+                getPassword(await MakeFetch(`https://rabbitstream.net/js/player/prod/e4-player.min.js?v=${(new Date()).getTime()}`));
+
+                
+            }
+        }else{
+            getPassword(await MakeFetch(`${url}?v=${(new Date()).getTime()}`));
+        }
+    }));
+
+}
 
 async function MakeFetch(url, options) {
     return new Promise(function (resolve, reject) {
@@ -30,23 +159,23 @@ var MakeCusReqFmovies = async function (url, options) {
 }
 
 
-if(config && config.chrome){
+if (config && config.chrome) {
     chrome.webRequest.onBeforeSendHeaders.addListener(
-        function(details) {
-          for(x in customHeaders){
-            details.requestHeaders.push({
-                "name" : x,
-                "value" : customHeaders[x]
-              });
-          }
+        function (details) {
+            for (x in customHeaders) {
+                details.requestHeaders.push({
+                    "name": x,
+                    "value": customHeaders[x]
+                });
+            }
 
 
-          
-          return { requestHeaders: details.requestHeaders };
+
+            return { requestHeaders: details.requestHeaders };
         },
-        {urls: ['https://fmovies.app/*','https://streamrapid.ru/*']},
+        { urls: ['https://fmovies.app/*', 'https://streamrapid.ru/*'] },
         ['blocking', 'requestHeaders']
-      );
+    );
 
     chrome.webRequest.onBeforeSendHeaders.addListener(
         function (details) {
@@ -75,8 +204,8 @@ if(config && config.chrome){
         ['blocking', 'requestHeaders']
     );
 
-    MakeCusReqFmovies = async function(url,options){
-        if("headers" in options){
+    MakeCusReqFmovies = async function (url, options) {
+        if ("headers" in options) {
             customHeaders = options["headers"];
         }
 
@@ -151,8 +280,8 @@ var wco = {
                 let data = {};
                 data.name = temp.querySelectorAll(".video-title")[0].innerText;
                 data.image = temp.querySelector("#sidebar_cat").querySelectorAll(".img5")[0].getAttribute("src");
-                
-                if(data.image.indexOf("//") == 0){
+
+                if (data.image.indexOf("//") == 0) {
                     data.image = "https:" + data.image;
                 }
 
@@ -163,7 +292,7 @@ var wco = {
                 let animeEps = [];
                 let animeDOM = episodesDOM.querySelectorAll("a");
                 let animeName;
-                for (var i = animeDOM.length - 1; i >=0 ; i--) {
+                for (var i = animeDOM.length - 1; i >= 0; i--) {
                     animeEps.push({
                         "link": animeDOM[i].href.replace("https://www.wcoforever.net", "?watch=") + "&engine=0",
                         "title": animeDOM[i].innerText,
@@ -292,8 +421,8 @@ var wco = {
             let arrayRegOut = JSON.parse(arrayReg.exec(tempRegOut)[0]);
             let num = parseInt(tempRegOut.split(`.replace(\/\\D\/g,'')) -`)[1]);
 
-            arrayRegOut.forEach(function(value) { 
-                main += String.fromCharCode(parseInt(atob(value).replace(/\D/g,'')) - num); 
+            arrayRegOut.forEach(function (value) {
+                main += String.fromCharCode(parseInt(atob(value).replace(/\D/g, '')) - num);
             });
 
             main = "https://www.wcoforever.net" + main.split("src=\"")[1].split("\" ")[0];
@@ -443,10 +572,10 @@ var animixplay = {
                 try {
                     let malId = parseInt(response.split("malid = '")[1]);
                     let response2 = await MakeFetch(`https://myanimelist.net/anime/${malId}`, {});
-                    temp2.innerHTML = DOMPurify.sanitize(response2,{ALLOWED_ATTR: ['itemprop']});
+                    temp2.innerHTML = DOMPurify.sanitize(response2, { ALLOWED_ATTR: ['itemprop'] });
 
                     data.image = temp2.querySelector('[itemprop="image"]').src;
-                    
+
 
                     if (data.image == null || data.image == undefined || data.image.trim() == "") {
                         data.image = temp2.querySelector('[itemprop="image"]').getAttribute('data-image');
@@ -460,7 +589,7 @@ var animixplay = {
                     data.description = temp2.querySelector('[itemprop="description"]').innerText;
                 } catch (err) {
                     console.error(err);
-                }finally{
+                } finally {
                     temp2.remove();
                 }
 
@@ -535,14 +664,14 @@ var animixplay = {
 
             let l = animeDOM[episode.toString()].split("id=")[1].split("&")[0]
 
-            function padding(string, len){
+            function padding(string, len) {
                 let length = len - string.length;
-                for(var i = 0; i < length; i++){
+                for (var i = 0; i < length; i++) {
                     string += "=";
                 }
-            
+
                 return string;
-                
+
             }
             function idToLink(id) {
 
@@ -558,14 +687,14 @@ var animixplay = {
 
             data.sources = [];
 
-            if(config.chrome){
-                let reqTimeout = setTimeout(function(){
+            if (config.chrome) {
+                let reqTimeout = setTimeout(function () {
                     chrome.webRequest.onHeadersReceived.removeListener(
                         callbackReq
-                      );
+                    );
                     reject("Timeout");
                 }, 3000);
-                function callbackReq(details){
+                function callbackReq(details) {
                     clearTimeout(reqTimeout);
                     let res = details.url;
                     res = atob(res.split("#")[1]);
@@ -580,23 +709,23 @@ var animixplay = {
                     data.message = "done";
                     chrome.webRequest.onHeadersReceived.removeListener(
                         callbackReq
-                      );
+                    );
                     resolve(data);
                 }
 
-                
-                
+
+
                 chrome.webRequest.onHeadersReceived.addListener(
                     callbackReq,
-                    {urls: ["https://plyr.link/*"]}
+                    { urls: ["https://plyr.link/*"] }
                 );
 
                 MakeFetch(`https://animixplay.to/api/live${link}`, {
                     method: 'GET'
                 });
 
-                
-            }else{
+
+            } else {
 
                 cordova.plugin.http.sendRequest(`https://animixplay.to/api/live${link}`, {
                     method: 'GET'
@@ -632,7 +761,7 @@ var fmovies = {
 
         query = decodeURIComponent(query);
         return (new Promise(function (resolve, reject) {
-            fetch(`https://fmovies.app/search/${query.replace(" ", "-")}`, {
+            fetch(`https://${fmoviesBaseURL}/search/${query.replace(" ", "-")}`, {
 
             }).then(response => response.text())
                 .then(response => {
@@ -652,7 +781,7 @@ var fmovies = {
 
                         let temlLink = poster.querySelector("a").getAttribute("href");
 
-                        if(temlLink.includes("http")){
+                        if (temlLink.includes("http")) {
                             temlLink = new URL(temlLink);
                             temlLink = temlLink.pathname;
                         }
@@ -690,7 +819,7 @@ var fmovies = {
 
         async function getSeason(x, showURL) {
             try {
-                let r = await MakeFetch(`https://fmovies.app/ajax/v2/tv/seasons/${x}`);
+                let r = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/tv/seasons/${x}`);
 
                 let temp = document.createElement("div");
                 temp.innerHTML = DOMPurify.sanitize(r);
@@ -702,7 +831,7 @@ var fmovies = {
 
 
 
-                r = await MakeFetch(`https://fmovies.app/${showURL}`);
+                r = await MakeFetch(`https://${fmoviesBaseURL}/${showURL}`);
                 let temp2 = document.createElement("div");
                 temp2.innerHTML = DOMPurify.sanitize(r);
                 let data2 = {};
@@ -729,7 +858,7 @@ var fmovies = {
 
         async function getEpisode(x) {
             try {
-                let r = await MakeFetch(`https://fmovies.app/ajax/v2/season/episodes/${x}`);
+                let r = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/season/episodes/${x}`);
                 let temp = document.createElement("div");
                 temp.innerHTML = DOMPurify.sanitize(r);
                 let tempDOM = temp.getElementsByClassName("nav-link btn btn-sm btn-secondary eps-item");
@@ -818,9 +947,6 @@ var fmovies = {
 
     'getLinkFromUrl': function (url) {
 
-
-
-
         return (new Promise(async function (resolve, reject) {
             url = url.split("&engine");
             url = url[0];
@@ -858,6 +984,7 @@ var fmovies = {
                         var second = await MakeCusReqFmovies(`${host}/ajax/embed-4/getSources?id=${link}&_token=3&_number=${6}`, option23);
 
                         let jsonq = JSON.parse(second);
+
                         resolve(jsonq);
 
                     } catch (err) {
@@ -906,11 +1033,11 @@ var fmovies = {
                 let promise2;
                 if (split.length == 1) {
                     ep = split[0];
-                    promise2 = MakeCusReqFmovies(`https://fmovies.app/ajax/movie/episodes/${ep}`, option);
+                    promise2 = MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/movie/episodes/${ep}`, option);
                 } else {
                     ep = split[1];
 
-                    promise2 = MakeCusReqFmovies(`https://fmovies.app/ajax/v2/episode/servers/${ep}`, option)
+                    promise2 = MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/v2/episode/servers/${ep}`, option)
                 }
 
                 Promise.all([promise2]).then(async (tokens) => {
@@ -970,7 +1097,7 @@ var fmovies = {
                     }
 
 
-                    let getSeason = await MakeFetch(`https://fmovies.app/watch-${url.split(".")[0]}.${server}`);
+                    let getSeason = await MakeFetch(`https://${fmoviesBaseURL}/watch-${url.split(".")[0]}.${server}`);
 
                     let tempGetDom = document.createElement("div");
 
@@ -979,7 +1106,7 @@ var fmovies = {
                     tempGetDom.remove();
 
                     if (currentSeason != "") {
-                        let r = await MakeFetch(`https://fmovies.app/ajax/v2/season/episodes/${currentSeason}`);
+                        let r = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/season/episodes/${currentSeason}`);
 
                         let temp = document.createElement("div");
                         temp.innerHTML = DOMPurify.sanitize(r);
@@ -1000,12 +1127,17 @@ var fmovies = {
 
                     }
 
-                    let getLink = await MakeCusReqFmovies(`https://fmovies.app/ajax/get_link/${server}`, option);
+                    let getLink = await MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/get_link/${server}`, option);
 
                     var title_get = JSON.parse(getLink).title;
                     var link = JSON.parse(getLink).link;
-                    let ytr = await getLinkFromStream(link);
-
+                    let sourceJSON = await getLinkFromStream(link);
+                    console.log(sourceJSON);
+                    let encryptedURL = sourceJSON.sources;
+                    let decryptKey = await extractKey(4);
+                    console.log(decryptKey);
+                    let tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                    sourceJSON.sources = tempFile;
 
                     data.status = 200;
                     data.message = "done";
@@ -1020,12 +1152,12 @@ var fmovies = {
                     data.nameWSeason = url.split("/watch-")[1].split("-online")[0] + "-" + currentSeason;
 
                     data.sources = [{
-                        "url": ytr.sources[0].file,
+                        "url": sourceJSON.sources[0].file,
                         "name": "hls",
                         "type": "hls",
                     }];
 
-                    data.subtitles = ytr.tracks;
+                    data.subtitles = sourceJSON.tracks;
 
                     resolve(data);
 
@@ -1110,7 +1242,7 @@ var zoro = {
         response.description = _dom.querySelector(".film-description.m-hide").innerText;
 
         let name = url;
-        name = name.replace("?watch=","").split("&ep=")[0].split("-");
+        name = name.replace("?watch=", "").split("&ep=")[0].split("-");
         name.pop();
         name = name.join("-");
         response.mainName = name;
@@ -1195,39 +1327,45 @@ var zoro = {
 
         let sourceURLs = [];
         let subtitles = [];
-        
+
 
         for (var i = 0; i < dom.length; i++) {
-                let sources = await MakeFetch(`https://zoro.to/ajax/v2/episode/sources?id=${dom[i].getAttribute('data-id')}`, {});
-                sources = JSON.parse(sources).link;
-                let urlHost = (new URL(sources)).origin;
+            let sources = await MakeFetch(`https://zoro.to/ajax/v2/episode/sources?id=${dom[i].getAttribute('data-id')}`, {});
+            sources = JSON.parse(sources).link;
+            let urlHost = (new URL(sources)).origin;
 
 
-                let sourceId = sources.split("/");
-                sourceId = sourceId[sourceId.length - 1];
-                sourceId = sourceId.split("?")[0];
+            let sourceId = sources.split("/");
+            sourceId = sourceId[sourceId.length - 1];
+            sourceId = sourceId.split("?")[0];
 
 
-                let sourceJSON = JSON.parse((await MakeFetch(`${urlHost}/ajax/embed-6/getSources?id=${sourceId}&sId=lihgfedcba-abcde`, {})));
-                try{
-                    for(let j = 0; j < sourceJSON.tracks.length; j++){
-                        sourceJSON.tracks[j].label += " - " +dom[i].getAttribute('data-type');
-                        if(sourceJSON.tracks[j].kind == "captions"){
-                            subtitles.push(sourceJSON.tracks[j]);
-                        }
+            let sourceJSON = JSON.parse((await MakeFetch(`${urlHost}/ajax/embed-6/getSources?id=${sourceId}&sId=lihgfedcba-abcde`, {})));
+            try {
+                for (let j = 0; j < sourceJSON.tracks.length; j++) {
+                    sourceJSON.tracks[j].label += " - " + dom[i].getAttribute('data-type');
+                    if (sourceJSON.tracks[j].kind == "captions") {
+                        subtitles.push(sourceJSON.tracks[j]);
                     }
-                }catch(err){
+                }
+            } catch (err) {
 
+            }
+            try {
+                if (sourceJSON.encrypted) {
+                    let encryptedURL = sourceJSON.sources;
+                    let decryptKey = await extractKey(6);
+                    let tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                    sourceJSON.sources = tempFile;
                 }
-                try{
-                    let tempSrc = {"url":sourceJSON.sources[0].file , "name":"HLS#"+dom[i].getAttribute('data-type'), "type":"hls"};
-                    if("intro" in sourceJSON && "start" in sourceJSON.intro && "end" in sourceJSON.intro){
-                        tempSrc.skipIntro = sourceJSON.intro;   
-                    }
-                    sourceURLs.push(tempSrc);
-                }catch(err){
-                    console.error(err);
+                let tempSrc = { "url": sourceJSON.sources[0].file, "name": "HLS#" + dom[i].getAttribute('data-type'), "type": "hls" };
+                if ("intro" in sourceJSON && "start" in sourceJSON.intro && "end" in sourceJSON.intro) {
+                    tempSrc.skipIntro = sourceJSON.intro;
                 }
+                sourceURLs.push(tempSrc);
+            } catch (err) {
+                console.error(err);
+            }
         }
 
         let links = await getEpisodeListFromAnimeId(animeId, episodeId);
@@ -1254,16 +1392,16 @@ var zoro = {
 
         resp = { "sources": sourceURLs, "episode": epNum };
 
-        if(next != null){
+        if (next != null) {
             resp.next = next;
         }
 
-        if(prev != null){
+        if (prev != null) {
             resp.prev = prev;
         }
 
         let name = url;
-        name = name.replace("?watch=","").split("&ep=")[0].split("-");
+        name = name.replace("?watch=", "").split("&ep=")[0].split("-");
         name.pop();
         name = name.join("-");
 
@@ -1275,10 +1413,10 @@ var zoro = {
         return resp;
 
     },
-    "config" : {
-        "socketURL" : "https://ws1.rapid-cloud.co",
-        "origin" : "https://rapid-cloud.co",
-        "referer" : "https://rapid-cloud.co/",
+    "config": {
+        "socketURL": "https://ws1.rapid-cloud.co",
+        "origin": "https://rapid-cloud.co",
+        "referer": "https://rapid-cloud.co/",
     }
 };
 
@@ -1287,7 +1425,7 @@ const extensionNames = ["WCOforever", "Animixplay", "Fmovies", "Zoro"];
 
 
 
-localStorage.setItem("version", "1.1.6");
+localStorage.setItem("version", "1.1.7");
 if (localStorage.getItem("lastUpdate") === null) {
     localStorage.setItem("lastUpdate", "0");
 
