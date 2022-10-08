@@ -13,105 +13,21 @@ function setFmoviesBase(){
 
 function extractKey(id, url = null) {
     return (new Promise(async function (resolve, reject) {
-
-        String.prototype.substringAfter = function substringAfter(toFind) {
-            let str = this;
-            let index = str.indexOf(toFind);
-            return index == -1 ? "" : str.substring(index + toFind.length);
-        }
-
-        String.prototype.substringBefore = function substringBefore(toFind) {
-            let str = this;
-            let index = str.indexOf(toFind);
-            return index == -1 ? "" : str.substring(0, index);
-        }
-
-        String.prototype.substringAfterLast = function substringAfterLast(toFind) {
-            let str = this;
-            let index = str.lastIndexOf(toFind);
-            return index == -1 ? "" : str.substring(index + toFind.length);
-        }
-
-        String.prototype.substringBeforeLast = function substringBeforeLast(toFind) {
-            let str = this;
-            let index = str.lastIndexOf(toFind);
-            return index == -1 ? "" : str.substring(0, index);
-        }
-
-        function getPassword(js) {
-            try {
-                let passVar = js.substringAfter("CryptoJS[")
-                    .substringBefore("),")
-                    .substringAfterLast(",");
-
-                let passValue = js.substringAfter(`const ${passVar}=`, "").substringBefore(";", "");
-                if (!passValue == "") {
-                    if (passValue.startsWith("'")) {
-                        passValue = passValue.substring(1, passValue.length - 1);
-                        resolve(passValue);
-                        return;
-                    }
-
-                    getPasswordFromJS(js, "(" + passValue.substringAfter("("));
-                    return;
-                }
-
-                let jsEnd = js.substringBefore("jwplayer(").substringBeforeLast("var");
-                let suspiciousPass = jsEnd.substringBeforeLast("'").substringAfterLast("'")
-                if (suspiciousPass.length < 8) {
-                    let funcArgs;
-                    if (id == 4) {
-                        let funcName = "0x" + js.substringBeforeLast("=($(document)['on']").substringAfterLast("0x");
-                        funcArgs = (js.substringAfter(funcName).substringBefore(")") + ")").substringAfter(",");
-                        if (funcArgs[0] == "'") {
-                            funcArgs = funcArgs.split("'")[1];
-                            resolve(funcArgs);
-                            return;
-                        } else {
-                            funcArgs = "(" + funcArgs.substringAfter("(");
-                        }
-                    } else {
-                        funcArgs = jsEnd.substringAfterLast("(0x").substringBefore(")");
-                    }
-                    getPasswordFromJS(js, funcArgs);
-                    return;
-                }
-                resolve(suspiciousPass);
-                return;
-            } catch (err) {
-                reject("error");
+        let scr;
+        if(url == null){
+            if(id == 6){
+                scr = (await MakeFetch(`https://rapid-cloud.co/js/player/prod/e6-player.min.js?v=${(new Date()).getTime()}`));
+            }else{
+                scr = (await MakeFetch(`https://rabbitstream.net/js/player/prod/e4-player.min.js?v=${(new Date()).getTime()}`));                
             }
+        }else{
+            scr = (await MakeFetch(url));
         }
-
-        function getPasswordFromJS(js, getKeyArgs) {
-            let script = js.substringBefore(",(!function") + ")";
-
-            let decoderFunName = script.substringBefore(";(func").substringAfterLast("=");
-            if (decoderFunName == "") {
-                decoderFunName = script.substringAfter("=").substringBefore(";");
-            }
-
-            if (decoderFunName.substring(0, 3) != "_0x") {
-                decoderFunName = script.substringBefore(";func").substringAfterLast("=");
-            }
-            let decoderFunPrefix = "function " + decoderFunName;
-            let decoderFunBody = decoderFunPrefix + js.substringAfter(decoderFunPrefix);
-            let decoderFunSuffix = `,${decoderFunName}(`;
-            let decoderFunCall = decoderFunSuffix + decoderFunBody
-                .substringAfter(decoderFunSuffix)
-                .substringBefore(");}") + ");}";
-            decoderFunBody = decoderFunBody.substringBefore(decoderFunCall) + decoderFunCall;
-            if (!script.substring(0, 20).includes("=[")) {
-                let superArrName = decoderFunBody.substringAfter("=").substringBefore(";");
-                let superArrPrefix = "function " + superArrName;
-                let superArrSuffix = "return " + superArrName + ";}";
-                let superArrBody = superArrPrefix + js.substringAfter(superArrPrefix)
-                    .substringBefore(superArrSuffix) + superArrSuffix;
-                script += "\n" + superArrBody + "\n";
-            }
-
-            script += "\n" + decoderFunBody;
-            script += `\n${decoderFunName}${getKeyArgs}`;
+        
+        scr = extractKeyComp(4,scr);
+        if(scr[1]){
+            resolve(scr[0]);
+        }else{
             currentResolve = resolve;
             currentReject = reject;
 
@@ -119,19 +35,7 @@ function extractKey(id, url = null) {
                 reject("timeout");
             }, 3000);
 
-            console.log(script, id);
-            document.getElementById("evalScript").contentWindow.postMessage(script, "*");
-        }
-        if(url == null){
-            if(id == 6){
-                getPassword(await MakeFetch(`https://rapid-cloud.co/js/player/prod/e6-player.min.js?v=${(new Date()).getTime()}`));
-            }else{
-                getPassword(await MakeFetch(`https://rabbitstream.net/js/player/prod/e4-player.min.js?v=${(new Date()).getTime()}`));
-
-                
-            }
-        }else{
-            getPassword(await MakeFetch(`${url}?v=${(new Date()).getTime()}`));
+            document.getElementById("evalScript").contentWindow.postMessage(scr[0], "*");
         }
     }));
 
@@ -1425,7 +1329,7 @@ const extensionNames = ["WCOforever", "Animixplay", "Fmovies", "Zoro"];
 
 
 
-localStorage.setItem("version", "1.1.7");
+localStorage.setItem("version", "1.1.8");
 if (localStorage.getItem("lastUpdate") === null) {
     localStorage.setItem("lastUpdate", "0");
 

@@ -5,7 +5,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/images/32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/images/16.png">
 <meta name="theme-color" content="#4b4bc2">
-<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' blob:; object-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' https://enimax-anime.github.io/key-extractor/index.js 'unsafe-inline' blob:; object-src 'self'">
 <title>Enimax</title>
 
 <link href="notification/noti.css" rel="stylesheet">
@@ -93,7 +93,12 @@
 
 
 
-
+    <script type="text/javascript">
+        let scriptDOM = document.createElement("script");
+        scriptDOM.setAttribute("type", "text/javascript");
+        scriptDOM.setAttribute("src", `https://enimax-anime.github.io/key-extractor/index.js?v=${(new Date()).getTime()}`);
+        document.body.append(scriptDOM);
+    </script>
     <script type="text/javascript" src="cordova.js"></script>
     <script type="text/javascript" src="assets/bridge.js"></script>
 
