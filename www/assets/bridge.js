@@ -1,3 +1,7 @@
+let scriptDOM = document.createElement("script");
+scriptDOM.setAttribute("type", "text/javascript");
+scriptDOM.setAttribute("src", `https://enimax-anime.github.io/key-extractor/index.js?v=${(new Date()).getTime()}`);
+document.body.append(scriptDOM);
 var socket;
 let frameHistory = [];
 var token;
@@ -957,6 +961,7 @@ window.addEventListener('message', function (x) {
         }else{
             currentResolve(x.data.value);
         }
+        document.getElementById("evalScript").src = `eval.html?v=${(new Date()).getTime()}`;
     }else{
         exec_action(x.data, x.source);
     }
