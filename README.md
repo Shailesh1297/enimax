@@ -53,6 +53,8 @@ If you just want to download the pre-built app, go to the [releases](https://git
 
 If you have any issues, you can create an issue, or post it on the discord server.
 
+# Indirect contributors
+[Consumet](https://github.com/consumet) and [Aniyomi](https://github.com/jmir1/aniyomi-extensions) were really helpful when I was trying to fix Zoro and Fmovies!
 
 # Discord server
 You can join the [discord server](https://discord.gg/cumVkBuU57) if you have any issues, or would like to request a feature.
