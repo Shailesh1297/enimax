@@ -1,3 +1,19 @@
+# Screenshots
+
+ #### Android ####
+ <p align="middle">
+  <img src="https://user-images.githubusercontent.com/107899019/196063730-4554d20b-6fb8-4bfa-b073-6e3505bc52bd.jpg" height="600">
+  <img src="https://user-images.githubusercontent.com/107899019/196063734-295d1793-fbad-40f0-b029-a3263a3fb864.jpg" height="600">
+  <img src="https://user-images.githubusercontent.com/107899019/196063736-ab26fb3e-574e-42ae-b6e9-a62633a302ac.jpg" width="600">
+</p>
+
+ #### Firefox extension ####
+  <img src="https://user-images.githubusercontent.com/107899019/196063742-d2d2a173-9baf-424e-8edf-1c657f9be79c.png" width="600">
+
+ #### Chromium extension ####
+  <img src="https://user-images.githubusercontent.com/107899019/196063743-8d61241d-9b50-4fe3-aba1-459d8ee627bc.png" width="600">
+
+
 # How to build
 
 After cloning the repository, run the following commands:
