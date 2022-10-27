@@ -58,7 +58,11 @@ async function testIt(){
             alert(`${extensionNames[i]} - player :  ${err.toString()}`);
         }
 
-        alert(`${extensionNames[i]} - Here's the link: ${playerResult.sources[0].url}`);
+        try{
+            alert(`${extensionNames[i]} - Here's the link: ${playerResult.sources[0].url}`);
+        }catch(err){
+            alert(extensionNames[i] + " Failed");
+        }
     }
 
     if(!errored){
