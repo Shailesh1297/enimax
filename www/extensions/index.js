@@ -24,7 +24,7 @@ function extractKey(id, url = null) {
             scr = (await MakeFetch(url));
         }
         
-        scr = extractKeyComp(4,scr);
+        scr = extractKeyComp(id,scr);
         if(scr[1]){
             resolve(scr[0]);
         }else{
