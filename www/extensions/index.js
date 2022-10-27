@@ -93,10 +93,13 @@ if (config && config.chrome) {
                 "value": extensionList[3].config.referer
             });
 
-            details.requestHeaders.push({
-                "name": "sid",
-                "value": localStorage.getItem("sid")
-            });
+            if(config.sockets){
+                details.requestHeaders.push({
+                    "name": "sid",
+                    "value": localStorage.getItem("sid")
+                });
+            }
+            
 
 
 
