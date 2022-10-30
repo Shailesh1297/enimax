@@ -151,6 +151,8 @@ function resetOfflineQual() {
         if (!isNaN(choice) && choice >= 1 && choice <= 4) {
             localStorage.setItem("offlineQual", qual[choice - 1]);
             break;
+        }else{
+            alert("Enter a number between 1 and 4");
         }
     }
 }
@@ -450,6 +452,11 @@ document.getElementById("queueOpen").onclick = function () {
     reloadQueue();
 }
 
+document.getElementById("themes").onclick = function () {
+    document.getElementById("themesCon").setAttribute("data-conopen", "true");
+    document.getElementById("themesCon").style.display = "flex";
+}
+
 
 
 if (!config.chrome) {
@@ -604,6 +611,7 @@ document.getElementById("fmoviesBase").oninput = function () {
 
 document.getElementById("themeColor").onchange = function () {
     localStorage.setItem("themecolor", this.value);
+    applyTheme();
 }
 
 document.getElementById("downloadTimeout").oninput = function () {
@@ -660,23 +668,31 @@ function changeServer() {
 
 }
 
+
 function toggleMenu(){
     let menuI = document.getElementById("menuIcon");
+    let menuElem = document.getElementById("menu");
     menuI.classList.toggle("change");
-    clearTimeout(timeout);
     let conElem = document.getElementById("con_11");
-    if (menuI.getAttribute("data-open") == "0") {
-        conElem.style.transform ="translateX(200px)";
-        conElem.style.opacity = "0";
+    if (menuElem.getAttribute("data-open") == "0") {
+        conElem.style.transform ="scale(0.8) translateX(300px)";
+        conElem.style.opacity = "0.6";
         conElem.style.pointerEvents = "none";
-        menuI.setAttribute("data-open", "1");
-        document.getElementById("menu").style.display = "block";
+        document.getElementById("toggleMenuOpen").style.display = "block";
+        menuElem.setAttribute("data-open", "1");
+        menuElem.style.transform = "translateX(0px)";
+        menuElem.style.opacity = "1";
+        menuElem.style.pointerEvents = "auto";
     } else {
-        conElem.style.transform ="translateX(0)";
+        conElem.style.transform ="scale(1) translateX(0)";
         conElem.style.opacity = "1";
         conElem.style.pointerEvents = "auto";
-        menuI.setAttribute("data-open", "0");
-        document.getElementById("menu").style.display = "none";
+        document.getElementById("toggleMenuOpen").style.display = "none";
+
+        menuElem.setAttribute("data-open", "0");
+        menuElem.style.transform = "translateX(-200px)";
+        menuElem.style.opacity = "0";
+        menuElem.style.pointerEvents = "none";
     }
 }
 
@@ -1685,3 +1701,37 @@ for(element of document.getElementsByClassName("menuItem")){
 
 
 applyTheme();
+let bgGradientIndex = parseInt(localStorage.getItem("themegradient"));
+
+function selectTheme(index){
+    window.parent.postMessage({ "action": "updateGrad", data: index}, "*");
+    let themeCount = 0;
+    for(themeElem of document.getElementsByClassName("themesContainer")){
+        if(themeCount == index){
+            themeElem.classList.add("selected");
+        }else{
+            themeElem.classList.remove("selected");
+        }
+        themeCount++;
+    }
+}
+
+let menuP = new menuPull(document.getElementById("con_11"), toggleMenu);
+document.getElementById("toggleMenuOpen").addEventListener("click", toggleMenu);
+
+
+let themeCount = 0;
+
+for(themeElem of document.getElementsByClassName("themesContainer")){
+    let curCount = themeCount;
+    if(bgGradientIndex == curCount){
+        themeElem.classList.add("selected");
+    }
+
+    themeElem.style.backgroundImage = backgroundGradients[curCount];
+    themeElem.addEventListener("click", function(){
+        selectTheme(curCount);
+    });
+
+    themeCount++;
+}

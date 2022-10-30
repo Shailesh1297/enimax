@@ -23,7 +23,7 @@
 
     <div id="floatingMenu">
       <div id="floatingMenuWrapper">
-      <div id="menuIcon" data-open="0" class="">
+      <div id="menuIcon" class="">
         <div class="bar1"></div>
         <div class="bar2"></div>
         <div class="bar3"></div>
@@ -32,8 +32,9 @@
       <div id="searchIcon"></div></div>
     </div>
 
+    <div id="toggleMenuOpen"></div>
 
-    <div id="menu">
+    <div id="menu" data-open="0">
       <div class="menuItem">
         <div style="color: white;text-align: left;display: none;" id="offlineCon">
           Offline Mode: &nbsp;
@@ -43,24 +44,28 @@
           </label>  
         </div>
       </div>
-      <div class="menuItem" id="retry">Reload</div>
-      <div class="menuItem" id="reset">Reset password</div>
-      <div class="menuItem" id="add_room">Add categories</div>
-      <div class="menuItem" id="show_room">Reorder categories</div>
-      <div class="menuItem" id="queueOpen">Download Queue</div>
-      <div class="menuItem" id="restoreData">Restore Data</div>
-      <div class="menuItem" id="accessability">Settings</div>
-      <div class="menuItem" id="changeServerDiv">Change server</div>
-      <div class="menuItem" id="logout">Log out</div>
-      <div class="menuItem" id="exportData" style="display:none;">Export Data</div>
+      <div class="menuItem" id="restoreData" style="display:none">Restore Data</div>
+      <div class="menuItem" id="retry"><div class="menuIcon" id="reloadMenu"></div><div class="menuTitle">Reload</div></div>
+      <div class="menuItem" id="reset"><div class="menuIcon" id="resetPasswordMenu"></div><div class="menuTitle">Reset password</div></div>
+      <div class="menuItem" id="add_room"><div class="menuIcon" id="addCatsMenu"></div><div class="menuTitle">Add categories</div></div>
+      <div class="menuItem" id="show_room"><div class="menuIcon" id="reorderCatsMenu"></div><div class="menuTitle">Reorder categories</div></div>
+      <div class="menuItem" id="queueOpen"><div class="menuIcon" id="downloadMenu"></div><div class="menuTitle">Download Queue</div></div>
+      <div class="menuItem" id="accessability"><div class="menuIcon" id="settingMenu"></div><div class="menuTitle">Settings</div></div>
+      <div class="menuItem" id="themes"><div class="menuIcon" id="themesMenu"></div><div class="menuTitle">Themes</div></div>
+      <div class="menuItem" id="changeServerDiv"><div class="menuIcon" id="serverMenu"></div><div class="menuTitle">Change server</div></div>
+      <div class="menuItem" id="logout"><div class="menuIcon" id="logoutMenu"></div><div class="menuTitle">Log out</div></div>
+      <div class="menuItem" id="exportData" style="display:none;"><div class="menuIcon" id="exportMenu"></div><div class="menuTitle">Export Data</div></div>
+      <div class="menuItem" id="importData" style="display:none;">
+        <div class="menuIcon" id="importMenu"></div>
+        <div class="menuTitle">
+          <label for="importFile">Import Data</label>
+          <input type="file" id="importFile">
+        </div>
+      </div>
+      <div class="menuItem" id="resetSource" style="display:none;">Reset source preference</div>
+      <div class="menuItem" id="resetQuality" style="display:none;">Reset quality preference</div>
       <div class="menuItem" id="testExtensions" style="display:none;">Test Extensions</div>
       <div class="menuItem" id="testKey" style="display:none;">Test key</div>
-      <div class="menuItem" id="importData" style="display:none;"><label for="importFile">Import Data</label><input
-          type="file" id="importFile"></div>
-      <div class="menuItem" id="resetSource" style="display:none;">Reset source preference
-      </div>
-      <div class="menuItem" id="resetQuality" style="display:none;">Reset quality preference
-      </div>
     </div>
 
     <div id="con_11">
@@ -85,12 +90,14 @@
         <div class="close_con" id="closeRoom"></div>
         <button class="save_button" id="saveRoom">Save</button>
         <div class="input_con drag-sort-enable" id="room_dis_child"></div>
+        <div class="menuPadding"></div>
       </div>
 
 
       <div id="room_add_show" class="con_main">
         <div class="close_con closeDom"></div>
         <div class="input_con" id="room_add_child"></div>
+        <div class="menuPadding"></div>
       </div>
 
 
@@ -103,9 +110,36 @@
             <input type="checkbox" id="local">
             <span class="slider round"></span>
           </label>
+          <div class="menuPadding"></div>
         </div>
       </div>
 
+      <div id="themesCon" class="con_main">
+        <div class="close_con closeDom"></div>
+        <div style="text-align: center;color: white;max-height: 100%;overflow-y: scroll;">
+
+          <div class="accessTable">
+            <div class="accessItem">
+              <div class="tableCell" style="text-align:center">Theme Color</div>
+              <div class="tableCell"><input type="color" id="themeColor"></div>
+            </div>
+            <div class="accessItem">
+              <div class="tableCell" style="text-align:center">Outline Color</div>
+              <div class="tableCell"><input type="color" id="outlineColor"></div>
+            </div>
+          </div>
+          <div class="themesContainer"></div>
+          <div class="themesContainer"></div>
+          <div class="themesContainer"></div>
+          <div class="themesContainer"></div>
+          <div class="themesContainer"></div>
+          <div class="themesContainer"></div>
+          <div class="themesContainer"></div>
+          <div class="themesContainer"></div>
+          <div class="menuPadding"></div>
+
+        </div>
+      </div>
 
       <div id="queueCon" class="con_main" style="white-space: normal;">
         <div class="close_con" id="closeDomQueue"></div>
@@ -127,6 +161,7 @@
           <div class="queueRemove" id="doneRemove"></div> Done
         </div>
         <div id="doneCon"></div>
+        <div class="menuPadding"></div>
 
 
 
@@ -138,27 +173,25 @@
         <div id="tableCon">
           <div class="accessTable">
             <div class="accessItem">
-              <div class="tableCell">Outline Color</div>
-              <div class="tableCell"><input type="color" id="outlineColor"></div>
+              <div class="tableCell tableCellNoPadding">Outline Width</div>
             </div>
 
             <div class="accessItem">
-              <div class="tableCell">Theme Color</div>
-              <div class="tableCell"><input type="color" id="themeColor"></div>
-            </div>
-
-            <div class="accessItem">
-              <div class="tableCell">Outline Width</div>
               <div class="tableCell"><input type="text" id="outlineWidth"></div>
             </div>
 
             <div class="accessItem">
-              <div class="tableCell">Fmovies Base url</div>
+              <div class="tableCell tableCellNoPadding">Fmovies Base url</div>
+            </div>
+            <div class="accessItem">
               <div class="tableCell"><input type="text" id="fmoviesBase"></div>
             </div>
 
             <div class="accessItem notChrome">
-              <div class="tableCell">Timeout for downloads (in seconds)</div>
+              <div class="tableCell tableCellNoPadding">Timeout for downloads (in seconds)</div>
+            </div>
+
+            <div class="accessItem notChrome">
               <div class="tableCell"><input type="text" id="downloadTimeout"></div>
             </div>
 
@@ -214,6 +247,8 @@
               </div>
             </div>
           </div>
+          <div class="menuPadding"></div>
+
         </div>
       </div>
 
