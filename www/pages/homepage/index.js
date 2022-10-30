@@ -660,37 +660,29 @@ function changeServer() {
 
 }
 
-
-
-var timeout;
-document.getElementById("menuIcon").addEventListener("click", function () {
+function toggleMenu(){
     let menuI = document.getElementById("menuIcon");
     menuI.classList.toggle("change");
     clearTimeout(timeout);
+    let conElem = document.getElementById("con_11");
     if (menuI.getAttribute("data-open") == "0") {
+        conElem.style.transform ="translateX(200px)";
+        conElem.style.opacity = "0";
+        conElem.style.pointerEvents = "none";
         menuI.setAttribute("data-open", "1");
         document.getElementById("menu").style.display = "block";
-        document.getElementById("menuBg").style.display = "block";
-
-        window.requestAnimationFrame(function () {
-            window.requestAnimationFrame(function () {
-                document.getElementById("menuBg").style.backgroundColor = "rgba(0,0,0,0.7)";
-            });
-        });
     } else {
+        conElem.style.transform ="translateX(0)";
+        conElem.style.opacity = "1";
+        conElem.style.pointerEvents = "auto";
         menuI.setAttribute("data-open", "0");
         document.getElementById("menu").style.display = "none";
-        window.requestAnimationFrame(function () {
-            window.requestAnimationFrame(function () {
-                document.getElementById("menuBg").style.backgroundColor = "rgba(0,0,0,0)";
-                timeout = setTimeout(function () {
-                    document.getElementById("menuBg").style.display = "none";
-
-                }, 400);
-            });
-        });
-
     }
+}
+
+var timeout;
+document.getElementById("menuIcon").addEventListener("click", function () {
+    toggleMenu();
 
 
 });
@@ -1551,7 +1543,7 @@ if (true) {
             catMainDOM[i].append(createElement({
                 "style": {
                     "width": "100%",
-                    "height": "60px"
+                    "height": "70px"
                 }
             }));
         }
@@ -1685,6 +1677,10 @@ function changeEngine() {
         localStorage.setItem("currentEngine", 1);
 
     }
+}
+
+for(element of document.getElementsByClassName("menuItem")){
+    element.addEventListener("click", toggleMenu);
 }
 
 
