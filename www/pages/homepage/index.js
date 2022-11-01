@@ -871,7 +871,9 @@ function updateRoomDis() {
 
     }
 
-
+    // let menuPaddingElem = document.createElement("div");
+    // menuPaddingElem.className = "menuPadding";
+    // document.getElementById("room_dis_child").append(menuPaddingElem);
 }
 
 

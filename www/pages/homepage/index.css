@@ -488,3 +488,10 @@ input[type="color"]::-webkit-color-swatch {
     display: inline-block;
     vertical-align: middle;
 }
+
+#room_dis{
+    backdrop-filter: none !important;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 99;
+
+}
