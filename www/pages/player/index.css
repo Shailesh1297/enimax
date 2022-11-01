@@ -495,9 +495,9 @@ div {
 
 #setting_con_main {
     position: absolute;
-    top: 0;
+    bottom: 0;
     left: 0;
-    height: 100%;
+    height: calc(100% - 50px);
     width: 100%;
     overflow-y: auto;
     z-index: 1;
@@ -549,10 +549,10 @@ div {
 }
 
 select{
-    -webkit-appearance:none;
-    -moz-appearance:none;
-    -ms-appearance:none;
-    appearance:none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -ms-appearance: none;
+    appearance: none;
     background: white;
     font-family: 'Montserrat', sans-serif;
     padding: 10px;
@@ -560,6 +560,7 @@ select{
     font-weight: 900;
     border-radius: 10px;
     font-size: 15px;
+    border-radius: 25px;
 }
 
 .settingTitle{
@@ -590,12 +591,15 @@ select{
 
 .textBox {
     display: inline-block;
-    border-radius: 10px;
+    border-radius: 30px;
+    text-align: center;
     height: 20px;
     padding: 10px;
     margin: 10px;
-    border: 0;
     width: 100px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: bolder;
+    border: 5px solid #d8c9c9;
 }
 
 #doubleTime{
@@ -612,4 +616,32 @@ select{
 
 #sub_con select{
     width: 240px;
+}
+
+#settingHandleCon{
+    width: 100%;
+    height: 20px;
+    border-radius: 10px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    text-align: center;
+    box-sizing: border-box;
+    z-index: 5;
+}
+
+#settingHandle{
+    height: 10px;
+    width: 50px;
+    background-color: white;
+    border-radius: 10px;
+}
+
+#settingHandlePadding{
+    display: inline-block;
+    padding: 20px;
+}
+
+.accessTable{
+    padding: 0px !important;
 }

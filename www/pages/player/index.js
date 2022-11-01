@@ -2277,3 +2277,25 @@ document.getElementById("skipIntroDOM").onclick = function(){
 	}
 }
 applyTheme();
+
+function closeSettings(){
+	let settingCon = document.getElementById("setting_con");
+	settingCon.style.transitionDuration = "0.2s";
+	settingCon.style.transform = "translateY(0px)";
+
+	window.requestAnimationFrame(function(){
+		window.requestAnimationFrame(function(){
+			settingCon.style.transform = "translateY(200px)";
+			settingCon.style.opacity = "0";
+			setTimeout(function(){
+				settingCon.style.transform = "translateY(0px)";
+				settingCon.style.opacity = "1";
+				settingCon.style.height = "60%";
+				settingCon.style.display = "none";
+				settingCon.style.transitionDuration = "0s";
+			},200);
+		});
+	});
+}
+
+let settingsPullInstance = new settingsPull(document.getElementById("settingHandlePadding"), closeSettings);

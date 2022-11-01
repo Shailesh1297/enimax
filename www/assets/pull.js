@@ -180,3 +180,79 @@ class menuPull {
 
 	}
 }
+
+
+class settingsPull {
+	constructor(dom, callback) {
+		this.dom = dom;
+		let self = this;
+		this.callback = callback;
+		this.iniX = 0;
+		this.lastX = 0;
+		this.sensitivity = 50;
+		this.iniHeight = 0;
+		this.dom.addEventListener("touchstart", function (event) {
+			self.touchStart(event, self);
+		}, { passive: true });
+
+		this.dom.addEventListener("touchmove", function (event) {
+			self.touchMove(event, self);
+		}, { passive: true });
+
+		this.dom.addEventListener("touchend", function (event) {
+			self.touchEnd(self);
+		});
+
+		this.dom.addEventListener("touchcancel", function (event) {
+			self.touchEnd(self);
+		});
+
+		self.shouldStart = false;
+		self.hasMoved = false;
+		self.settingCon = document.getElementById("setting_con");
+	}
+
+	touchStart(event, self) {
+		const targetTouches = event.targetTouches;
+		let x = targetTouches[0].screenY;
+		self.iniX = x;
+		self.shouldStart = true;
+		self.iniHeight = self.settingCon.offsetHeight;
+
+	}
+
+	touchMove(event, self) {
+		if (self.shouldStart === false) {
+			return;
+		}
+		const targetTouches = event.targetTouches;
+		let x = targetTouches[0].screenY;
+		self.settingCon.style.height = `${(self.iniHeight + -x + self.iniX)}px`;
+		self.lastX = -x + self.iniX;
+	}
+
+	touchEnd(self) {
+		// if(self.hasMoved){
+		// 	self.callback();
+		// }else{
+		// 	self.dom.style.opacity = "1";
+		// 	self.dom.style.transform = `translateX(0px)`;
+		// }
+
+		if(self.lastX > 75){
+			self.settingCon.style.height = `100%`;
+		}else if(self.lastX < -75){
+			self.callback();
+		}else{
+			self.settingCon.style.height = `${self.iniHeight}px`;			
+		}
+
+		self.iniHeight = 0;
+		self.iniX = 0;
+		self.lastX = 0;
+		self.shouldStart = false;
+		self.hasMoved = false;
+
+
+	}
+}

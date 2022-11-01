@@ -15,6 +15,7 @@
 
 	<script type="text/javascript" src="../../assets/config.js"></script>
 	<script src="../../assets/hls.js"></script>
+	<script src="../../assets/pull.js"></script>
 	<script type="text/javascript" src="../../notification/noti.js"></script>
 	<script type="text/javascript" src="../../assets/index.js"></script>
 
@@ -34,9 +35,14 @@
 
 		<div id="con_2">
 			<div id="setting_con">
+				<div id="settingHandleCon">
+					<div id="settingHandlePadding">
+						<div id="settingHandle"></div>					
+					</div>
+				</div>
 				<div style="width: 20px;position: absolute;top: 0;display: inline-block;font-size: 20px;color: white;text-align: right;top: 10px;right: 10px;box-sizing: border-box;z-index: 5;" 	id="closeSetting">&#10005;</div>
 
-				<div style="width:100%;padding: 30px; box-sizing: border-box;" id="setting_con_main">
+				<div style="width:100%; box-sizing: border-box;" id="setting_con_main">
 
 					<div class="accessTable">
 						<div class="accessItem">
@@ -185,14 +191,9 @@
 			</video>
 			
 			<div id="pop">
-
 				<div style="width: 100%;font-size: 25px;color: white;font-weight: bolder;text-align: left;	box-sizing: border-box;	margin: 15px 0px 0px 25px;" id="epCon">
 					Episode <span id="ep_dis"></span>
-				</div>
-
-
-				
-
+				</div>		
 			</div>
 			<div id="options">
 				<div style="display: table-cell;vertical-align: middle;">
@@ -266,12 +267,6 @@
 					<div style="display: table-cell;vertical-align: middle;">
 						<div id="fullscreen"></div>
 					</div>
-
-
-
-					
-
-
 
 					<div style="display: table-cell;vertical-align: middle;">
 						<div id="lock"></div>
