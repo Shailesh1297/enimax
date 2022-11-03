@@ -2,16 +2,18 @@
 
  #### Android ####
  <p align="middle">
-  <img src="https://user-images.githubusercontent.com/107899019/196063730-4554d20b-6fb8-4bfa-b073-6e3505bc52bd.jpg" height="600">
-  <img src="https://user-images.githubusercontent.com/107899019/196063734-295d1793-fbad-40f0-b029-a3263a3fb864.jpg" height="600">
+  <img src="https://user-images.githubusercontent.com/107899019/199632645-08b20486-a60c-430c-90ef-c619c030a6f5.png" height="600">
+  <img src="https://user-images.githubusercontent.com/107899019/199632627-181af73f-5bea-42d4-82b6-ec133568bf2b.png" height="600">
+  <img src="https://user-images.githubusercontent.com/107899019/199632758-c246eb8d-8cff-4591-bcd4-05881fb50751.png" height="600">
   <img src="https://user-images.githubusercontent.com/107899019/196063736-ab26fb3e-574e-42ae-b6e9-a62633a302ac.jpg" width="600">
 </p>
 
  #### Firefox extension ####
-  <img src="https://user-images.githubusercontent.com/107899019/196063742-d2d2a173-9baf-424e-8edf-1c657f9be79c.png" width="600">
+  <img src="https://user-images.githubusercontent.com/107899019/199632435-9e0708c1-11f8-4581-8ceb-f3e524fde913.png" width="100%">
 
  #### Chromium extension ####
-  <img src="https://user-images.githubusercontent.com/107899019/196063743-8d61241d-9b50-4fe3-aba1-459d8ee627bc.png" width="600">
+  <img src="https://user-images.githubusercontent.com/107899019/199632586-9696e718-0634-4213-99c2-a81164a87672.png" width="100%">
+
 
 
 # How to build
