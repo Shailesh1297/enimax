@@ -7,7 +7,7 @@
 }
 
 * {
-  text-rendering: ageometricPrecision;
+  text-rendering: geometricPrecision;
 }
 
 /* body {
