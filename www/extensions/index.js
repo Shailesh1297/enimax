@@ -569,7 +569,7 @@ var animixplay = {
             data.nameWSeason = url.split("/")[1].split("-").join("-") + "-";
             data.name = (url.split("/")[1].split("-").join("-")) + "-";
 
-            let l = animeDOM[episode.toString()].split("id=")[1].split("&")[0]
+            let l = animeDOM[episode.toString()].split("id=")[1].split("&")[0];
 
             function padding(string, len) {
                 let length = len - string.length;
@@ -1039,12 +1039,15 @@ var fmovies = {
                     var title_get = JSON.parse(getLink).title;
                     var link = JSON.parse(getLink).link;
                     let sourceJSON = await getLinkFromStream(link);
-                    console.log(sourceJSON);
                     let encryptedURL = sourceJSON.sources;
                     let decryptKey = await extractKey(4);
-                    console.log(decryptKey);
-                    let tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
-                    sourceJSON.sources = tempFile;
+
+                    try{
+                        let tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                        sourceJSON.sources = tempFile;
+                    }catch(err){
+                        
+                    }
 
                     data.status = 200;
                     data.message = "done";
