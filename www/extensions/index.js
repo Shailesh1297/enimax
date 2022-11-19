@@ -5,37 +5,77 @@ if (localVal != "true" && localVal != "false") {
 }
 let currentResolve;
 let currentReject;
+let wcoRef;
 let fmoviesBaseURL = !localStorage.getItem("fmoviesBaseURL") ? "fmovies.app" : localStorage.getItem("fmoviesBaseURL");
 
 function setFmoviesBase(){
     fmoviesBaseURL = !localStorage.getItem("fmoviesBaseURL") ? "fmovies.app" : localStorage.getItem("fmoviesBaseURL");
 }
 
+String.prototype.substringAfter = function substringAfter(toFind) {
+    let str = this;
+    let index = str.indexOf(toFind);
+    return index == -1 ? "" : str.substring(index + toFind.length);
+}
+
+String.prototype.substringBefore = function substringBefore(toFind) {
+    let str = this;
+    let index = str.indexOf(toFind);
+    return index == -1 ? "" : str.substring(0, index);
+}
+
+String.prototype.substringAfterLast = function substringAfterLast(toFind) {
+    let str = this;
+    let index = str.lastIndexOf(toFind);
+    return index == -1 ? "" : str.substring(index + toFind.length);
+}
+
+String.prototype.substringBeforeLast = function substringBeforeLast(toFind) {
+    let str = this;
+    let index = str.lastIndexOf(toFind);
+    return index == -1 ? "" : str.substring(0, index);
+}
+
+String.prototype.onlyOnce = function substringBeforeLast(substring) {
+    let str = this;
+    return str.lastIndexOf(substring) == str.indexOf(substring);
+}
+
 function extractKey(id, url = null) {
     return (new Promise(async function (resolve, reject) {
-        let scr;
-        if(url == null){
-            if(id == 6){
-                scr = (await MakeFetch(`https://rapid-cloud.co/js/player/prod/e6-player.min.js?v=${(new Date()).getTime()}`));
-            }else{
-                scr = (await MakeFetch(`https://rabbitstream.net/js/player/prod/e4-player.min.js?v=${(new Date()).getTime()}`));                
+        if(config.chrome){
+            try{
+                let gitHTML = (await MakeFetch(`https://github.com/enimax-anime/key/blob/e${id}/key.txt`));
+                let key = gitHTML.substringAfter('"blob-code blob-code-inner js-file-line">').substringBefore("</td>");
+                resolve(key);
+            }catch(err){
+                reject("error");
             }
         }else{
-            scr = (await MakeFetch(url));
-        }
-        
-        scr = extractKeyComp(id,scr);
-        if(scr[1]){
-            resolve(scr[0]);
-        }else{
-            currentResolve = resolve;
-            currentReject = reject;
+            let scr;
+            if(url == null){
+                if(id == 6){
+                    scr = (await MakeFetch(`https://rapid-cloud.co/js/player/prod/e6-player.min.js?v=${(new Date()).getTime()}`));
+                }else{
+                    scr = (await MakeFetch(`https://rabbitstream.net/js/player/prod/e4-player.min.js?v=${(new Date()).getTime()}`));                
+                }
+            }else{
+                scr = (await MakeFetch(url));
+            }
+            
+            scr = extractKeyComp(id,scr);
+            if(scr[1]){
+                resolve(scr[0]);
+            }else{
+                currentResolve = resolve;
+                currentReject = reject;
 
-            setTimeout(function () {
-                reject("timeout");
-            }, 3000);
+                setTimeout(function () {
+                    reject("timeout");
+                }, 3000);
 
-            document.getElementById("evalScript").contentWindow.postMessage(scr[0], "*");
+                document.getElementById("evalScript").contentWindow.postMessage(scr[0], "*");
+            }
         }
     }));
 
@@ -53,6 +93,7 @@ async function MakeFetch(url, options) {
 
 let customHeaders = {};
 var MakeCusReqFmovies = async function (url, options) {
+    console.log(url, options);
     return new Promise(function (resolve, reject) {
         cordova.plugin.http.sendRequest(url, options, function (response) {
             resolve(response.data);
@@ -93,24 +134,24 @@ if (config && config.chrome) {
                 "value": extensionList[3].config.referer
             });
 
-            if(config.sockets){
-                details.requestHeaders.push({
-                    "name": "sid",
-                    "value": localStorage.getItem("sid")
-                });
-            }
-            
-
-
-
-
-
             return { requestHeaders: details.requestHeaders };
         },
         { urls: ['https://*.dayimage.net/*'] },
         ['blocking', 'requestHeaders']
     );
 
+    chrome.webRequest.onBeforeSendHeaders.addListener(
+        function (details) {
+            details.requestHeaders.push({
+                "name": "referer",
+                "value": wcoRef
+            });
+            return { requestHeaders: details.requestHeaders };
+        },
+        { urls: ['https://*.watchanimesub.net/*'] },
+        ['blocking', 'requestHeaders', 'extraHeaders']
+    );
+    
     MakeCusReqFmovies = async function (url, options) {
         if ("headers" in options) {
             customHeaders = options["headers"];
@@ -232,7 +273,9 @@ var wco = {
                 }
 
                 data.episodes = animeEps;
-                data.mainName = animeName;
+
+                let dash = "-";
+                data.mainName = url.replace("https://www.wcoforever.net/anime/","") + dash;
 
                 temp.remove();
                 resolve(data);
@@ -268,6 +311,7 @@ var wco = {
         } catch (err) {
 
         }
+
 
         try {
             var ytf = name_ep_main.split("episode")[1];
@@ -314,6 +358,17 @@ var wco = {
             var dom = document.createElement("div");
             dom.innerHTML = DOMPurify.sanitize(d);
 
+
+            try {
+                let tmpName = dom.querySelector('[rel="category tag"]').getAttribute("href").replace("https://www.wcoforever.net/anime/","");
+                if(tmpName != ""){
+                    name_name = tmpName + "-";
+                }
+            } catch (err) {
+
+            }
+
+
             var nextPrev = dom.getElementsByClassName("prev-next");
             var data = {};
             for (var npi = 0; npi < nextPrev.length; npi++) {
@@ -332,15 +387,35 @@ var wco = {
                 main += String.fromCharCode(parseInt(atob(value).replace(/\D/g, '')) - num);
             });
 
-            main = "https://www.wcoforever.net" + main.split("src=\"")[1].split("\" ")[0];
+            main = main.split("src=\"")[1].split("\" ")[0];
+            wcoRef = main;
+            option2.headers.referer = main;
+            let domain;
+            try{
+                domain = new URL(main).origin;
+            }catch(err){
+                domain = "https://embed.watchanimesub.net";
+            }
 
-            var req2 = await MakeFetch(main, {});
+            var req2;
 
-            main = "https://www.wcoforever.net" + req2.split("$.getJSON(\"")[1].split("\"")[0];
+            if(config.chrome){
+                req2 = await MakeFetch(main, {});
+            }else{
+                req2 = await MakeCusReqFmovies(main, option2);
+            }
+            main = domain + req2.split("$.getJSON(\"")[1].split("\"")[0];
 
             try {
                 let animeUrl = (main.split("v=cizgi").join('v=')).split('&embed=cizgi').join('&embed=anime');
-                var req4 = await MakeFetch(animeUrl, option2);
+
+
+                let req4;
+                if(config.chrome){
+                    req4 = await MakeFetch(main, {});
+                }else{
+                    req4 = await MakeCusReqFmovies(main, option2);
+                }
 
                 req4 = JSON.parse(req4);
 
@@ -365,7 +440,13 @@ var wco = {
                 console.error(err);
             }
 
-            var req3 = await MakeFetch(main, option2);
+            let req3;
+
+            if(config.chrome){
+                req3 = await MakeFetch(main, {});
+            }else{
+                req3 = await MakeCusReqFmovies(main, option2);
+            }
             req3 = JSON.parse(req3);
 
             if (req3.enc != "") {
@@ -390,7 +471,7 @@ var wco = {
 
             data.sources = sources;
             data.name = name_name;
-            data.nameWSeason = name_name2;
+            data.nameWSeason = name_name;
             data.episode = name_ep;
             data.status = 200;
             data.message = "done";
@@ -402,6 +483,41 @@ var wco = {
             return { "status": 400, "message": "Couldn't get the link" }
         }
 
+    },
+    "discover": async function(){
+        let temp = document.createElement("div");
+        temp.innerHTML = DOMPurify.sanitize(await MakeFetch("https://wcoforever.net", {}));
+        let data = [];
+        let promises = [];
+        for(elem of temp.querySelectorAll(".items")[1].querySelectorAll("li")){
+            let image = "https:" + elem.querySelector("img").getAttribute("src");
+            let tempAnchor = elem.querySelectorAll("a")[1];
+            let name = tempAnchor.innerText;
+            let link = tempAnchor.getAttribute("href");
+            if(link == ""){
+                link = null;
+            }
+            
+            data.push({
+                image,
+                name,
+                link,
+                "getLink" : true
+            });
+
+        }
+        return data;
+    },
+
+    "getDiscoverLink" : async function(mainLink){
+        try{
+            let temp = document.createElement("div");
+            temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://wcoforever.net${mainLink}`, {}));
+            mainLink = temp.querySelector('[rel="category tag"]').getAttribute("href").replace("https://www.wcoforever.net","");
+            return mainLink;
+        }catch(err){
+            throw err;
+        }
     }
 
 };
@@ -659,6 +775,25 @@ var animixplay = {
         }));
 
 
+    },
+    "discover": async function(){
+        let temp = document.createElement("div");
+        temp.innerHTML = DOMPurify.sanitize(await MakeFetch("https://animixplay.to/?tab=popular", {}));
+        let data = [];
+        for(elem of temp.querySelector("#resultplace").querySelectorAll("li")){
+            let image = elem.querySelector("img").getAttribute("src");
+            let tempAnchor = elem.querySelector("a");
+            let name = tempAnchor.getAttribute("title");
+            let link = tempAnchor.getAttribute("href");
+
+            data.push({
+                image,
+                name,
+                link 
+            });
+        }
+
+        return data;
     }
 }
 
@@ -1101,6 +1236,33 @@ var fmovies = {
 
     },
 
+    "discover": async function(){
+        let temp = document.createElement("div");
+        temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://fmovies.app/tv-show`, {}));
+        let data = [];
+        for(elem of temp.querySelectorAll(".flw-item")){
+            let image = elem.querySelector("img").getAttribute("data-src");
+            let tempAnchor = elem.querySelector(".film-name");
+            let name = tempAnchor.innerText.trim();
+            let link = tempAnchor.querySelector("a").getAttribute("href");
+
+            try{
+                let path = new URL(link);
+                path = path.pathname;
+                link = path;
+            }catch(err){
+
+            }
+        
+            data.push({
+                image,
+                name,
+                link 
+            });
+        }
+
+        return data;
+    }
 
 };
 
@@ -1327,6 +1489,25 @@ var zoro = {
         "socketURL": "https://ws1.rapid-cloud.co",
         "origin": "https://rapid-cloud.co",
         "referer": "https://rapid-cloud.co/",
+    },
+    "discover": async function(){
+        let temp = document.createElement("div");
+        temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://zoro.to/most-popular`, {}));
+        let data = [];
+        for(elem of temp.querySelector("#top-viewed-day").querySelectorAll("li")){
+            let image = elem.querySelector("img").getAttribute("data-src");
+            let tempAnchor = elem.querySelector("a");
+            let name = tempAnchor.innerText;
+            let link = tempAnchor.getAttribute("href");
+
+            data.push({
+                image,
+                name,
+                link 
+            });
+        }
+
+        return data;
     }
 };
 
