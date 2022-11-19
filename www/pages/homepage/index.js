@@ -1224,7 +1224,7 @@ function addCustomRoom() {
         "id": `room_recently`
     }));
 
-    if(localStorage.getItem("discoverHide") !== "true"){
+    if(localStorage.getItem("discoverHide") !== "true" && localStorage.getItem("offline") !== 'true'){
         let tempDiscover = createCat("discoverCon", "Discover");
         tempDiscover.id = "discoverCat";
         document.getElementById("categoriesCon").append(tempDiscover);
@@ -1303,7 +1303,7 @@ function addCustomRoom() {
 
     }
 
-    if(localStorage.getItem("discoverHide") !== "true"){
+    if(localStorage.getItem("discoverHide") !== "true" && localStorage.getItem("offline") !== 'true'){
         populateDiscover();
     }
 }

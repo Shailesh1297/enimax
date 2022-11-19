@@ -436,6 +436,15 @@ var wco = {
                     });
                 }
 
+                if (req4.fhd != "") {
+                    sources.push({
+                        "url": req4.cdn + "/getvid?evid=" + req4.fhd,
+                        "name": "FHD#2",
+                        "type": "mp4"
+
+                    });
+                }
+
             } catch (err) {
                 console.error(err);
             }
@@ -463,6 +472,15 @@ var wco = {
                 sources.unshift({
                     "url": req3.cdn + "/getvid?evid=" + req3.hd,
                     "name": "HD",
+                    "type": "mp4"
+
+                });
+            }
+
+            if (req3.fhd != "") {
+                sources.unshift({
+                    "url": req3.cdn + "/getvid?evid=" + req3.fhd,
+                    "name": "FHD",
                     "type": "mp4"
 
                 });
