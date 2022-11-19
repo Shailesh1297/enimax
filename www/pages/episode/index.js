@@ -296,7 +296,7 @@ function ini() {
                     epCon.append(tempDiv);
                     if(trr == currentLink){
                         scrollToDOM = tempDiv;
-                        tempDiv.style.backgroundColor = "white";
+                        tempDiv.style.backgroundColor = "rgba(255,255,255,0.7)";
                         tempDiv.querySelector(".episodesTitle").style.color = "black";
                     }
                 }else{

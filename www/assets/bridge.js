@@ -1,7 +1,10 @@
-let scriptDOM = document.createElement("script");
-scriptDOM.setAttribute("type", "text/javascript");
-scriptDOM.setAttribute("src", `https://enimax-anime.github.io/key-extractor/index.js?v=${(new Date()).getTime()}`);
-document.body.append(scriptDOM);
+if(!config.chrome){
+    let scriptDOM = document.createElement("script");
+    scriptDOM.setAttribute("type", "text/javascript");
+    scriptDOM.setAttribute("src", `https://enimax-anime.github.io/key-extractor/index.js?v=${(new Date()).getTime()}`);
+    document.body.append(scriptDOM);
+}
+
 var socket;
 let frameHistory = [];
 var token;

@@ -622,6 +622,11 @@ document.getElementById("scrollBool").onchange = function () {
     localStorage.setItem("scrollBool", this.checked.toString());
 }
 
+document.getElementById("discoverHide").onchange = function () {
+    localStorage.setItem("discoverHide", this.checked.toString());
+    location.reload();
+}
+
 document.getElementById("autoPause").onchange = function () {
     localStorage.setItem("autoPause", this.checked.toString());
 }
@@ -650,6 +655,7 @@ document.getElementById("fmoviesBase").value = localStorage.getItem("fmoviesBase
 document.getElementById("themeColor").value = localStorage.getItem("themecolor");
 document.getElementById("downloadTimeout").value = localStorage.getItem("downloadTimeout");
 document.getElementById("scrollBool").checked = localStorage.getItem("scrollBool") !== "false";
+document.getElementById("discoverHide").checked = localStorage.getItem("discoverHide") === "true";
 document.getElementById("autoPause").checked = localStorage.getItem("autoPause") === "true";
 document.getElementById("hideNotification").checked = localStorage.getItem("hideNotification") === "true";
 document.getElementById("fancyHome").checked = localStorage.getItem("fancyHome") === "true";
@@ -1001,6 +1007,131 @@ if(isSnapSupported){
         scrollLastIndex = index;
     }, {"passive" : true});
 }
+
+function makeDiscoverCard(data, engine, engineName){
+    let tempDiv1 = createElement({ "class": "s_card" });
+    tempDiv1.style.backgroundImage = `url("${data.image}")`;
+    let tempDiv2 = createElement({ "class": "s_card_bg" });
+    let tempDiv3 = createElement({ "class": "s_card_title" });
+    let tempDiv4 = createElement({ "class": "s_card_title_main", "innerText": data.name, "style" : {"text-decoration" : "none"}});
+    let tempDivEx = createElement({ "class": "card_title_extension", "attributes": {}, "listeners": {}, "innerText" : engineName });
+    let tempDiv5;
+
+
+    tempDiv5 = createElement({
+        "element": "div", "class": "s_card_play",
+        "attributes": {
+            "data-href": data.link
+        },
+        "listeners": {
+            "click": async function () {
+
+                let curLink = this.getAttribute("data-href");
+                
+                if(data.getLink === true){
+                    sendNoti([0, "", "Alert", "Redirecting. Wait a moment..."]);
+
+                    let extensionList = window.parent.returnExtensionList();
+                    
+                    try{
+                        let episodeLink = await extensionList[engine].getDiscoverLink(curLink);
+                        curLink = `pages/episode/index.html?watch=${episodeLink}&engine=${engine}`;
+                    }catch(err){
+                        sendNoti([2, "red", "Alert", "An unexpected error has occurred."]);
+                        console.error(err);
+                    }
+
+                }else{
+                    curLink = `pages/episode/index.html?watch=${curLink}&engine=${engine}`;
+                }
+
+                window.parent.postMessage({ "action": 500, data: curLink}, "*");
+
+            }
+        }
+    });
+    
+
+
+
+    tempDiv3.append(tempDiv4);
+    tempDiv2.append(tempDiv3);
+    tempDiv2.append(tempDiv5);
+    tempDiv1.append(tempDiv2);
+    tempDiv1.append(tempDivEx);
+    
+    return tempDiv1;
+}
+async function populateDiscover(){
+    let extensionList = window.parent.returnExtensionList();
+    let extensionNames = window.parent.returnExtensionNames();
+    let disCon = document.getElementById("discoverCon");
+    let parents = [];
+    let exTitle = [];
+
+    for(let i = 0; i < 4; i++){
+        parents.push(createElement({
+            "style":{
+                "display" : "none",
+                "height" : "250px",
+                "marginBottom" : "40px",
+                "width" : "100%",
+                "whiteSpace" : "nowrap",
+                "overflowX" : "auto"
+            }
+        }));
+
+        exTitle.push(createElement({
+            "style":{
+                "display" : "none",
+            },
+            "class" : "discoverTitle",
+            "innerText" : extensionNames[i]
+        }));
+
+        disCon.append(exTitle[i]);
+        disCon.append(parents[i]);
+
+    }
+    for(let i = 0; i < 4; i++){
+        let engine = i;
+        try{
+            extensionList[engine]["discover"]().then(function(data){
+                let parentDiscover = parents[engine];
+                let titleDiscover = exTitle[engine];
+                for(card of data){
+                    if(card.link === null){
+                        continue;
+                    }
+                    
+                    if(engine == 1){
+                        let index = card.link.lastIndexOf("/");
+                        card.link = card.link.substring(0,index);
+                    }
+        
+                    parentDiscover.append(makeDiscoverCard(card, engine, extensionNames[engine]));
+                }
+
+                parentDiscover.style.display = "block";
+                titleDiscover.style.display = "block";
+        
+            }).catch(function(err){
+                console.error(err);
+            });
+        }catch(err){
+            console.error(err);
+        }
+    }
+
+
+    disCon.append(createElement({
+        "style": {
+            "width": "100%",
+            "height": "70px"
+        }
+    }));
+}
+
 function addCustomRoom() {
 
     rooms2 = rooms.slice(0);
@@ -1083,15 +1214,27 @@ function addCustomRoom() {
         });
     }
 
+
     let tempRecent = createCat("room_recently", "Recently Watched");
     tempRecent.id = "recentlyCat";
     document.getElementById("categoriesCon").append(tempRecent);
-
 
     document.getElementById("custom_rooms").append(createElement({
         "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === "room_recently") ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain" : ""}`,
         "id": `room_recently`
     }));
+
+    if(localStorage.getItem("discoverHide") !== "true" && localStorage.getItem("offline") !== 'true'){
+        let tempDiscover = createCat("discoverCon", "Discover");
+        tempDiscover.id = "discoverCat";
+        document.getElementById("categoriesCon").append(tempDiscover);
+
+
+        document.getElementById("custom_rooms").append(createElement({
+            "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === "discoverCon") ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain" : ""}`,
+            "id": `discoverCon`
+        }));
+    }
 
     for (var i = 0; i < rooms_order.length; i++) {
 
@@ -1158,6 +1301,10 @@ function addCustomRoom() {
         });
     } catch (err) {
 
+    }
+
+    if(localStorage.getItem("discoverHide") !== "true" && localStorage.getItem("offline") !== 'true'){
+        populateDiscover();
     }
 }
 
@@ -1433,7 +1580,7 @@ if (true) {
         updateRoomDis();
         updateRoomAdd();
         addCustomRoom();
-
+        let extensionNames = window.parent.returnExtensionNames();
         for (var i = 0; i < data.length; i++) {
             let domToAppend;
 
@@ -1454,6 +1601,24 @@ if (true) {
 
             let tempDiv1 = createElement({ "class": "s_card_bg", "attributes": {}, "listeners": {} });
             let tempDiv2 = createElement({ "class": "s_card_title", "attributes": {}, "listeners": {} });
+
+            let currentExtensionName = "null";
+            try{
+                let engineTemp = data[i][5].split("engine=");
+                let engine;
+                if (engineTemp.length == 1) {
+                    engine = 0;
+                } else {
+                    engine = parseInt(engineTemp[1]);
+                }
+                
+                currentExtensionName = extensionNames[engine];
+            }catch(err){
+                console.log(err);
+                console.log(data[i]);
+            }
+
+            let tempDivEx = createElement({ "class": "card_title_extension", "attributes": {}, "listeners": {}, "innerText" : currentExtensionName });
 
 
             let tempDiv3 = document.createElement("div");
@@ -1541,6 +1706,7 @@ if (true) {
             tempDiv7.append(tempDiv9);
             tempDiv7.append(tempDiv10);
             tempDiv7.append(tempDiv11);
+
             tempDiv2.append(tempDiv3);
             tempDiv2.append(tempDiv4);
 
@@ -1548,6 +1714,7 @@ if (true) {
             tempDiv1.append(tempDiv5);
             tempDiv1.append(tempDiv6);
             tempDiv1.append(tempDiv7);
+            tempDiv1.append(tempDivEx);
             tempDiv.append(tempDiv1);
 
             domToAppend.append(tempDiv);
@@ -1558,6 +1725,9 @@ if (true) {
         let catMainDOM = document.getElementsByClassName("categoriesDataMain");
         for (var i = 0; i < catMainDOM.length; i++) {
             pullTabArray.push(new pullToRefresh(catMainDOM[i]));
+            if(catMainDOM[i].id == "discoverCon"){
+                continue;
+            }
             catMainDOM[i].append(createElement({
                 "style": {
                     "width": "100%",
