@@ -25,12 +25,15 @@ async function populateDownloadedArray(){
     }
 }
 
-async function testIt(){
+async function testIt(idx = -1){
     let extensionList = window.parent.returnExtensionList();
     let extensionNames = window.parent.returnExtensionNames();
     let searchQuery = "odd";
     let errored = false;
     for(let i = 0; i < extensionList.length; i++){
+        if(idx != -1 && i != idx){
+            continue;
+        }
         let searchResult, episodeResult, playerResult;
         try{
             searchResult = (await extensionList[i].searchApi(searchQuery)).data;
@@ -129,6 +132,12 @@ async function testKey(){
 }
 if(localStorage.getItem("devmode") === "true"){
     document.getElementById("testExtensions").style.display = "block";
+    for(elem of document.getElementsByClassName("testExt")){
+        elem.style.display = "block";
+        elem.onclick = function(){
+            testIt(parseInt(this.getAttribute("data-exId")));
+        }
+    }
     document.getElementById("testKey").style.display = "block";
     document.getElementById("testExtensions").onclick = function(){
         testIt();
@@ -1073,7 +1082,7 @@ async function populateDiscover(){
         parents.push(createElement({
             "style":{
                 "display" : "none",
-                "height" : "250px",
+                "height" : "280px",
                 "marginBottom" : "40px",
                 "width" : "100%",
                 "whiteSpace" : "nowrap",

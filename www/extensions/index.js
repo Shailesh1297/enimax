@@ -41,21 +41,21 @@ String.prototype.onlyOnce = function substringBeforeLast(substring) {
     return str.lastIndexOf(substring) == str.indexOf(substring);
 }
 
-function extractKey(id, url = null) {
+function extractKey(id, url = null, useCached = false) {
     return (new Promise(async function (resolve, reject) {
-        if(config.chrome){
+        if(config.chrome|| useCached){
             try{
                 let gitHTML = (await MakeFetch(`https://github.com/enimax-anime/key/blob/e${id}/key.txt`));
                 let key = gitHTML.substringAfter('"blob-code blob-code-inner js-file-line">').substringBefore("</td>");
                 resolve(key);
             }catch(err){
-                reject("error");
+                reject(err);
             }
         }else{
             let scr;
             if(url == null){
                 if(id == 6){
-                    scr = (await MakeFetch(`https://rapid-cloud.co/js/player/prod/e6-player.min.js?v=${(new Date()).getTime()}`));
+                    scr = (await MakeFetch(`https://rabbitstream.net/js/player/prod/e6-player.min.js?v=${(new Date()).getTime()}`));
                 }else{
                     scr = (await MakeFetch(`https://rabbitstream.net/js/player/prod/e4-player.min.js?v=${(new Date()).getTime()}`));                
                 }
@@ -145,6 +145,11 @@ if (config && config.chrome) {
             details.requestHeaders.push({
                 "name": "referer",
                 "value": wcoRef
+            });
+
+            details.requestHeaders.push({
+                "name": "x-requested-with",
+                "value": "XMLHttpRequest"
             });
             return { requestHeaders: details.requestHeaders };
         },
@@ -1008,6 +1013,7 @@ var fmovies = {
     'getLinkFromUrl': function (url) {
 
         return (new Promise(async function (resolve, reject) {
+            let start = performance.now();
             url = url.split("&engine");
             url = url[0];
             let data = {};
@@ -1156,18 +1162,40 @@ var fmovies = {
                         dom.remove();
                     }
 
+                    let seasonLinkPromises = [
+                        MakeFetch(`https://${fmoviesBaseURL}/watch-${url.split(".")[0]}.${server}`),
+                        MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/get_link/${server}`, option)
+                    ];
 
-                    let getSeason = await MakeFetch(`https://${fmoviesBaseURL}/watch-${url.split(".")[0]}.${server}`);
+                    let seasonLinkData = await Promise.all(seasonLinkPromises);
+
+                    let getSeason = seasonLinkData[0];
 
                     let tempGetDom = document.createElement("div");
-
                     tempGetDom.innerHTML = DOMPurify.sanitize(getSeason);
                     currentSeason = tempGetDom.querySelector(".detail_page-watch").getAttribute("data-season");
                     tempGetDom.remove();
 
-                    if (currentSeason != "") {
-                        let r = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/season/episodes/${currentSeason}`);
 
+                    let getLink = seasonLinkData[1];
+
+                    var title_get = JSON.parse(getLink).title;
+                    var link = JSON.parse(getLink).link;
+
+
+
+                    let promises = [getLinkFromStream(link)];
+                    let seasonNotEmpty = false;
+                    if (currentSeason != "") {    
+                        seasonNotEmpty = true;
+
+                        promises.push(MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/season/episodes/${currentSeason}`));
+                    }
+                    
+                    let parallelReqs = await Promise.all(promises);
+
+                    if(seasonNotEmpty){
+                        let r = parallelReqs[1];
                         let temp = document.createElement("div");
                         temp.innerHTML = DOMPurify.sanitize(r);
                         let tempDOM = temp.getElementsByClassName("nav-link btn btn-sm btn-secondary eps-item");
@@ -1184,23 +1212,24 @@ var fmovies = {
 
                         }
                         temp.remove();
-
                     }
 
-                    let getLink = await MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/get_link/${server}`, option);
-
-                    var title_get = JSON.parse(getLink).title;
-                    var link = JSON.parse(getLink).link;
-                    let sourceJSON = await getLinkFromStream(link);
+                    let sourceJSON =   parallelReqs[0];
                     let encryptedURL = sourceJSON.sources;
-                    let decryptKey = await extractKey(4);
+                    let decryptKey, tempFile;
 
                     try{
-                        let tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
-                        sourceJSON.sources = tempFile;
+                        decryptKey = await extractKey(4, null, true);
+                        // decryptKey = "dfdfdfdf";
+                        tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+
                     }catch(err){
-                        
+                        if(err.message == "Malformed UTF-8 data"){
+                            decryptKey = await extractKey(4);
+                            tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                        }
                     }
+                    sourceJSON.sources = tempFile;
 
                     data.status = 200;
                     data.message = "done";
@@ -1221,6 +1250,7 @@ var fmovies = {
                     }];
 
                     data.subtitles = sourceJSON.tracks;
+                    // alert(performance.now() - start);
 
                     resolve(data);
 
@@ -1368,6 +1398,9 @@ var zoro = {
     },
 
     'getLinkFromUrl': async function (url) {
+        let start = performance.now();
+        let sourceURLs = [];
+
         async function getEpisodeListFromAnimeId(id, episodeId) {
             let res = JSON.parse((await MakeFetch(`https://zoro.to/ajax/v2/episode/list/${id}`, {})));
             res = res.html;
@@ -1398,6 +1431,54 @@ var zoro = {
 
         }
 
+        async function addSource(type, id){
+            let sources = await MakeFetch(`https://zoro.to/ajax/v2/episode/sources?id=${id}`, {});
+            sources = JSON.parse(sources).link;
+            let urlHost = (new URL(sources)).origin;
+
+
+            let sourceId = sources.split("/");
+            sourceId = sourceId[sourceId.length - 1];
+            sourceId = sourceId.split("?")[0];
+
+
+            let sourceJSON = JSON.parse((await MakeFetch(`${urlHost}/ajax/embed-6/getSources?id=${sourceId}&sId=lihgfedcba-abcde`, {})));
+            try {
+                for (let j = 0; j < sourceJSON.tracks.length; j++) {
+                    sourceJSON.tracks[j].label += " - " + type;
+                    if (sourceJSON.tracks[j].kind == "captions") {
+                        subtitles.push(sourceJSON.tracks[j]);
+                    }
+                }
+            } catch (err) {
+
+            }
+            try {
+                if (sourceJSON.encrypted) {
+                    let encryptedURL = sourceJSON.sources;
+                    let decryptKey, tempFile;
+                    try{
+                        decryptKey = await extractKey(6, null, true);
+                        // decryptKey = "dfdfdfdf";
+                        tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                    }catch(err){
+                        if(err.message == "Malformed UTF-8 data"){
+                            decryptKey = await extractKey(6);
+                            tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                        }
+                    }
+                    sourceJSON.sources = tempFile;
+                }
+                let tempSrc = { "url": sourceJSON.sources[0].file, "name": "HLS#" + type, "type": "hls" };
+                if ("intro" in sourceJSON && "start" in sourceJSON.intro && "end" in sourceJSON.intro) {
+                    tempSrc.skipIntro = sourceJSON.intro;
+                }
+                sourceURLs.push(tempSrc);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
         let resp = {};
         let episodeId, animeId;
 
@@ -1415,50 +1496,17 @@ var zoro = {
 
         dom = dom.querySelectorAll('[data-server-id="4"]');
 
-        let sourceURLs = [];
         let subtitles = [];
 
-
+        let promises = [];
+        promises.push(getEpisodeListFromAnimeId(animeId, episodeId));
         for (var i = 0; i < dom.length; i++) {
-            let sources = await MakeFetch(`https://zoro.to/ajax/v2/episode/sources?id=${dom[i].getAttribute('data-id')}`, {});
-            sources = JSON.parse(sources).link;
-            let urlHost = (new URL(sources)).origin;
-
-
-            let sourceId = sources.split("/");
-            sourceId = sourceId[sourceId.length - 1];
-            sourceId = sourceId.split("?")[0];
-
-
-            let sourceJSON = JSON.parse((await MakeFetch(`${urlHost}/ajax/embed-6/getSources?id=${sourceId}&sId=lihgfedcba-abcde`, {})));
-            try {
-                for (let j = 0; j < sourceJSON.tracks.length; j++) {
-                    sourceJSON.tracks[j].label += " - " + dom[i].getAttribute('data-type');
-                    if (sourceJSON.tracks[j].kind == "captions") {
-                        subtitles.push(sourceJSON.tracks[j]);
-                    }
-                }
-            } catch (err) {
-
-            }
-            try {
-                if (sourceJSON.encrypted) {
-                    let encryptedURL = sourceJSON.sources;
-                    let decryptKey = await extractKey(6);
-                    let tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
-                    sourceJSON.sources = tempFile;
-                }
-                let tempSrc = { "url": sourceJSON.sources[0].file, "name": "HLS#" + dom[i].getAttribute('data-type'), "type": "hls" };
-                if ("intro" in sourceJSON && "start" in sourceJSON.intro && "end" in sourceJSON.intro) {
-                    tempSrc.skipIntro = sourceJSON.intro;
-                }
-                sourceURLs.push(tempSrc);
-            } catch (err) {
-                console.error(err);
-            }
+            promises.push(addSource(dom[i].getAttribute("data-type"),dom[i].getAttribute('data-id')));
         }
 
-        let links = await getEpisodeListFromAnimeId(animeId, episodeId);
+        let promRes = await Promise.all(promises);
+
+        let links = promRes[0];
         let prev = null;
         let next = null;
         let check = false;
@@ -1500,6 +1548,8 @@ var zoro = {
         resp.subtitles = subtitles;
 
         resp.status = 200;
+
+        // alert(performance.now() - start);
         return resp;
 
     },
@@ -1510,12 +1560,12 @@ var zoro = {
     },
     "discover": async function(){
         let temp = document.createElement("div");
-        temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://zoro.to/most-popular`, {}));
+        temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://zoro.to/top-airing`, {}));
         let data = [];
-        for(elem of temp.querySelector("#top-viewed-day").querySelectorAll("li")){
+        for(elem of temp.querySelectorAll(".flw-item")){
             let image = elem.querySelector("img").getAttribute("data-src");
             let tempAnchor = elem.querySelector("a");
-            let name = tempAnchor.innerText;
+            let name = tempAnchor.getAttribute("title");
             let link = tempAnchor.getAttribute("href");
 
             data.push({
