@@ -640,6 +640,8 @@ select{
 #settingHandlePadding{
     display: inline-block;
     padding: 20px;
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .accessTable{

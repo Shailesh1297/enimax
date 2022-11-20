@@ -4,7 +4,6 @@ showLastEpDB.version(1.0).stores({
     lastestEp : "++id, name, latest"
 });
 
-
 window.parent.postMessage({ "action": 1, data: "any" }, "*");
 
 if(config.chrome){
@@ -1565,12 +1564,14 @@ if (true) {
     }
 
     async function updateNewEpCached(){
-
+        for(dom of document.getElementById("room_recently").querySelectorAll(".s_card")){
+            dom.style.border = "none";
+        }
         let updateLibNoti = sendNoti([0, null, "Message", "Fetching cached data..."]);
         for(show of flaggedShow){
             try{
                 let lastestEp = await showLastEpDB.lastestEp.where({"name" : show.name}).toArray();
-                console.log(lastestEp);
+                
                 if(lastestEp.length != 0){
                     lastestEp = lastestEp[0].latest;
                     if(show.ep != lastestEp){
@@ -1703,38 +1704,40 @@ if (true) {
         updateRoomAdd();
         addCustomRoom();
         let extensionNames = window.parent.returnExtensionNames();
+        
+        if(!offlineMode){
+            let updateLibCon = createElement({
+                "style" : {
+                    "width" : "100%",
+                    "bottomMargin" : "10px",
+                    "textAlign" : "center"
+                }
+            });
 
-        let updateLibCon = createElement({
-            "style" : {
-                "width" : "100%",
-                "bottomMargin" : "10px",
-                "textAlign" : "center"
+            let updateLibButton = createElement({
+                "id" : "updateLib",
+                "innerText" : "Update Library"
+            });
+
+            let updateLibInfo = createElement({
+                "id" : "infoBut",
+            });
+
+            updateLibInfo.onclick = function(){
+                helpUpdateLib();
+            };
+
+            updateLibButton.onclick = function(){
+                updateNewEp();
             }
-        });
 
-        let updateLibButton = createElement({
-            "id" : "updateLib",
-            "innerText" : "Update Library"
-        });
+            updateLibCon.append(updateLibButton);
+            updateLibCon.append(updateLibInfo);
 
-        let updateLibInfo = createElement({
-            "id" : "infoBut",
-        });
-
-        updateLibInfo.onclick = function(){
-            helpUpdateLib();
-        };
-
-        updateLibButton.onclick = function(){
-            updateNewEp();
+            document.getElementById('room_recently').append(
+                updateLibCon
+            );
         }
-
-        updateLibCon.append(updateLibButton);
-        updateLibCon.append(updateLibInfo);
-
-        document.getElementById('room_recently').append(
-            updateLibCon
-        );
 
         for (var i = 0; i < data.length; i++) {
             let domToAppend;
@@ -1972,7 +1975,9 @@ if (true) {
         }
 
         let curTime = (new Date()).getTime() / 1000;
-        if((curTime - parseInt(localStorage.getItem("lastupdatelib"))) > 43200){
+        if(offlineMode){
+
+        }else if((curTime - parseInt(localStorage.getItem("lastupdatelib"))) > 43200){
             updateNewEp();
             localStorage.setItem("lastupdatelib", curTime.toString());
         }else{
