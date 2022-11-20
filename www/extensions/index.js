@@ -194,17 +194,11 @@ var wco = {
 
                 let data = [];
                 for (var i = 0; i < main_div.length; i++) {
-
                     data.push({
                         "image": main_div[i].getElementsByTagName("img")[0].getAttribute("src"),
                         "name": main_div[i].getElementsByTagName("a")[1].innerText,
                         "link": main_div[i].getElementsByTagName("a")[1].getAttribute("href").replace("https://www.wcoforever.net", "") + "&engine=0",
                     });
-
-
-
-
-
                 }
 
                 temp.remove();
@@ -1582,16 +1576,7 @@ var zoro = {
 const extensionList = [wco, animixplay, fmovies, zoro];
 const extensionNames = ["WCOforever", "Animixplay", "Fmovies", "Zoro"];
 
-
-
 localStorage.setItem("version", "1.2.2");
 if (localStorage.getItem("lastUpdate") === null) {
     localStorage.setItem("lastUpdate", "0");
-
 }
-
-
-
-
-
-
