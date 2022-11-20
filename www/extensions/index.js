@@ -1488,14 +1488,24 @@ var zoro = {
         let ogDOM = dom;
         dom.innerHTML = DOMPurify.sanitize(domIn);
 
-        dom = dom.querySelectorAll('[data-server-id="4"]');
 
         let subtitles = [];
 
         let promises = [];
         promises.push(getEpisodeListFromAnimeId(animeId, episodeId));
-        for (var i = 0; i < dom.length; i++) {
-            promises.push(addSource(dom[i].getAttribute("data-type"),dom[i].getAttribute('data-id')));
+
+        let tempDom = dom.querySelectorAll('[data-server-id="4"]');
+        let hasSource = false;
+        for (var i = 0; i < tempDom.length; i++) {
+            hasSource = true;
+            promises.push(addSource(tempDom[i].getAttribute("data-type"),tempDom[i].getAttribute('data-id')));
+        }
+
+        if(!hasSource){
+            tempDom = dom.querySelectorAll('[data-server-id="1"]');
+            for (var i = 0; i < tempDom.length; i++) {
+                promises.push(addSource(tempDom[i].getAttribute("data-type"),tempDom[i].getAttribute('data-id')));
+            }
         }
 
         let promRes = await Promise.all(promises);
