@@ -1586,7 +1586,7 @@ var zoro = {
 const extensionList = [wco, animixplay, fmovies, zoro];
 const extensionNames = ["WCOforever", "Animixplay", "Fmovies", "Zoro"];
 
-localStorage.setItem("version", "1.2.2");
+localStorage.setItem("version", "1.2.3");
 if (localStorage.getItem("lastUpdate") === null) {
     localStorage.setItem("lastUpdate", "0");
 }
