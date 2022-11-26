@@ -1571,10 +1571,9 @@ if (true) {
         for(show of flaggedShow){
             try{
                 let lastestEp = await showLastEpDB.lastestEp.where({"name" : show.name}).toArray();
-                
                 if(lastestEp.length != 0){
                     lastestEp = lastestEp[0].latest;
-                    if(show.ep != lastestEp){
+                    if(show.currentEp != lastestEp){
                         show.dom.style.boxSizing = "border-box";
                         show.dom.style.border = "3px solid white";
                     }
