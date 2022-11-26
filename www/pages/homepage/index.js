@@ -1625,29 +1625,39 @@ if (true) {
 
         let promiseResult = [];
         try{
-            await showLastEpDB.lastestEp.clear();
             if(allSettled){
                 let res = await Promise.allSettled(promises);
                 for(let promise of res){
                     if(promise.status === "fulfilled"){
                         promiseResult.push(promise.value);
+                    }else{
+                        promiseResult.push(null);
                     }
                 }
             }else{
                 promiseResult = await Promise.all(promises);
             }
 
-            
 
+            await showLastEpDB.lastestEp.clear();
 
             let count = 0;
             for(let promise of promiseResult){
-                let latestEpisode = promise.episodes;
-                latestEpisode = latestEpisode[latestEpisode.length - 1].link;
-                if(promiseShowData[count].ep != latestEpisode){
-                    await showLastEpDB.lastestEp.put({"name" : promiseShowData[count].name, "latest" : latestEpisode});
+                if(promise === null){
+                    sendNoti([0, "red", "Error", `Could not update ${fix_title(promiseShowData[count].name)}`]);
                     promiseShowData[count].dom.style.boxSizing = "border-box";
-                    promiseShowData[count].dom.style.border = "3px solid white";
+                    promiseShowData[count].dom.style.border = "3px solid grey";
+                }else{
+                    let latestEpisode = promise.episodes;
+                    latestEpisode = latestEpisode[latestEpisode.length - 1].link;
+                    if(promiseShowData[count].ep != latestEpisode){
+                        await showLastEpDB.lastestEp.put({"name" : promiseShowData[count].name, "latest" : latestEpisode});
+                        promiseShowData[count].dom.style.boxSizing = "border-box";
+                        promiseShowData[count].dom.style.border = "3px solid white";
+                    }else{
+                        promiseShowData[count].dom.style.boxSizing = "content-box";
+                        promiseShowData[count].dom.style.border = "none";
+                    }
                 }
                 count++;
             }
@@ -1658,6 +1668,7 @@ if (true) {
 
             }
         }catch(err){
+            alert("Couldn't update the library");
             console.log(err);
             console.error("Error 342");
         }
