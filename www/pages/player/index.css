@@ -635,11 +635,15 @@ select{
     width: 50px;
     background-color: white;
     border-radius: 10px;
+    display: inline-block;
 }
 
 #settingHandlePadding{
     display: inline-block;
     padding: 20px;
+    box-sizing: border-box;
+    width: 100%;
+    text-align: center;
 }
 
 .accessTable{

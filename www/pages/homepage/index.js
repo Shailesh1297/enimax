@@ -1,3 +1,9 @@
+let showLastEpDB;
+showLastEpDB = new Dexie("updateLib");
+showLastEpDB.version(1.0).stores({
+    lastestEp : "++id, name, latest"
+});
+
 window.parent.postMessage({ "action": 1, data: "any" }, "*");
 
 if(config.chrome){
@@ -9,8 +15,9 @@ if(config.chrome){
 
 let downloadedFolders = {};
 let pullTabArray = [];
+let flaggedShow = [];
 let errDOM = document.getElementById("errorCon");
-
+let firstLoad = true;
 async function populateDownloadedArray(){
     try{
         downloadedFolders = {};
@@ -25,12 +32,15 @@ async function populateDownloadedArray(){
     }
 }
 
-async function testIt(){
+async function testIt(idx = -1){
     let extensionList = window.parent.returnExtensionList();
     let extensionNames = window.parent.returnExtensionNames();
     let searchQuery = "odd";
     let errored = false;
     for(let i = 0; i < extensionList.length; i++){
+        if(idx != -1 && i != idx){
+            continue;
+        }
         let searchResult, episodeResult, playerResult;
         try{
             searchResult = (await extensionList[i].searchApi(searchQuery)).data;
@@ -129,6 +139,12 @@ async function testKey(){
 }
 if(localStorage.getItem("devmode") === "true"){
     document.getElementById("testExtensions").style.display = "block";
+    for(elem of document.getElementsByClassName("testExt")){
+        elem.style.display = "block";
+        elem.onclick = function(){
+            testIt(parseInt(this.getAttribute("data-exId")));
+        }
+    }
     document.getElementById("testKey").style.display = "block";
     document.getElementById("testExtensions").onclick = function(){
         testIt();
@@ -1073,7 +1089,7 @@ async function populateDiscover(){
         parents.push(createElement({
             "style":{
                 "display" : "none",
-                "height" : "250px",
+                "height" : "280px",
                 "marginBottom" : "40px",
                 "width" : "100%",
                 "whiteSpace" : "nowrap",
@@ -1303,7 +1319,8 @@ function addCustomRoom() {
 
     }
 
-    if(localStorage.getItem("discoverHide") !== "true" && localStorage.getItem("offline") !== 'true'){
+    if(localStorage.getItem("discoverHide") !== "true" && localStorage.getItem("offline") !== 'true' && firstLoad){
+        firstLoad = false;
         populateDiscover();
     }
 }
@@ -1546,8 +1563,113 @@ if (true) {
         x.parentElement.parentElement.parentElement.remove();
     }
 
-    async function get_userinfo_callback(x, y, z) {
+    async function updateNewEpCached(){
+        for(dom of document.getElementById("room_recently").querySelectorAll(".s_card")){
+            dom.style.border = "none";
+        }
+        let updateLibNoti = sendNoti([0, null, "Message", "Fetching cached data..."]);
+        for(show of flaggedShow){
+            try{
+                let lastestEp = await showLastEpDB.lastestEp.where({"name" : show.name}).toArray();
+                if(lastestEp.length != 0){
+                    lastestEp = lastestEp[0].latest;
+                    if(show.currentEp != lastestEp){
+                        show.dom.style.boxSizing = "border-box";
+                        show.dom.style.border = "3px solid white";
+                    }
+                }
+            }catch(err){
 
+            }
+        }
+
+        try{
+            updateLibNoti.noti.remove();
+        }catch(err){
+            
+        }
+
+
+    }
+    async function updateNewEp(){
+        let updateLibNoti = sendNoti([0, null, "Message", "Updating Libary"]);
+        let updatedShow = [];
+        let extensionList = window.parent.returnExtensionList();
+        let promises = [];
+        let promiseShowData =[];
+        let allSettled = "allSettled" in Promise;
+        // let allSettled = false;
+
+        for(show of flaggedShow){
+            let showURL = show.showURL;
+            showURL = showURL.replace("?watch=/", "");
+            let currentEp = show.currentEp;
+            
+
+            let currentEngine;
+            let temp = showURL.split("&engine=");
+            if (temp.length == 1) {
+                currentEngine = extensionList[0];
+            } else {
+                currentEngine = parseInt(temp[1]);
+                currentEngine = extensionList[currentEngine];
+            }
+            
+            promises.push(currentEngine.getAnimeInfo(showURL));
+            promiseShowData.push({
+                "ep" : currentEp,
+                "dom" : show.dom,
+                "name" : show.name
+            });
+        }
+
+        let promiseResult = [];
+        try{
+            await showLastEpDB.lastestEp.clear();
+            if(allSettled){
+                let res = await Promise.allSettled(promises);
+                for(let promise of res){
+                    if(promise.status === "fulfilled"){
+                        promiseResult.push(promise.value);
+                    }
+                }
+            }else{
+                promiseResult = await Promise.all(promises);
+            }
+
+            
+
+
+            let count = 0;
+            for(let promise of promiseResult){
+                let latestEpisode = promise.episodes;
+                latestEpisode = latestEpisode[latestEpisode.length - 1].link;
+                if(promiseShowData[count].ep != latestEpisode){
+                    await showLastEpDB.lastestEp.put({"name" : promiseShowData[count].name, "latest" : latestEpisode});
+                    promiseShowData[count].dom.style.boxSizing = "border-box";
+                    promiseShowData[count].dom.style.border = "3px solid white";
+                }
+                count++;
+            }
+
+            try{
+                updateLibNoti.noti.remove();
+            }catch(err){
+
+            }
+        }catch(err){
+            console.log(err);
+            console.error("Error 342");
+        }
+    }
+
+    function helpUpdateLib(){
+        alert("Outlines the shows that have new unwatched episodes. This is automatically updated twice a day, but you can manually do it by clicking on \"Update Library\". This may take tens of seconds.");
+    }
+
+
+    async function get_userinfo_callback(x, y, z) {
+        flaggedShow = [];
 
         document.getElementById("room_dis_child").innerHTML = "";
         document.getElementById("room_add_child").innerHTML = "";
@@ -1581,9 +1703,44 @@ if (true) {
         updateRoomAdd();
         addCustomRoom();
         let extensionNames = window.parent.returnExtensionNames();
+        
+        if(!offlineMode){
+            let updateLibCon = createElement({
+                "style" : {
+                    "width" : "100%",
+                    "bottomMargin" : "10px",
+                    "textAlign" : "center"
+                }
+            });
+
+            let updateLibButton = createElement({
+                "id" : "updateLib",
+                "innerText" : "Update Library"
+            });
+
+            let updateLibInfo = createElement({
+                "id" : "infoBut",
+            });
+
+            updateLibInfo.onclick = function(){
+                helpUpdateLib();
+            };
+
+            updateLibButton.onclick = function(){
+                updateNewEp();
+            }
+
+            updateLibCon.append(updateLibButton);
+            updateLibCon.append(updateLibInfo);
+
+            document.getElementById('room_recently').append(
+                updateLibCon
+            );
+        }
+
         for (var i = 0; i < data.length; i++) {
             let domToAppend;
-
+            let findUnwatched = false;
             if(offlineMode){
                 if(data[i][0] in downloadedFolders){
                     delete downloadedFolders[data[i][0]];
@@ -1594,6 +1751,7 @@ if (true) {
                 domToAppend = document.getElementById(`room_${data[i][4]}`);
             } else {
                 domToAppend = document.getElementById('room_recently');
+                findUnwatched = true;
             }
 
             let tempDiv = createElement({ "class": "s_card", "attributes": {}, "listeners": {} });
@@ -1628,7 +1786,14 @@ if (true) {
             tempDiv3.setAttribute("data-current", data[i][3]);
             tempDiv3.setAttribute("data-mainname", data[i][0]);
 
-            
+            if(findUnwatched){
+                flaggedShow.push({
+                    "showURL" : data[i][5],
+                    "currentEp" : data[i][3],
+                    "dom" : tempDiv,
+                    "name": data[i][0]
+                });
+            }
 
             tempDiv3.onclick = function () {
                 localStorage.setItem("currentLink", this.getAttribute("data-current"));
@@ -1804,7 +1969,19 @@ if (true) {
             }
         }
 
+        if(isNaN(parseInt(localStorage.getItem("lastupdatelib")))){
+            localStorage.setItem("lastupdatelib", 0);
+        }
 
+        let curTime = (new Date()).getTime() / 1000;
+        if(offlineMode){
+
+        }else if((curTime - parseInt(localStorage.getItem("lastupdatelib"))) > 43200){
+            updateNewEp();
+            localStorage.setItem("lastupdatelib", curTime.toString());
+        }else{
+            updateNewEpCached();
+        }
     }
 
     var ini_api = api;

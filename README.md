@@ -76,4 +76,3 @@ If you have any issues, you can create an issue, or post it on the discord serve
 
 # Discord server
 You can join the [discord server](https://discord.gg/cumVkBuU57) if you have any issues, or would like to request a feature.
-
