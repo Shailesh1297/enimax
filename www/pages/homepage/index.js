@@ -908,7 +908,17 @@ function updateRoomAdd() {
 
     </div>`;
 
+    document.getElementById("room_add_child").innerHTML += `<div class="room_card_con" roomId="-1">
+
+    <div class="room_card"><div class="room_text">Ongoing</div><div class="draggable_room add_to_room"  id="add_to_ongoing" data-roomId="-1"></div></div>
+
+    </div>`;
+
     document.getElementById("add_to_room").onclick = function () {
+        ini_api.change_state(this);
+    };
+
+    document.getElementById("add_to_ongoing").onclick = function () {
         ini_api.change_state(this);
     };
 
@@ -1240,6 +1250,16 @@ function addCustomRoom() {
         "id": `room_recently`
     }));
 
+
+    let tempOngoing = createCat("room_-1", "Ongoing");
+    tempOngoing.id = "ongoingCat";
+    document.getElementById("categoriesCon").append(tempOngoing);
+
+    document.getElementById("custom_rooms").append(createElement({
+        "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === "room_-1") ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain" : ""}`,
+        "id": `room_-1`
+    }));
+
     if(localStorage.getItem("discoverHide") !== "true" && localStorage.getItem("offline") !== 'true'){
         let tempDiscover = createCat("discoverCon", "Discover");
         tempDiscover.id = "discoverCat";
@@ -1564,7 +1584,7 @@ if (true) {
     }
 
     async function updateNewEpCached(){
-        for(dom of document.getElementById("room_recently").querySelectorAll(".s_card")){
+        for(dom of document.getElementById("room_-1").querySelectorAll(".s_card")){
             dom.style.border = "none";
         }
         let updateLibNoti = sendNoti([0, null, "Message", "Fetching cached data..."]);
@@ -1744,7 +1764,7 @@ if (true) {
             updateLibCon.append(updateLibButton);
             updateLibCon.append(updateLibInfo);
 
-            document.getElementById('room_recently').append(
+            document.getElementById('room_-1').append(
                 updateLibCon
             );
         }
@@ -1762,6 +1782,9 @@ if (true) {
                 domToAppend = document.getElementById(`room_${data[i][4]}`);
             } else {
                 domToAppend = document.getElementById('room_recently');
+            }
+
+            if(parseInt(data[i][4]) == -1){
                 findUnwatched = true;
             }
 
