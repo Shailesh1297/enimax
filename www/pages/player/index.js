@@ -1023,22 +1023,27 @@ class vid {
 				x.current.innerText = x.timeToString(temp);
 
 				x.updateTimeout("f");
-			} else if ((Math.abs(x.iniX - coords.screenX) > 50) || (Math.abs(x.iniY - coords.screenY) > 50)) {
+			} else if (x.check != 100 && (Math.abs(x.iniX - coords.screenX) > 50) || ((x.iniY - coords.screenY) < -50)) {
 				x.canSeekNow = false;
 				clearTimeout(x.seekTimeout);
 				x.downTown = -x.iniY + coords.screenY;
-				if (-x.iniY + coords.screenY > 0 && -x.iniY + coords.screenY <= 100) {
-					document.body.style.backgroundColor = `rgba(255,255,255,${Math.floor((-x.iniY + coords.screenY) / 100)})`;
-				}
 				x.check = 99;
 				document.getElementById('con').style.transform = `translateY(${Math.max(Math.min(-x.iniY + coords.screenY, 100), 0)}px)`;
 
 			} else if (x.check == 99) {
 				x.downTown = -x.iniY + coords.screenY;
-
 				document.getElementById('con').style.transform = `translateY(${Math.max(Math.min(-x.iniY + coords.screenY, 100), 0)}px)`;
 
+			} else if (x.check != 100 && (x.iniY - coords.screenY) > 50) {
+				x.check = 100;
+				x.canSeekNow = false;
+				openSettingsSemi(0);
+				clearTimeout(x.seekTimeout);
+			} else if (x.check == 100) {
+				openSettingsSemi(x.iniY - coords.screenY);
+				x.downTown = x.iniY - coords.screenY;
 			}
+
 
 
 		} else if (x.type == 3) {
@@ -1109,13 +1114,21 @@ class vid {
 
 		}
 
+		if(x.check == 100){
+			if(x.downTown > 130){
+				openSettingsSemi(-1);
+			}else{
+				closeSettings();
+			}
+		}
+
 		x.updateTime(x);
 		x.updateBuffer(x);
 		document.getElementById('con').style.transitionDuration = "0.2s";
 		document.body.style.backgroundColor = "black";
 
 
-		if (x.downTown >= 100 && !config.chrome) {
+		if (x.check == 99 && x.downTown >= 100 && !config.chrome) {
 
 			window.parent.postMessage({ "action": 400 }, "*");
 
@@ -2283,6 +2296,31 @@ document.getElementById("skipIntroDOM").onclick = function(){
 	}
 }
 applyTheme();
+
+function openSettingsSemi(translateY){
+
+	let settingCon = document.getElementById("setting_con");
+	settingCon.style.display = "block";
+
+	if(translateY == -1){
+		settingCon.style.height = `100%`;
+	}else if(translateY == 0){
+		settingCon.style.transitionDuration = "0.2s";
+		settingCon.style.opacity = "0";
+		settingCon.style.height = "0";
+		window.requestAnimationFrame(function(){
+			window.requestAnimationFrame(function(){
+				settingCon.style.opacity = "1";
+				setTimeout(function(){
+					settingCon.style.transitionDuration = "0s";
+				}, 200);
+			});
+		});
+	}else{
+		settingCon.style.height = `${translateY - 50}px`;
+	}
+
+}
 
 function closeSettings(){
 	let settingCon = document.getElementById("setting_con");
