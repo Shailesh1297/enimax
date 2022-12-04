@@ -41,12 +41,12 @@ async function dexieToSQLite() {
     alert("This may take a while. DO NOT EXIT this page until you receive a message that says that you can.");
 
 
-    try{
+    try {
 
         let currentDB = await downloadedDB.vid.toArray();
         let command = [
             initQueries[2]
-                
+
         ];
         for (let i = 0; i < currentDB.length; i++) {
             let currentRow = currentDB[i];
@@ -55,7 +55,7 @@ async function dexieToSQLite() {
             let questionMarks = [];
             let flag = false;
             for (x in currentRow) {
-                if(x == "id"){
+                if (x == "id") {
                     continue;
                 }
                 flag = true;
@@ -80,7 +80,7 @@ async function dexieToSQLite() {
         currentDB = await downloadedDB.playlist.toArray();
         command = [
             initQueries[0]
-                
+
         ];
         for (let i = 0; i < currentDB.length; i++) {
             let currentRow = currentDB[i];
@@ -89,7 +89,7 @@ async function dexieToSQLite() {
             let questionMarks = [];
             let flag = false;
             for (x in currentRow) {
-                if(x == "id"){
+                if (x == "id") {
                     continue;
                 }
                 flag = true;
@@ -109,17 +109,17 @@ async function dexieToSQLite() {
         await batchInsert(command);
         alert("Done! You can now safely reload the page.");
         window.location.reload();
-    }catch(err){
+    } catch (err) {
         console.error(err);
         alert("Some unexpected error has occurred. Contact the developer.");
     }
 
-    
-   
+
+
 }
 
 
-function getDB(){
+function getDB() {
     return db;
 }
 let actions;
@@ -166,7 +166,7 @@ async function mysql_query(command, inputs, currentDB, lastID = false) {
             currentDB.transaction(function (tx) {
                 tx.executeSql(command, inputs, function (tx, rs) {
 
-                    try{
+                    try {
                         if (lastID) {
                             resolve(rs);
 
@@ -180,17 +180,17 @@ async function mysql_query(command, inputs, currentDB, lastID = false) {
                             resolve(result);
                         }
 
-                    }catch(err){
+                    } catch (err) {
                         reject(err);
                     }
                 }, function (tx, error) {
                     reject(error);
                 });
-            }, function(x){
+            }, function (x) {
                 reject(error);
 
-            }, function(x){
-                
+            }, function (x) {
+
             });
 
 
@@ -296,10 +296,10 @@ async function apiCall(method, form, callback, args = [], timeout = false) {
 
         }
         else if (config.local) {
-            if(config.chrome){
+            if (config.chrome) {
                 response = await actionDexie[form.action]({ "body": form });
 
-            }else{
+            } else {
                 response = await actionSQLite[form.action]({ "body": form });
 
             }
@@ -331,7 +331,7 @@ if (true) {
 
     async function updateTime(req, isDownloaded) {
         let currentDB = db;
-        if(isDownloaded){
+        if (isDownloaded) {
             currentDB = downloadedSqlite;
         }
 
@@ -390,7 +390,7 @@ if (true) {
 
     async function getShowInfo(req, isDownloaded) {
         let currentDB = db;
-        if(isDownloaded){
+        if (isDownloaded) {
             currentDB = downloadedSqlite;
         }
 
@@ -414,7 +414,7 @@ if (true) {
 
 
                     var response = {};
-                    var getdata = await mysql_query("SELECT cur_time as current, main_link as mainLink from video where ep=0 and name=? LIMIT 1", [nameUm],currentDB);
+                    var getdata = await mysql_query("SELECT cur_time as current, main_link as mainLink from video where ep=0 and name=? LIMIT 1", [nameUm], currentDB);
 
                     if (getdata.length == 0) {
 
@@ -472,7 +472,7 @@ if (true) {
 
     async function getUserInfo(req, isDownloaded) {
         let currentDB = db;
-        if(isDownloaded){
+        if (isDownloaded) {
             currentDB = downloadedSqlite;
         }
         try {
@@ -550,7 +550,7 @@ if (true) {
 
     async function updateImage(req, isDownloaded) {
         let currentDB = db;
-        if(isDownloaded){
+        if (isDownloaded) {
             currentDB = downloadedSqlite;
         }
         try {
@@ -604,7 +604,7 @@ if (true) {
 
     async function deleteShow(req, isDownloaded) {
         let currentDB = db;
-        if(isDownloaded){
+        if (isDownloaded) {
             currentDB = downloadedSqlite;
         }
         try {
@@ -616,9 +616,9 @@ if (true) {
                 var response = {};
 
                 if (isDownloaded) {
-                    try{
+                    try {
                         await window.parent.removeDirectory(`${name}`);
-                    }catch(err){
+                    } catch (err) {
                         alert("Could not delete the files. You have to manually delete it by going to the show's page.");
                     }
                 }
@@ -645,7 +645,7 @@ if (true) {
 
     async function changeState(req, isDownloaded) {
         let currentDB = db;
-        if(isDownloaded){
+        if (isDownloaded) {
             currentDB = downloadedSqlite;
         }
         try {
@@ -685,7 +685,7 @@ if (true) {
 
     async function updateImageManual(req, isDownloaded) {
         let currentDB = db;
-        if(isDownloaded){
+        if (isDownloaded) {
             currentDB = downloadedSqlite;
         }
         try {
@@ -728,7 +728,7 @@ if (true) {
 
     async function addRoom(req, isDownloaded) {
         let currentDB = db;
-        if(isDownloaded){
+        if (isDownloaded) {
             currentDB = downloadedSqlite;
         }
         try {
@@ -765,7 +765,7 @@ if (true) {
 
     async function deleteRoom(req, isDownloaded) {
         let currentDB = db;
-        if(isDownloaded){
+        if (isDownloaded) {
             currentDB = downloadedSqlite;
         }
         try {
@@ -799,7 +799,7 @@ if (true) {
 
     async function changeOrder(req, isDownloaded) {
         let currentDB = db;
-        if(isDownloaded){
+        if (isDownloaded) {
             currentDB = downloadedSqlite;
         }
         try {
@@ -848,7 +848,7 @@ if (true) {
 
     async function changeMainLink(req, isDownloaded) {
         let currentDB = db;
-        if(isDownloaded){
+        if (isDownloaded) {
             currentDB = downloadedSqlite;
         }
         try {
@@ -905,10 +905,10 @@ if (true) {
     };
 
 
-} 
+}
 
 
-if(true){
+if (true) {
 
 
 
@@ -1239,9 +1239,9 @@ if(true){
 
                 // await mysql_query("DELETE FROM video where ep=0 and name=? and username=?", [name, username]);
                 if (db == downloadedDB) {
-                    try{
+                    try {
                         await window.parent.removeDirectory(`${name}`);
-                    }catch(err){
+                    } catch (err) {
                         alert("Could not delete the files. You have to manually delete it by going to the show's page.");
                     }
                 }

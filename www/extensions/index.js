@@ -8,7 +8,7 @@ let currentReject;
 let wcoRef;
 let fmoviesBaseURL = !localStorage.getItem("fmoviesBaseURL") ? "fmovies.app" : localStorage.getItem("fmoviesBaseURL");
 
-function setFmoviesBase(){
+function setFmoviesBase() {
     fmoviesBaseURL = !localStorage.getItem("fmoviesBaseURL") ? "fmovies.app" : localStorage.getItem("fmoviesBaseURL");
 }
 
@@ -43,30 +43,30 @@ String.prototype.onlyOnce = function substringBeforeLast(substring) {
 
 function extractKey(id, url = null, useCached = false) {
     return (new Promise(async function (resolve, reject) {
-        if(config.chrome|| useCached){
-            try{
+        if (config.chrome || useCached) {
+            try {
                 let gitHTML = (await MakeFetch(`https://github.com/enimax-anime/key/blob/e${id}/key.txt`));
                 let key = gitHTML.substringAfter('"blob-code blob-code-inner js-file-line">').substringBefore("</td>");
                 resolve(key);
-            }catch(err){
+            } catch (err) {
                 reject(err);
             }
-        }else{
+        } else {
             let scr;
-            if(url == null){
-                if(id == 6){
+            if (url == null) {
+                if (id == 6) {
                     scr = (await MakeFetch(`https://rabbitstream.net/js/player/prod/e6-player.min.js?v=${(new Date()).getTime()}`));
-                }else{
-                    scr = (await MakeFetch(`https://rabbitstream.net/js/player/prod/e4-player.min.js?v=${(new Date()).getTime()}`));                
+                } else {
+                    scr = (await MakeFetch(`https://rabbitstream.net/js/player/prod/e4-player.min.js?v=${(new Date()).getTime()}`));
                 }
-            }else{
+            } else {
                 scr = (await MakeFetch(url));
             }
-            
-            scr = extractKeyComp(id,scr);
-            if(scr[1]){
+
+            scr = extractKeyComp(id, scr);
+            if (scr[1]) {
                 resolve(scr[0]);
-            }else{
+            } else {
                 currentResolve = resolve;
                 currentReject = reject;
 
@@ -156,7 +156,7 @@ if (config && config.chrome) {
         { urls: ['https://*.watchanimesub.net/*'] },
         ['blocking', 'requestHeaders', 'extraHeaders']
     );
-    
+
     MakeCusReqFmovies = async function (url, options) {
         if ("headers" in options) {
             customHeaders = options["headers"];
@@ -274,7 +274,7 @@ var wco = {
                 data.episodes = animeEps;
 
                 let dash = "-";
-                data.mainName = url.replace("https://www.wcoforever.net/anime/","") + dash;
+                data.mainName = url.replace("https://www.wcoforever.net/anime/", "") + dash;
 
                 temp.remove();
                 resolve(data);
@@ -359,8 +359,8 @@ var wco = {
 
 
             try {
-                let tmpName = dom.querySelector('[rel="category tag"]').getAttribute("href").replace("https://www.wcoforever.net/anime/","");
-                if(tmpName != ""){
+                let tmpName = dom.querySelector('[rel="category tag"]').getAttribute("href").replace("https://www.wcoforever.net/anime/", "");
+                if (tmpName != "") {
                     name_name = tmpName + "-";
                 }
             } catch (err) {
@@ -390,17 +390,17 @@ var wco = {
             wcoRef = main;
             option2.headers.referer = main;
             let domain;
-            try{
+            try {
                 domain = new URL(main).origin;
-            }catch(err){
+            } catch (err) {
                 domain = "https://embed.watchanimesub.net";
             }
 
             var req2;
 
-            if(config.chrome){
+            if (config.chrome) {
                 req2 = await MakeFetch(main, {});
-            }else{
+            } else {
                 req2 = await MakeCusReqFmovies(main, option2);
             }
             main = domain + req2.split("$.getJSON(\"")[1].split("\"")[0];
@@ -410,9 +410,9 @@ var wco = {
 
 
                 let req4;
-                if(config.chrome){
+                if (config.chrome) {
                     req4 = await MakeFetch(main, {});
-                }else{
+                } else {
                     req4 = await MakeCusReqFmovies(main, option2);
                 }
 
@@ -450,9 +450,9 @@ var wco = {
 
             let req3;
 
-            if(config.chrome){
+            if (config.chrome) {
                 req3 = await MakeFetch(main, {});
-            }else{
+            } else {
                 req3 = await MakeCusReqFmovies(main, option2);
             }
             req3 = JSON.parse(req3);
@@ -501,38 +501,38 @@ var wco = {
         }
 
     },
-    "discover": async function(){
+    "discover": async function () {
         let temp = document.createElement("div");
         temp.innerHTML = DOMPurify.sanitize(await MakeFetch("https://wcoforever.net", {}));
         let data = [];
         let promises = [];
-        for(elem of temp.querySelectorAll(".items")[1].querySelectorAll("li")){
+        for (elem of temp.querySelectorAll(".items")[1].querySelectorAll("li")) {
             let image = "https:" + elem.querySelector("img").getAttribute("src");
             let tempAnchor = elem.querySelectorAll("a")[1];
             let name = tempAnchor.innerText;
             let link = tempAnchor.getAttribute("href");
-            if(link == ""){
+            if (link == "") {
                 link = null;
             }
-            
+
             data.push({
                 image,
                 name,
                 link,
-                "getLink" : true
+                "getLink": true
             });
 
         }
         return data;
     },
 
-    "getDiscoverLink" : async function(mainLink){
-        try{
+    "getDiscoverLink": async function (mainLink) {
+        try {
             let temp = document.createElement("div");
             temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://wcoforever.net${mainLink}`, {}));
-            mainLink = temp.querySelector('[rel="category tag"]').getAttribute("href").replace("https://www.wcoforever.net","");
+            mainLink = temp.querySelector('[rel="category tag"]').getAttribute("href").replace("https://www.wcoforever.net", "");
             return mainLink;
-        }catch(err){
+        } catch (err) {
             throw err;
         }
     }
@@ -793,11 +793,11 @@ var animixplay = {
 
 
     },
-    "discover": async function(){
+    "discover": async function () {
         let temp = document.createElement("div");
         temp.innerHTML = DOMPurify.sanitize(await MakeFetch("https://animixplay.to/?tab=popular", {}));
         let data = [];
-        for(elem of temp.querySelector("#resultplace").querySelectorAll("li")){
+        for (elem of temp.querySelector("#resultplace").querySelectorAll("li")) {
             let image = elem.querySelector("img").getAttribute("src");
             let tempAnchor = elem.querySelector("a");
             let name = tempAnchor.getAttribute("title");
@@ -806,7 +806,7 @@ var animixplay = {
             data.push({
                 image,
                 name,
-                link 
+                link
             });
         }
 
@@ -1180,15 +1180,15 @@ var fmovies = {
 
                     let promises = [getLinkFromStream(link)];
                     let seasonNotEmpty = false;
-                    if (currentSeason != "") {    
+                    if (currentSeason != "") {
                         seasonNotEmpty = true;
 
                         promises.push(MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/season/episodes/${currentSeason}`));
                     }
-                    
+
                     let parallelReqs = await Promise.all(promises);
 
-                    if(seasonNotEmpty){
+                    if (seasonNotEmpty) {
                         let r = parallelReqs[1];
                         let temp = document.createElement("div");
                         temp.innerHTML = DOMPurify.sanitize(r);
@@ -1208,17 +1208,17 @@ var fmovies = {
                         temp.remove();
                     }
 
-                    let sourceJSON =   parallelReqs[0];
+                    let sourceJSON = parallelReqs[0];
                     let encryptedURL = sourceJSON.sources;
                     let decryptKey, tempFile;
 
-                    try{
+                    try {
                         decryptKey = await extractKey(4, null, true);
                         // decryptKey = "dfdfdfdf";
                         tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
 
-                    }catch(err){
-                        if(err.message == "Malformed UTF-8 data"){
+                    } catch (err) {
+                        if (err.message == "Malformed UTF-8 data") {
                             decryptKey = await extractKey(4);
                             tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
                         }
@@ -1278,28 +1278,28 @@ var fmovies = {
 
     },
 
-    "discover": async function(){
+    "discover": async function () {
         let temp = document.createElement("div");
         temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://fmovies.app/tv-show`, {}));
         let data = [];
-        for(elem of temp.querySelectorAll(".flw-item")){
+        for (elem of temp.querySelectorAll(".flw-item")) {
             let image = elem.querySelector("img").getAttribute("data-src");
             let tempAnchor = elem.querySelector(".film-name");
             let name = tempAnchor.innerText.trim();
             let link = tempAnchor.querySelector("a").getAttribute("href");
 
-            try{
+            try {
                 let path = new URL(link);
                 path = path.pathname;
                 link = path;
-            }catch(err){
+            } catch (err) {
 
             }
-        
+
             data.push({
                 image,
                 name,
-                link 
+                link
             });
         }
 
@@ -1425,7 +1425,7 @@ var zoro = {
 
         }
 
-        async function addSource(type, id){
+        async function addSource(type, id) {
             let sources = await MakeFetch(`https://zoro.to/ajax/v2/episode/sources?id=${id}`, {});
             sources = JSON.parse(sources).link;
             let urlHost = (new URL(sources)).origin;
@@ -1451,12 +1451,12 @@ var zoro = {
                 if (sourceJSON.encrypted) {
                     let encryptedURL = sourceJSON.sources;
                     let decryptKey, tempFile;
-                    try{
+                    try {
                         decryptKey = await extractKey(6, null, true);
                         // decryptKey = "dfdfdfdf";
                         tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
-                    }catch(err){
-                        if(err.message == "Malformed UTF-8 data"){
+                    } catch (err) {
+                        if (err.message == "Malformed UTF-8 data") {
                             decryptKey = await extractKey(6);
                             tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
                         }
@@ -1498,13 +1498,13 @@ var zoro = {
         let hasSource = false;
         for (var i = 0; i < tempDom.length; i++) {
             hasSource = true;
-            promises.push(addSource(tempDom[i].getAttribute("data-type"),tempDom[i].getAttribute('data-id')));
+            promises.push(addSource(tempDom[i].getAttribute("data-type"), tempDom[i].getAttribute('data-id')));
         }
 
-        if(!hasSource){
+        if (!hasSource) {
             tempDom = dom.querySelectorAll('[data-server-id="1"]');
             for (var i = 0; i < tempDom.length; i++) {
-                promises.push(addSource(tempDom[i].getAttribute("data-type"),tempDom[i].getAttribute('data-id')));
+                promises.push(addSource(tempDom[i].getAttribute("data-type"), tempDom[i].getAttribute('data-id')));
             }
         }
 
@@ -1562,11 +1562,11 @@ var zoro = {
         "origin": "https://rapid-cloud.co",
         "referer": "https://rapid-cloud.co/",
     },
-    "discover": async function(){
+    "discover": async function () {
         let temp = document.createElement("div");
         temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://zoro.to/top-airing`, {}));
         let data = [];
-        for(elem of temp.querySelectorAll(".flw-item")){
+        for (elem of temp.querySelectorAll(".flw-item")) {
             let image = elem.querySelector("img").getAttribute("data-src");
             let tempAnchor = elem.querySelector("a");
             let name = tempAnchor.getAttribute("title");
@@ -1575,7 +1575,7 @@ var zoro = {
             data.push({
                 image,
                 name,
-                link 
+                link
             });
         }
 
@@ -1589,25 +1589,25 @@ var twitch = {
         const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
 
         return (new Promise(function (resolve, reject) {
-            fetch("https://gql.twitch.tv/gql",{
-                "headers" : {
+            fetch("https://gql.twitch.tv/gql", {
+                "headers": {
                     'Client-id': clientId,
-                    'Content-Type' : 'application/json',
+                    'Content-Type': 'application/json',
                 },
-                "method" : "POST",
-                "body" : JSON.stringify(
-                    {"operationName":"SearchResultsPage_SearchResults","variables":{"query":query,"options":null},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"6ea6e6f66006485e41dbe3ebd69d5674c5b22896ce7b595d7fce6411a3790138"}}}
+                "method": "POST",
+                "body": JSON.stringify(
+                    { "operationName": "SearchResultsPage_SearchResults", "variables": { "query": query, "options": null }, "extensions": { "persistedQuery": { "version": 1, "sha256Hash": "6ea6e6f66006485e41dbe3ebd69d5674c5b22896ce7b595d7fce6411a3790138" } } }
                 )
             }).then((x) => x.json()).then((resData) => {
 
                 const data = [];
-                for(let channels of resData.data.searchFor.channels.edges){
-                    data.push({ "name": channels.item.login, "id": channels.item.login, "image": channels.item.profileImageURL, "link":"/"+encodeURIComponent(channels.item.login) +"&engine=4" });
+                for (let channels of resData.data.searchFor.channels.edges) {
+                    data.push({ "name": channels.item.login, "id": channels.item.login, "image": channels.item.profileImageURL, "link": "/" + encodeURIComponent(channels.item.login) + "&engine=4" });
                 }
-                resolve({ data, "status": 200 });        
-            }).catch((err) => { reject({data : "error", "status": 400})});
+                resolve({ data, "status": 200 });
+            }).catch((err) => { reject({ data: "error", "status": 400 }) });
 
-                  
+
         }));
 
     },
@@ -1627,37 +1627,37 @@ var twitch = {
         response.status = 200;
 
         const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
-        
+
         return new Promise((resolve, reject) => {
-            fetch("https://gql.twitch.tv/gql",{
-                "headers" : {
+            fetch("https://gql.twitch.tv/gql", {
+                "headers": {
                     'Client-id': clientId,
-                    'Content-Type' : 'application/json',
+                    'Content-Type': 'application/json',
                 },
-                "method" : "POST",
-                "body" : JSON.stringify(
+                "method": "POST",
+                "body": JSON.stringify(
                     [
-                        {"operationName":"StreamRefetchManager","variables":{"channel":id},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"ecdcb724b0559d49689e6a32795e6a43bba4b2071b5e762a4d1edf2bb42a6789"}}},
-                        {"operationName":"FilterableVideoTower_Videos","variables":{"limit":50,"channelOwnerLogin":id,"broadcastType":"ARCHIVE","videoSort":"TIME"},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"a937f1d22e269e39a03b509f65a7490f9fc247d7f83d6ac1421523e3b68042cb"}}}
+                        { "operationName": "StreamRefetchManager", "variables": { "channel": id }, "extensions": { "persistedQuery": { "version": 1, "sha256Hash": "ecdcb724b0559d49689e6a32795e6a43bba4b2071b5e762a4d1edf2bb42a6789" } } },
+                        { "operationName": "FilterableVideoTower_Videos", "variables": { "limit": 50, "channelOwnerLogin": id, "broadcastType": "ARCHIVE", "videoSort": "TIME" }, "extensions": { "persistedQuery": { "version": 1, "sha256Hash": "a937f1d22e269e39a03b509f65a7490f9fc247d7f83d6ac1421523e3b68042cb" } } }
                     ]
                 )
             }).then((x) => x.json()).then((resData) => {
                 let isLive = resData[0].data.user.stream !== null;
                 let items = resData[1].data.user.videos.edges;
                 let data = [];
-                if(sibling){
+                if (sibling) {
                     data = [null, null, null];
-                    for(let i = 0; i < items.length; i++){
+                    for (let i = 0; i < items.length; i++) {
                         let which = -1;
-                        if(currentID == items[i].node.id){
+                        if (currentID == items[i].node.id) {
                             which = 1;
-                        } else if(i != 0 && currentID == items[i - 1].node.id){
+                        } else if (i != 0 && currentID == items[i - 1].node.id) {
                             which = 0;
-                        } else if(i != (items.length - 1) && currentID == items[i + 1].node.id){
+                        } else if (i != (items.length - 1) && currentID == items[i + 1].node.id) {
                             which = 2;
                         }
 
-                        if(which != -1){
+                        if (which != -1) {
                             data[which] = {
                                 "link": encodeURIComponent(id) + "&id=" + items[i].node.id + "&engine=4",
                                 "id": id,
@@ -1666,26 +1666,26 @@ var twitch = {
                         }
                     }
 
-                }else{
-                    for(let vod of items){
-                        response.image = vod.node.owner.profileImageURL;                        
+                } else {
+                    for (let vod of items) {
+                        response.image = vod.node.owner.profileImageURL;
                         data.unshift({
                             "link": "?watch=" + encodeURIComponent(id) + "&id=" + vod.node.id + "&engine=4",
                             "id": id,
                             "title": vod.node.title,
                         });
                     }
-                }       
-                
-                if(isLive){
+                }
+
+                if (isLive) {
                     data.push({
-                        "link": "?watch=" + encodeURIComponent(id) + "&id=" + "live"+ "&engine=4",
+                        "link": "?watch=" + encodeURIComponent(id) + "&id=" + "live" + "&engine=4",
                         "id": id,
                         "title": `${id} is Live!`,
                     });
 
                     data.unshift({
-                        "link": "?watch=" + encodeURIComponent(id) + "&id=" + "live"+ "&engine=4",
+                        "link": "?watch=" + encodeURIComponent(id) + "&id=" + "live" + "&engine=4",
                         "id": id,
                         "title": `${id} is Live!`,
                     });
@@ -1694,10 +1694,10 @@ var twitch = {
 
                 resolve(response);
             }).catch((error) => reject(error));
-            
+
         });
 
-        
+
 
     },
 
@@ -1708,7 +1708,7 @@ var twitch = {
         let name = params.get("watch");
         let ep = params.get("id");
         let isLive = (ep == "live");
-        
+
         const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
 
         function getAccessToken(id, isVod) {
@@ -1728,15 +1728,15 @@ var twitch = {
                     playerType: "embed"
                 }
             });
-            
+
             return new Promise((resolve, reject) => {
-                fetch("https://gql.twitch.tv/gql",{
-                    "headers" : {
+                fetch("https://gql.twitch.tv/gql", {
+                    "headers": {
                         'Client-id': clientId,
-                        'Content-Type' : 'application/json',
+                        'Content-Type': 'application/json',
                     },
-                    "method" : "POST",
-                    "body" : data
+                    "method": "POST",
+                    "body": data
                 }).then((x) => x.json()).then((resData) => {
                     console.log(resData);
                     if (isVod) {
@@ -1745,7 +1745,7 @@ var twitch = {
                         resolve(resData.data.streamPlaybackAccessToken);
                     }
                 }).catch((error) => reject(error));
-                
+
             });
         }
 
@@ -1785,28 +1785,28 @@ var twitch = {
         }
 
         let resp = {};
-        
-        if(!isLive){
-            try{
+
+        if (!isLive) {
+            try {
                 let epList = await this.getAnimeInfo(name, true, parseInt(ep));
 
-                if(epList.episodes[0]){
+                if (epList.episodes[0]) {
                     resp.prev = epList.episodes[0].link;
                 }
 
-                if(epList.episodes[2]){
+                if (epList.episodes[2]) {
                     resp.next = epList.episodes[2].link;
                 }
-            }catch(err){
+            } catch (err) {
 
             }
         }
 
         resp.sources = [
             {
-                "url" : isLive ? (await getStream(name, false)) : (await getVod(ep, false)),
-                "name" : "VOD",
-                "type" : "hls"
+                "url": isLive ? (await getStream(name, false)) : (await getVod(ep, false)),
+                "name": "VOD",
+                "type": "hls"
             }
         ];
         resp.name = name;

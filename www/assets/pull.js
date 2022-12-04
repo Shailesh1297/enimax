@@ -160,16 +160,16 @@ class menuPull {
 		} else if ((x - self.iniX) > 150) {
 			self.dom.style.opacity = "0.5";
 			self.hasMoved = true;
-		}else{
+		} else {
 			self.dom.style.opacity = "1";
 			self.hasMoved = false;
 		}
 	}
 
 	touchEnd(self) {
-		if(self.hasMoved){
+		if (self.hasMoved) {
 			self.callback();
-		}else{
+		} else {
 			self.dom.style.opacity = "1";
 			self.dom.style.transform = `translateX(0px)`;
 		}
@@ -214,7 +214,7 @@ class settingsPull {
 	}
 
 	touchStart(event, self) {
-		if(self.shouldCheck && self.dom.scrollTop !== 0){
+		if (self.shouldCheck && self.dom.scrollTop !== 0) {
 			return;
 		}
 		const targetTouches = event.targetTouches;
@@ -247,12 +247,12 @@ class settingsPull {
 			return;
 		}
 
-		if(self.lastX > 75){
+		if (self.lastX > 75) {
 			self.settingCon.style.height = `100%`;
-		}else if(self.lastX < -75){
+		} else if (self.lastX < -75) {
 			self.callback();
-		}else{
-			self.settingCon.style.height = `${self.iniHeight}px`;			
+		} else {
+			self.settingCon.style.height = `${self.iniHeight}px`;
 		}
 
 		self.iniHeight = 0;

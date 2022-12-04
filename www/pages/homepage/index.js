@@ -1,14 +1,14 @@
 let showLastEpDB;
 showLastEpDB = new Dexie("updateLib");
 showLastEpDB.version(1.0).stores({
-    lastestEp : "++id, name, latest"
+    lastestEp: "++id, name, latest"
 });
 
 window.parent.postMessage({ "action": 1, data: "any" }, "*");
 
-if(config.chrome){
+if (config.chrome) {
     let chromeDOM = document.getElementsByClassName("notChrome");
-    for(let i = 0; i < chromeDOM.length; i++){
+    for (let i = 0; i < chromeDOM.length; i++) {
         chromeDOM[i].style.display = "none";
     }
 }
@@ -18,92 +18,92 @@ let pullTabArray = [];
 let flaggedShow = [];
 let errDOM = document.getElementById("errorCon");
 let firstLoad = true;
-async function populateDownloadedArray(){
-    try{
+async function populateDownloadedArray() {
+    try {
         downloadedFolders = {};
         let temp = await window.parent.listDir("");
-        for(let i = 0; i < temp.length; i++){
-            if(temp[i].isDirectory){
+        for (let i = 0; i < temp.length; i++) {
+            if (temp[i].isDirectory) {
                 downloadedFolders[temp[i].name] = true;
             }
         }
-    }catch(err){
+    } catch (err) {
 
     }
 }
 
-async function testIt(idx = -1){
+async function testIt(idx = -1) {
     let extensionList = window.parent.returnExtensionList();
     let extensionNames = window.parent.returnExtensionNames();
     let searchQuery = "odd";
     let errored = false;
-    for(let i = 0; i < extensionList.length; i++){
-        if(idx != -1 && i != idx){
+    for (let i = 0; i < extensionList.length; i++) {
+        if (idx != -1 && i != idx) {
             continue;
         }
         let searchResult, episodeResult, playerResult;
-        try{
+        try {
             searchResult = (await extensionList[i].searchApi(searchQuery)).data;
-        }catch(err){
+        } catch (err) {
             errored = true;
             alert(`${extensionNames[i]} - search :  ${err.toString()}`);
         }
 
-        try{
+        try {
             let tempSea = searchResult[0].link;
-            if(tempSea[0] == "/"){
+            if (tempSea[0] == "/") {
                 tempSea = tempSea.substring(1);
             }
             episodeResult = (await extensionList[i].getAnimeInfo(tempSea));
-        }catch(err){
+        } catch (err) {
             errored = true;
             alert(`${extensionNames[i]} - episode :  ${err.toString()}`);
         }
 
-        try{
+        try {
             playerResult = await extensionList[i].getLinkFromUrl(episodeResult.episodes[0].link.replace("?watch=", ""));
-        }catch(err){
+        } catch (err) {
             console.error(err);
             errored = true;
             alert(`${extensionNames[i]} - player :  ${err.toString()}`);
         }
 
-        try{
+        try {
             alert(`${extensionNames[i]} - Here's the link: ${playerResult.sources[0].url}`);
-        }catch(err){
+        } catch (err) {
             alert(extensionNames[i] + " Failed");
         }
     }
 
-    if(!errored){
+    if (!errored) {
         alert("Everything seems to be working fine");
     }
 }
-async function testKey(){
-    try{
+async function testKey() {
+    try {
         alert(await window.parent.extractKey(4));
-    }catch(err){
+    } catch (err) {
         alert("Fmovies failed");
     }
 
-    try{
+    try {
         alert(await window.parent.extractKey(6));
-    }catch(err){
+    } catch (err) {
         alert("zoro failed");
     }
 
     // return;
 
-    
-    try{
+
+    try {
 
         let links = ["main-2022-10-11-14-00-01.js"];
-    
 
-        for(let link of links){
-            try{
-            alert(await window.parent.extractKey(4,"http://10.0.0.203/dump/e4/"+link));
-            }catch(err){
+
+        for (let link of links) {
+            try {
+                alert(await window.parent.extractKey(4, "http://10.0.0.203/dump/e4/" + link));
+            } catch (err) {
                 console.error(err);
                 alert(link + "failed");
             }
@@ -111,53 +111,53 @@ async function testKey(){
         }
 
 
-    }catch(err){
+    } catch (err) {
         console.error(err);
         alert("fmovies failed");
     }
 
     return;
 
-    try{
+    try {
 
-        let links = ["main-2022-10-04-08-16-37.js","main-2022-10-04-18-30-02.js","main-2022-10-05-05-00-03.js","main-2022-10-05-15-30-03.js","main-2022-10-04-08-30-03.js","main-2022-10-04-19-00-02.js","main-2022-10-05-05-30-02.js","main-2022-10-05-16-00-03.js","main-2022-10-04-09-00-03.js","main-2022-10-04-19-30-03.js","main-2022-10-05-06-00-03.js","main-2022-10-05-16-30-03.js","main-2022-10-04-09-30-02.js","main-2022-10-04-20-00-03.js","main-2022-10-05-06-30-03.js","main-2022-10-05-17-00-03.js","main-2022-10-04-10-00-03.js","main-2022-10-04-20-30-03.js","main-2022-10-05-07-00-03.js","main-2022-10-05-17-30-03.js","main-2022-10-04-10-30-03.js","main-2022-10-04-21-00-03.js","main-2022-10-05-07-30-03.js","main-2022-10-05-18-00-03.js","main-2022-10-04-11-00-03.js","main-2022-10-04-21-30-03.js","main-2022-10-05-08-00-03.js","main-2022-10-05-18-30-02.js","main-2022-10-04-11-30-03.js","main-2022-10-04-22-00-03.js","main-2022-10-05-08-30-03.js","main-2022-10-05-19-00-03.js","main-2022-10-04-12-00-03.js","main-2022-10-04-22-30-02.js","main-2022-10-05-09-00-02.js","main-2022-10-05-19-30-03.js","main-2022-10-04-12-30-03.js","main-2022-10-04-23-00-02.js","main-2022-10-05-09-30-02.js","main-2022-10-05-20-00-03.js","main-2022-10-04-13-00-03.js","main-2022-10-04-23-30-02.js","main-2022-10-05-10-00-03.js","main-2022-10-05-20-30-03.js","main-2022-10-04-13-30-03.js","main-2022-10-05-00-00-02.js","main-2022-10-05-10-30-03.js","main-2022-10-05-21-00-03.js","main-2022-10-04-14-00-03.js","main-2022-10-05-00-30-03.js","main-2022-10-05-11-00-04.js","main-2022-10-05-21-30-03.js","main-2022-10-04-14-30-02.js","main-2022-10-05-01-00-03.js","main-2022-10-05-11-30-04.js","main-2022-10-05-22-00-03.js","main-2022-10-04-15-00-02.js","main-2022-10-05-01-30-03.js","main-2022-10-05-12-00-02.js","main-2022-10-07-22-23-12.js","main-2022-10-04-15-30-02.js","main-2022-10-05-02-00-02.js","main-2022-10-05-12-30-02.js","main-2022-10-07-22-23-39.js","main-2022-10-04-16-00-02.js","main-2022-10-05-02-30-02.js","main-2022-10-05-13-00-02.js","main-2022-10-07-23-17-34.js","main-2022-10-04-16-30-03.js","main-2022-10-05-03-00-03.js","main-2022-10-05-13-30-03.js","main-2022-10-07-23-30-03.js","main-2022-10-04-17-00-03.js","main-2022-10-05-03-30-03.js","main-2022-10-05-14-00-03.js","main-2022-10-08-00-00-03.js","main-2022-10-04-17-30-03.js","main-2022-10-05-04-00-02.js","main-2022-10-05-14-30-02.js","main-2022-10-04-18-00-02.js","main-2022-10-05-04-30-03.js","main-2022-10-05-15-00-02.js"];
-        for(let link of links){
-            try{
-                alert(await window.parent.extractKey(4,"http://10.0.0.203/dump/e6/"+link));
-                
-            }catch(err){
+        let links = ["main-2022-10-04-08-16-37.js", "main-2022-10-04-18-30-02.js", "main-2022-10-05-05-00-03.js", "main-2022-10-05-15-30-03.js", "main-2022-10-04-08-30-03.js", "main-2022-10-04-19-00-02.js", "main-2022-10-05-05-30-02.js", "main-2022-10-05-16-00-03.js", "main-2022-10-04-09-00-03.js", "main-2022-10-04-19-30-03.js", "main-2022-10-05-06-00-03.js", "main-2022-10-05-16-30-03.js", "main-2022-10-04-09-30-02.js", "main-2022-10-04-20-00-03.js", "main-2022-10-05-06-30-03.js", "main-2022-10-05-17-00-03.js", "main-2022-10-04-10-00-03.js", "main-2022-10-04-20-30-03.js", "main-2022-10-05-07-00-03.js", "main-2022-10-05-17-30-03.js", "main-2022-10-04-10-30-03.js", "main-2022-10-04-21-00-03.js", "main-2022-10-05-07-30-03.js", "main-2022-10-05-18-00-03.js", "main-2022-10-04-11-00-03.js", "main-2022-10-04-21-30-03.js", "main-2022-10-05-08-00-03.js", "main-2022-10-05-18-30-02.js", "main-2022-10-04-11-30-03.js", "main-2022-10-04-22-00-03.js", "main-2022-10-05-08-30-03.js", "main-2022-10-05-19-00-03.js", "main-2022-10-04-12-00-03.js", "main-2022-10-04-22-30-02.js", "main-2022-10-05-09-00-02.js", "main-2022-10-05-19-30-03.js", "main-2022-10-04-12-30-03.js", "main-2022-10-04-23-00-02.js", "main-2022-10-05-09-30-02.js", "main-2022-10-05-20-00-03.js", "main-2022-10-04-13-00-03.js", "main-2022-10-04-23-30-02.js", "main-2022-10-05-10-00-03.js", "main-2022-10-05-20-30-03.js", "main-2022-10-04-13-30-03.js", "main-2022-10-05-00-00-02.js", "main-2022-10-05-10-30-03.js", "main-2022-10-05-21-00-03.js", "main-2022-10-04-14-00-03.js", "main-2022-10-05-00-30-03.js", "main-2022-10-05-11-00-04.js", "main-2022-10-05-21-30-03.js", "main-2022-10-04-14-30-02.js", "main-2022-10-05-01-00-03.js", "main-2022-10-05-11-30-04.js", "main-2022-10-05-22-00-03.js", "main-2022-10-04-15-00-02.js", "main-2022-10-05-01-30-03.js", "main-2022-10-05-12-00-02.js", "main-2022-10-07-22-23-12.js", "main-2022-10-04-15-30-02.js", "main-2022-10-05-02-00-02.js", "main-2022-10-05-12-30-02.js", "main-2022-10-07-22-23-39.js", "main-2022-10-04-16-00-02.js", "main-2022-10-05-02-30-02.js", "main-2022-10-05-13-00-02.js", "main-2022-10-07-23-17-34.js", "main-2022-10-04-16-30-03.js", "main-2022-10-05-03-00-03.js", "main-2022-10-05-13-30-03.js", "main-2022-10-07-23-30-03.js", "main-2022-10-04-17-00-03.js", "main-2022-10-05-03-30-03.js", "main-2022-10-05-14-00-03.js", "main-2022-10-08-00-00-03.js", "main-2022-10-04-17-30-03.js", "main-2022-10-05-04-00-02.js", "main-2022-10-05-14-30-02.js", "main-2022-10-04-18-00-02.js", "main-2022-10-05-04-30-03.js", "main-2022-10-05-15-00-02.js"];
+        for (let link of links) {
+            try {
+                alert(await window.parent.extractKey(4, "http://10.0.0.203/dump/e6/" + link));
+
+            } catch (err) {
                 alert(link + "failed");
             }
 
         }
 
 
-    }catch(err){
+    } catch (err) {
         console.error(err);
         alert("zoro failed");
     }
 }
-if(localStorage.getItem("devmode") === "true"){
+if (localStorage.getItem("devmode") === "true") {
     document.getElementById("testExtensions").style.display = "block";
-    for(elem of document.getElementsByClassName("testExt")){
+    for (elem of document.getElementsByClassName("testExt")) {
         elem.style.display = "block";
-        elem.onclick = function(){
+        elem.onclick = function () {
             testIt(parseInt(this.getAttribute("data-exId")));
         }
     }
     document.getElementById("testKey").style.display = "block";
-    document.getElementById("testExtensions").onclick = function(){
+    document.getElementById("testExtensions").onclick = function () {
         testIt();
     }
-    document.getElementById("testKey").onclick = function(){
+    document.getElementById("testKey").onclick = function () {
         testKey();
     }
 }
 
-let isSnapSupported = CSS.supports('scroll-snap-align:start') && CSS.supports("scroll-snap-stop: always") && CSS.supports("scroll-snap-type: x mandatory") && localStorage.getItem("fancyHome") !=="true";
+let isSnapSupported = CSS.supports('scroll-snap-align:start') && CSS.supports("scroll-snap-stop: always") && CSS.supports("scroll-snap-type: x mandatory") && localStorage.getItem("fancyHome") !== "true";
 
 
-if(isSnapSupported){
+if (isSnapSupported) {
     document.getElementById("custom_rooms").className = "snappedCustomRooms";
 }
 function resetOfflineQual() {
@@ -167,7 +167,7 @@ function resetOfflineQual() {
         if (!isNaN(choice) && choice >= 1 && choice <= 4) {
             localStorage.setItem("offlineQual", qual[choice - 1]);
             break;
-        }else{
+        } else {
             alert("Enter a number between 1 and 4");
         }
     }
@@ -211,36 +211,36 @@ document.getElementById("resetQuality").onclick = function () {
 
 document.getElementById("importFile").onchange = async function (event) {
 
-    try{
+    try {
         let confirmation = prompt("Are you sure you want to import this file? Your current data will be replaced by the imported file. Type \"YES\" to continue.");
 
-        if(confirmation == "YES"){
+        if (confirmation == "YES") {
             const fileList = event.target.files;
             let result = await readImage(fileList[0]);
             window.parent.saveAsImport(result);
-        }else{
+        } else {
             alert("Aborting");
         }
-        
 
-    }catch(err){
+
+    } catch (err) {
         alert("Error reading the file.");
     }
-    
-    
-    
+
+
+
 }
 
 
 document.getElementById("getImage").onchange = async function (event) {
-    try{
+    try {
         const fileList = event.target.files;
         let result = await readImage(fileList[0]);
         window.parent.saveImage(result);
-    }catch(err){
+    } catch (err) {
         alert("Error reading the file.");
-    }    
-    
+    }
+
 }
 
 document.getElementById("exportData").onclick = function () {
@@ -348,8 +348,8 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
         let temp3 = createElement({ "element": "div", "innerText": queue[i].message, "class": "queueMessage" });
 
-        let temp4Con = createElement({ "element": "div"});
-        
+        let temp4Con = createElement({ "element": "div" });
+
         let temp4 = createElement({
             "element": "div", "class": "episodesDownloaded", "attributes": {
                 "data-url": queue[i].data
@@ -358,7 +358,7 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
         temp4.onclick = function () {
             if (isDone) {
-                downloadQueue.removeFromDoneQueue(this.getAttribute("data-url"),downloadQueue);
+                downloadQueue.removeFromDoneQueue(this.getAttribute("data-url"), downloadQueue);
 
             } else {
                 downloadQueue.removeFromQueue(this.getAttribute("data-url"), downloadQueue);
@@ -376,7 +376,7 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
             });
 
             temp6.onclick = function () {
-                    downloadQueue.retryFromDoneQueue(this.getAttribute("data-url"), downloadQueue);
+                downloadQueue.retryFromDoneQueue(this.getAttribute("data-url"), downloadQueue);
             }
 
             temp4Con.append(temp6);
@@ -406,13 +406,13 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
 
         temp2.append(temp3);
-        if(isDone){
-            if(queue[i].errored === true){
+        if (isDone) {
+            if (queue[i].errored === true) {
                 errDOM.prepend(temp);
-            }else{
+            } else {
                 queueDOM.prepend(temp);
-            }            
-        }else{
+            }
+        } else {
             queueDOM.append(temp);
         }
     }
@@ -445,10 +445,10 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
 function reloadQueue(mode = 0) {
     let downloadQueue = window.parent.returnDownloadQueue();
-    if(downloadQueue.pause){
+    if (downloadQueue.pause) {
         document.getElementById("queueButton").className = "queuePlay";
         document.getElementById("queueButton").setAttribute("data-paused", "true");
-    }else{
+    } else {
         document.getElementById("queueButton").className = "queuePause";
         document.getElementById("queueButton").setAttribute("data-paused", "false");
     }
@@ -491,7 +491,7 @@ document.getElementById("themes").onclick = function () {
 if (!config.chrome) {
     document.getElementById("offlineCon").style.display = "block";
 
-    if(config.local){
+    if (config.local) {
         document.getElementById("exportData").style.display = "block";
         document.getElementById("importData").style.display = "block";
     }
@@ -635,7 +635,7 @@ document.getElementById("outlineWidth").oninput = function () {
 
 document.getElementById("fmoviesBase").oninput = function () {
     localStorage.setItem("fmoviesBaseURL", this.value);
-    window.parent.setFmoviesBase(); 
+    window.parent.setFmoviesBase();
 }
 
 document.getElementById("themeColor").onchange = function () {
@@ -675,11 +675,11 @@ document.getElementById("alwaysDown").onchange = function () {
 }
 
 
-function switchOption(value){
-    if(value === "true"){
+function switchOption(value) {
+    if (value === "true") {
         document.getElementById("themeMainCon").style.display = "none";
         document.getElementById("imageInput").style.display = "table-row";
-    }else{
+    } else {
         document.getElementById("imageInput").style.display = "none";
         document.getElementById("themeMainCon").style.display = "block";
     }
@@ -691,7 +691,7 @@ document.getElementById("useImageBack").onchange = function () {
     window.parent.updateImage();
 }
 
-document.getElementById("rangeCon").ontouchmove = function(event){
+document.getElementById("rangeCon").ontouchmove = function (event) {
     event.stopPropagation();
 }
 
@@ -723,13 +723,13 @@ function changeServer() {
 }
 
 
-function toggleMenu(){
+function toggleMenu() {
     let menuI = document.getElementById("menuIcon");
     let menuElem = document.getElementById("menu");
     menuI.classList.toggle("change");
     let conElem = document.getElementById("con_11");
     if (menuElem.getAttribute("data-open") == "0") {
-        conElem.style.transform ="scale(0.8) translateX(300px)";
+        conElem.style.transform = "scale(0.8) translateX(300px)";
         conElem.style.opacity = "0.6";
         conElem.style.pointerEvents = "none";
         document.getElementById("toggleMenuOpen").style.display = "block";
@@ -738,7 +738,7 @@ function toggleMenu(){
         menuElem.style.opacity = "1";
         menuElem.style.pointerEvents = "auto";
     } else {
-        conElem.style.transform ="scale(1) translateX(0)";
+        conElem.style.transform = "scale(1) translateX(0)";
         conElem.style.opacity = "1";
         conElem.style.pointerEvents = "auto";
         document.getElementById("toggleMenuOpen").style.display = "none";
@@ -775,7 +775,7 @@ window.onmessage = function (x) {
             reloadQueue(1);
         } else if (x.data.action == "doneUpdate") {
             reloadQueue(2);
-        }else if (x.data.action == "paused") {
+        } else if (x.data.action == "paused") {
             document.getElementById("queueButton").className = "queuePlay";
             document.getElementById("queueButton").setAttribute("data-paused", "true");
         }
@@ -1031,20 +1031,20 @@ function updateRoomAdd() {
 
 
 }
-if(isSnapSupported){
+if (isSnapSupported) {
     let scrollLastIndex;
     let tempCatDOM = document.getElementsByClassName("categories");
     let cusRoomDOM = document.getElementById("custom_rooms");
-    cusRoomDOM.addEventListener("scroll", function(){
+    cusRoomDOM.addEventListener("scroll", function () {
         let unRoundedIndex = cusRoomDOM.scrollLeft / cusRoomDOM.offsetWidth;
         let index = Math.round(unRoundedIndex);
 
-        if(index != scrollLastIndex){
+        if (index != scrollLastIndex) {
             for (let i = 0; i < tempCatDOM.length; i++) {
                 if (i == index) {
                     tempCatDOM[i].classList.add("activeCat");
                     tempCatDOM[i].scrollIntoView();
-                    localStorage.setItem("currentCategory",tempCatDOM[i].getAttribute("data-id"));
+                    localStorage.setItem("currentCategory", tempCatDOM[i].getAttribute("data-id"));
                 } else {
                     tempCatDOM[i].classList.remove("activeCat");
                 }
@@ -1063,16 +1063,16 @@ if(isSnapSupported){
             });
         }
         scrollLastIndex = index;
-    }, {"passive" : true});
+    }, { "passive": true });
 }
 
-function makeDiscoverCard(data, engine, engineName){
+function makeDiscoverCard(data, engine, engineName) {
     let tempDiv1 = createElement({ "class": "s_card" });
     tempDiv1.style.backgroundImage = `url("${data.image}")`;
     let tempDiv2 = createElement({ "class": "s_card_bg" });
     let tempDiv3 = createElement({ "class": "s_card_title" });
-    let tempDiv4 = createElement({ "class": "s_card_title_main", "innerText": data.name, "style" : {"text-decoration" : "none"}});
-    let tempDivEx = createElement({ "class": "card_title_extension", "attributes": {}, "listeners": {}, "innerText" : engineName });
+    let tempDiv4 = createElement({ "class": "s_card_title_main", "innerText": data.name, "style": { "text-decoration": "none" } });
+    let tempDivEx = createElement({ "class": "card_title_extension", "attributes": {}, "listeners": {}, "innerText": engineName });
     let tempDiv5;
 
 
@@ -1085,30 +1085,30 @@ function makeDiscoverCard(data, engine, engineName){
             "click": async function () {
 
                 let curLink = this.getAttribute("data-href");
-                
-                if(data.getLink === true){
+
+                if (data.getLink === true) {
                     sendNoti([0, "", "Alert", "Redirecting. Wait a moment..."]);
 
                     let extensionList = window.parent.returnExtensionList();
-                    
-                    try{
+
+                    try {
                         let episodeLink = await extensionList[engine].getDiscoverLink(curLink);
                         curLink = `pages/episode/index.html?watch=${episodeLink}&engine=${engine}`;
-                    }catch(err){
+                    } catch (err) {
                         sendNoti([2, "red", "Alert", "An unexpected error has occurred."]);
                         console.error(err);
                     }
 
-                }else{
+                } else {
                     curLink = `pages/episode/index.html?watch=${curLink}&engine=${engine}`;
                 }
 
-                window.parent.postMessage({ "action": 500, data: curLink}, "*");
+                window.parent.postMessage({ "action": 500, data: curLink }, "*");
 
             }
         }
     });
-    
+
 
 
 
@@ -1117,66 +1117,66 @@ function makeDiscoverCard(data, engine, engineName){
     tempDiv2.append(tempDiv5);
     tempDiv1.append(tempDiv2);
     tempDiv1.append(tempDivEx);
-    
+
     return tempDiv1;
 }
-async function populateDiscover(){
+async function populateDiscover() {
     let extensionList = window.parent.returnExtensionList();
     let extensionNames = window.parent.returnExtensionNames();
     let disCon = document.getElementById("discoverCon");
     let parents = [];
     let exTitle = [];
 
-    for(let i = 0; i < 4; i++){
+    for (let i = 0; i < 4; i++) {
         parents.push(createElement({
-            "style":{
-                "display" : "none",
-                "height" : "280px",
-                "marginBottom" : "40px",
-                "width" : "100%",
-                "whiteSpace" : "nowrap",
-                "overflowX" : "auto"
+            "style": {
+                "display": "none",
+                "height": "280px",
+                "marginBottom": "40px",
+                "width": "100%",
+                "whiteSpace": "nowrap",
+                "overflowX": "auto"
             }
         }));
 
         exTitle.push(createElement({
-            "style":{
-                "display" : "none",
+            "style": {
+                "display": "none",
             },
-            "class" : "discoverTitle",
-            "innerText" : extensionNames[i]
+            "class": "discoverTitle",
+            "innerText": extensionNames[i]
         }));
 
         disCon.append(exTitle[i]);
         disCon.append(parents[i]);
 
     }
-    for(let i = 0; i < 4; i++){
+    for (let i = 0; i < 4; i++) {
         let engine = i;
-        try{
-            extensionList[engine]["discover"]().then(function(data){
+        try {
+            extensionList[engine]["discover"]().then(function (data) {
                 let parentDiscover = parents[engine];
                 let titleDiscover = exTitle[engine];
-                for(card of data){
-                    if(card.link === null){
+                for (card of data) {
+                    if (card.link === null) {
                         continue;
                     }
-                    
-                    if(engine == 1){
+
+                    if (engine == 1) {
                         let index = card.link.lastIndexOf("/");
-                        card.link = card.link.substring(0,index);
+                        card.link = card.link.substring(0, index);
                     }
-        
+
                     parentDiscover.append(makeDiscoverCard(card, engine, extensionNames[engine]));
                 }
 
                 parentDiscover.style.display = "block";
                 titleDiscover.style.display = "block";
-        
-            }).catch(function(err){
+
+            }).catch(function (err) {
                 console.error(err);
             });
-        }catch(err){
+        } catch (err) {
             console.error(err);
         }
     }
@@ -1212,7 +1212,7 @@ function addCustomRoom() {
                     let thisDataId = this.getAttribute("data-id");
                     localStorage.setItem("currentCategory", thisDataId);
 
-                    if(!isSnapSupported){
+                    if (!isSnapSupported) {
                         let tempCat = document.getElementsByClassName("categories");
                         for (let i = 0; i < tempCat.length; i++) {
                             if (this == tempCat[i]) {
@@ -1234,23 +1234,23 @@ function addCustomRoom() {
                                 temp.style.width = activeCatDOM.offsetWidth;
                             }
 
-                            if(isSnapSupported){
+                            if (isSnapSupported) {
                                 let tempCatData = document.getElementsByClassName("categoriesDataMain");
                                 for (let i = 0; i < tempCatData.length; i++) {
                                     if (tempCatData[i].id == thisDataId) {
                                         tempCatData[i].classList.add("active");
                                         window.requestAnimationFrame(function () {
                                             window.requestAnimationFrame(function () {
-                                                document.getElementById("custom_rooms").scrollTo(tempCatData[i].offsetLeft,0);
+                                                document.getElementById("custom_rooms").scrollTo(tempCatData[i].offsetLeft, 0);
                                             });
                                         });
-                                        
+
                                     } else {
                                         tempCatData[i].classList.remove("active");
 
                                     }
                                 }
-                            }else{
+                            } else {
                                 setTimeout(function () {
                                     let tempCatData = document.getElementsByClassName("categoriesDataMain");
                                     for (let i = 0; i < tempCatData.length; i++) {
@@ -1292,7 +1292,7 @@ function addCustomRoom() {
         "id": `room_-1`
     }));
 
-    if(localStorage.getItem("discoverHide") !== "true" && localStorage.getItem("offline") !== 'true'){
+    if (localStorage.getItem("discoverHide") !== "true" && localStorage.getItem("offline") !== 'true') {
         let tempDiscover = createCat("discoverCon", "Discover");
         tempDiscover.id = "discoverCat";
         document.getElementById("categoriesCon").append(tempDiscover);
@@ -1371,7 +1371,7 @@ function addCustomRoom() {
 
     }
 
-    if(localStorage.getItem("discoverHide") !== "true" && localStorage.getItem("offline") !== 'true' && firstLoad){
+    if (localStorage.getItem("discoverHide") !== "true" && localStorage.getItem("offline") !== 'true' && firstLoad) {
         firstLoad = false;
         populateDiscover();
     }
@@ -1615,48 +1615,48 @@ if (true) {
         x.parentElement.parentElement.parentElement.remove();
     }
 
-    async function updateNewEpCached(){
-        for(dom of document.getElementById("room_-1").querySelectorAll(".s_card")){
+    async function updateNewEpCached() {
+        for (dom of document.getElementById("room_-1").querySelectorAll(".s_card")) {
             dom.style.border = "none";
         }
         let updateLibNoti = sendNoti([0, null, "Message", "Fetching cached data..."]);
-        for(show of flaggedShow){
-            try{
-                let lastestEp = await showLastEpDB.lastestEp.where({"name" : show.name}).toArray();
-                if(lastestEp.length != 0){
+        for (show of flaggedShow) {
+            try {
+                let lastestEp = await showLastEpDB.lastestEp.where({ "name": show.name }).toArray();
+                if (lastestEp.length != 0) {
                     lastestEp = lastestEp[0].latest;
-                    if(show.currentEp != lastestEp){
+                    if (show.currentEp != lastestEp) {
                         show.dom.style.boxSizing = "border-box";
                         show.dom.style.border = "3px solid white";
                     }
                 }
-            }catch(err){
+            } catch (err) {
 
             }
         }
 
-        try{
+        try {
             updateLibNoti.noti.remove();
-        }catch(err){
-            
+        } catch (err) {
+
         }
 
 
     }
-    async function updateNewEp(){
+    async function updateNewEp() {
         let updateLibNoti = sendNoti([0, null, "Message", "Updating Libary"]);
         let updatedShow = [];
         let extensionList = window.parent.returnExtensionList();
         let promises = [];
-        let promiseShowData =[];
+        let promiseShowData = [];
         let allSettled = "allSettled" in Promise;
         // let allSettled = false;
 
-        for(show of flaggedShow){
+        for (show of flaggedShow) {
             let showURL = show.showURL;
             showURL = showURL.replace("?watch=/", "");
             let currentEp = show.currentEp;
-            
+
 
             let currentEngine;
             let temp = showURL.split("&engine=");
@@ -1666,27 +1666,27 @@ if (true) {
                 currentEngine = parseInt(temp[1]);
                 currentEngine = extensionList[currentEngine];
             }
-            
+
             promises.push(currentEngine.getAnimeInfo(showURL));
             promiseShowData.push({
-                "ep" : currentEp,
-                "dom" : show.dom,
-                "name" : show.name
+                "ep": currentEp,
+                "dom": show.dom,
+                "name": show.name
             });
         }
 
         let promiseResult = [];
-        try{
-            if(allSettled){
+        try {
+            if (allSettled) {
                 let res = await Promise.allSettled(promises);
-                for(let promise of res){
-                    if(promise.status === "fulfilled"){
+                for (let promise of res) {
+                    if (promise.status === "fulfilled") {
                         promiseResult.push(promise.value);
-                    }else{
+                    } else {
                         promiseResult.push(null);
                     }
                 }
-            }else{
+            } else {
                 promiseResult = await Promise.all(promises);
             }
 
@@ -1694,43 +1694,43 @@ if (true) {
             await showLastEpDB.lastestEp.clear();
 
             let count = 0;
-            for(let promise of promiseResult){
-                try{
-                    if(promise === null){
+            for (let promise of promiseResult) {
+                try {
+                    if (promise === null) {
                         sendNoti([0, "red", "Error", `Could not update ${fix_title(promiseShowData[count].name)}`]);
                         promiseShowData[count].dom.style.boxSizing = "border-box";
                         promiseShowData[count].dom.style.border = "3px solid grey";
-                    }else{
+                    } else {
                         let latestEpisode = promise.episodes;
                         latestEpisode = latestEpisode[latestEpisode.length - 1].link;
-                        if(promiseShowData[count].ep != latestEpisode){
-                            await showLastEpDB.lastestEp.put({"name" : promiseShowData[count].name, "latest" : latestEpisode});
+                        if (promiseShowData[count].ep != latestEpisode) {
+                            await showLastEpDB.lastestEp.put({ "name": promiseShowData[count].name, "latest": latestEpisode });
                             promiseShowData[count].dom.style.boxSizing = "border-box";
                             promiseShowData[count].dom.style.border = "3px solid white";
-                        }else{
+                        } else {
                             promiseShowData[count].dom.style.boxSizing = "content-box";
                             promiseShowData[count].dom.style.border = "none";
                         }
                     }
-                }catch(err){
+                } catch (err) {
                     console.error(err);
                 }
                 count++;
             }
 
-            try{
+            try {
                 updateLibNoti.noti.remove();
-            }catch(err){
+            } catch (err) {
 
             }
-        }catch(err){
+        } catch (err) {
             alert("Couldn't update the library");
             console.log(err);
             console.error("Error 342");
         }
     }
 
-    function helpUpdateLib(){
+    function helpUpdateLib() {
         alert("Outlines the shows that have new unwatched episodes. This is automatically updated twice a day, but you can manually do it by clicking on \"Update Library\". This may take tens of seconds.");
     }
 
@@ -1742,7 +1742,7 @@ if (true) {
         document.getElementById("room_add_child").innerHTML = "";
         let offlineMode = localStorage.getItem("offline") === "true";
 
-        if(offlineMode){
+        if (offlineMode) {
             await populateDownloadedArray();
         }
         let a = x.data;
@@ -1770,30 +1770,30 @@ if (true) {
         updateRoomAdd();
         addCustomRoom();
         let extensionNames = window.parent.returnExtensionNames();
-        
-        if(!offlineMode){
+
+        if (!offlineMode) {
             let updateLibCon = createElement({
-                "style" : {
-                    "width" : "100%",
-                    "bottomMargin" : "10px",
-                    "textAlign" : "center"
+                "style": {
+                    "width": "100%",
+                    "bottomMargin": "10px",
+                    "textAlign": "center"
                 }
             });
 
             let updateLibButton = createElement({
-                "id" : "updateLib",
-                "innerText" : "Update Library"
+                "id": "updateLib",
+                "innerText": "Update Library"
             });
 
             let updateLibInfo = createElement({
-                "id" : "infoBut",
+                "id": "infoBut",
             });
 
-            updateLibInfo.onclick = function(){
+            updateLibInfo.onclick = function () {
                 helpUpdateLib();
             };
 
-            updateLibButton.onclick = function(){
+            updateLibButton.onclick = function () {
                 updateNewEp();
             }
 
@@ -1808,8 +1808,8 @@ if (true) {
         for (var i = 0; i < data.length; i++) {
             let domToAppend;
             let findUnwatched = false;
-            if(offlineMode){
-                if(data[i][0] in downloadedFolders){
+            if (offlineMode) {
+                if (data[i][0] in downloadedFolders) {
                     delete downloadedFolders[data[i][0]];
                 }
             }
@@ -1820,7 +1820,7 @@ if (true) {
                 domToAppend = document.getElementById('room_recently');
             }
 
-            if(parseInt(data[i][4]) == -1){
+            if (parseInt(data[i][4]) == -1) {
                 findUnwatched = true;
             }
 
@@ -1831,7 +1831,7 @@ if (true) {
             let tempDiv2 = createElement({ "class": "s_card_title", "attributes": {}, "listeners": {} });
 
             let currentExtensionName = "null";
-            try{
+            try {
                 let engineTemp = data[i][5].split("engine=");
                 let engine;
                 if (engineTemp.length == 1) {
@@ -1839,14 +1839,14 @@ if (true) {
                 } else {
                     engine = parseInt(engineTemp[1]);
                 }
-                
+
                 currentExtensionName = extensionNames[engine];
-            }catch(err){
+            } catch (err) {
                 console.log(err);
                 console.log(data[i]);
             }
 
-            let tempDivEx = createElement({ "class": "card_title_extension", "attributes": {}, "listeners": {}, "innerText" : currentExtensionName });
+            let tempDivEx = createElement({ "class": "card_title_extension", "attributes": {}, "listeners": {}, "innerText": currentExtensionName });
 
 
             let tempDiv3 = document.createElement("div");
@@ -1856,11 +1856,11 @@ if (true) {
             tempDiv3.setAttribute("data-current", data[i][3]);
             tempDiv3.setAttribute("data-mainname", data[i][0]);
 
-            if(findUnwatched){
+            if (findUnwatched) {
                 flaggedShow.push({
-                    "showURL" : data[i][5],
-                    "currentEp" : data[i][3],
-                    "dom" : tempDiv,
+                    "showURL": data[i][5],
+                    "currentEp": data[i][3],
+                    "dom": tempDiv,
                     "name": data[i][0]
                 });
             }
@@ -1960,7 +1960,7 @@ if (true) {
         let catMainDOM = document.getElementsByClassName("categoriesDataMain");
         for (var i = 0; i < catMainDOM.length; i++) {
             pullTabArray.push(new pullToRefresh(catMainDOM[i]));
-            if(catMainDOM[i].id == "discoverCon"){
+            if (catMainDOM[i].id == "discoverCon") {
                 continue;
             }
             catMainDOM[i].append(createElement({
@@ -1980,9 +1980,9 @@ if (true) {
             }
         }
 
-        if(offlineMode){
-            for(let showname in downloadedFolders){
-                if(showname == "socialsharing-downloads"){
+        if (offlineMode) {
+            for (let showname in downloadedFolders) {
+                if (showname == "socialsharing-downloads") {
                     continue;
                 }
 
@@ -1998,20 +1998,20 @@ if (true) {
                 let tempDiv3 = document.createElement("div");
                 tempDiv3.className = "s_card_title_main";
                 tempDiv3.textContent = fix_title(showname);
-                tempDiv3.setAttribute("data-href", "?watch=/"+ showname);
+                tempDiv3.setAttribute("data-href", "?watch=/" + showname);
 
                 let tempDiv7 = createElement({ "class": "card_menu", "attributes": {}, "listeners": {} });
 
                 let tempDiv9 = createElement({
                     "class": "card_menu_item card_menu_icon_delete", "attributes": {
-                    "data-showname": showname
-                    }, 
+                        "data-showname": showname
+                    },
                     "listeners": {
                         "click": async function () {
-                            try{
+                            try {
                                 await window.parent.removeDirectory(`${showname}`);
                                 tempDiv.remove();
-                            }catch(err){
+                            } catch (err) {
                                 alert("Could not delete the files. You have to manually delete it by going to the show's page.");
                             }
                         }
@@ -2023,14 +2023,14 @@ if (true) {
 
                 };
 
-               
+
 
 
                 tempDiv2.append(tempDiv3);
 
                 tempDiv1.append(tempDiv2);
                 tempDiv7.append(tempDiv9);
-                
+
                 tempDiv1.append(tempDiv7);
 
                 tempDiv.append(tempDiv1);
@@ -2039,17 +2039,17 @@ if (true) {
             }
         }
 
-        if(isNaN(parseInt(localStorage.getItem("lastupdatelib")))){
+        if (isNaN(parseInt(localStorage.getItem("lastupdatelib")))) {
             localStorage.setItem("lastupdatelib", 0);
         }
 
         let curTime = (new Date()).getTime() / 1000;
-        if(offlineMode){
+        if (offlineMode) {
 
-        }else if((curTime - parseInt(localStorage.getItem("lastupdatelib"))) > 43200){
+        } else if ((curTime - parseInt(localStorage.getItem("lastupdatelib"))) > 43200) {
             updateNewEp();
             localStorage.setItem("lastupdatelib", curTime.toString());
-        }else{
+        } else {
             updateNewEpCached();
         }
     }
@@ -2114,7 +2114,7 @@ function changeEngine() {
     }
 }
 
-for(element of document.getElementsByClassName("menuItem")){
+for (element of document.getElementsByClassName("menuItem")) {
     element.addEventListener("click", toggleMenu);
 }
 
@@ -2124,13 +2124,13 @@ switchOption(localStorage.getItem("useImageBack"));
 
 let bgGradientIndex = parseInt(localStorage.getItem("themegradient"));
 
-function selectTheme(index){
-    window.parent.postMessage({ "action": "updateGrad", data: index}, "*");
+function selectTheme(index) {
+    window.parent.postMessage({ "action": "updateGrad", data: index }, "*");
     let themeCount = 0;
-    for(themeElem of document.getElementsByClassName("themesContainer")){
-        if(themeCount == index){
+    for (themeElem of document.getElementsByClassName("themesContainer")) {
+        if (themeCount == index) {
             themeElem.classList.add("selected");
-        }else{
+        } else {
             themeElem.classList.remove("selected");
         }
         themeCount++;
@@ -2143,14 +2143,14 @@ document.getElementById("toggleMenuOpen").addEventListener("click", toggleMenu);
 
 let themeCount = 0;
 
-for(themeElem of document.getElementsByClassName("themesContainer")){
+for (themeElem of document.getElementsByClassName("themesContainer")) {
     let curCount = themeCount;
-    if(bgGradientIndex == curCount){
+    if (bgGradientIndex == curCount) {
         themeElem.classList.add("selected");
     }
 
     themeElem.style.backgroundImage = backgroundGradients[curCount];
-    themeElem.addEventListener("click", function(){
+    themeElem.addEventListener("click", function () {
         selectTheme(curCount);
     });
 
@@ -2159,7 +2159,7 @@ for(themeElem of document.getElementsByClassName("themesContainer")){
 
 document.getElementById("opSlider").value = isNaN(parseFloat(localStorage.getItem("bgOpacity"))) ? 0.6 : parseFloat(localStorage.getItem("bgOpacity"));
 
-document.getElementById("opSlider").oninput = function(){
+document.getElementById("opSlider").oninput = function () {
     let elem = document.getElementById("opSlider");
-    window.parent.postMessage({ "action": "updateOpacity", data: elem.value}, "*");
+    window.parent.postMessage({ "action": "updateOpacity", data: elem.value }, "*");
 };

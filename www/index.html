@@ -5,7 +5,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/images/32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/images/16.png">
 <meta name="theme-color" content="#4b4bc2">
-<meta http-equiv="Content-Security-Policy" content="script-src 'self' https://enimax-anime.github.io/key-extractor/index.js 'unsafe-inline' blob:; object-src 'self'">
+<meta http-equiv="Content-Security-Policy"
+    content="script-src 'self' https://enimax-anime.github.io/key-extractor/index.js 'unsafe-inline' blob:; object-src 'self'">
 <title>Enimax</title>
 
 <link href="notification/noti.css" rel="stylesheet">
@@ -25,8 +26,7 @@
 
 
 <style>
-
-    #bgGrad{
+    #bgGrad {
         background-image: var(--theme-gradient);
         background-size: cover;
         background-repeat: no-repeat;
@@ -61,7 +61,8 @@
         z-index: 1;
 
     }
-    #spotlight{
+
+    #spotlight {
         position: absolute;
         top: 0;
         left: 0;
@@ -73,17 +74,18 @@
         z-index: 2;
         transition-duration: 200ms;
     }
-    .pop{
+
+    .pop {
 
         bottom: 0 !important;
         top: auto !important;
-        left:0 !important;
+        left: 0 !important;
         width: 100% !important;
-        height:  200px !important;
-				
+        height: 200px !important;
+
     }
 
-    #evalScript{
+    #evalScript {
         display: none;
     }
 </style>
@@ -97,7 +99,7 @@
     <div class="con_black" id="bgOpacity"></div>
 
     <iframe src="" id="frame"></iframe>
-    <iframe src="fallback.html" id="player" ></iframe>
+    <iframe src="fallback.html" id="player"></iframe>
     <iframe src="eval.html" id="evalScript" sandbox="allow-scripts"></iframe>
 
 

@@ -23,13 +23,13 @@ function deviceReady() {
         let oldPassword = document.getElementById("oldPassword").value;
         let confirmNewPassword = document.getElementById("confirmNewPassword").value;
 
-        if(newPassword !== confirmNewPassword){
+        if (newPassword !== confirmNewPassword) {
             alert("The passwords don't match.")
         } else if (newPassword != "" && oldPassword != "") {
             let formation = {};
             formation.method = "POST";
 
-            if(!config.chrome){
+            if (!config.chrome) {
                 let token = cordova.plugin.http.getCookieString(config.remoteWOport);
                 if (token) {
                     formation.headers = {};
@@ -38,20 +38,20 @@ function deviceReady() {
             }
 
 
-            formation.body = toFormData({"newPassword": newPassword, "oldPassword": oldPassword});
+            formation.body = toFormData({ "newPassword": newPassword, "oldPassword": oldPassword });
 
             fetch(`${config.remote}/reset`, formation).then(response => response.json()).then(function (x) {
                 alert(x.message);
-               
-                if(x.status == 200){
-                window.location = "index.html";
 
-               }
+                if (x.status == 200) {
+                    window.location = "index.html";
+
+                }
             }).catch(function (err) {
-                if(typeof err == 'object' && "message" in err){
+                if (typeof err == 'object' && "message" in err) {
                     alert(err.message);
-                }else{
-                alert(err);
+                } else {
+                    alert(err);
                 }
             });
         }
@@ -69,6 +69,6 @@ document.addEventListener("deviceready", function () {
 }, false);
 
 
-if(config.chrome){
+if (config.chrome) {
     deviceReady();
 }

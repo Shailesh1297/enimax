@@ -1,9 +1,9 @@
-if(config.local){
+if (config.local) {
     window.location = "index.html";
 }
 
 var secureStorageVar;
-document.getElementById("settingsMain").onclick = function(){
+document.getElementById("settingsMain").onclick = function () {
     window.location = "settings.html";
 }
 function sendNoti(x) {
@@ -16,10 +16,10 @@ function sendNoti(x) {
     });
 }
 
-function deviceReady(){
+function deviceReady() {
     let MakeCusReq;
-    
-    MakeCusReq = async function(url, options) {
+
+    MakeCusReq = async function (url, options) {
         return new Promise(function (resolve, reject) {
             cordova.plugin.http.setDataSerializer('multipart');
             cordova.plugin.http.sendRequest(url, options, function (response) {
@@ -30,10 +30,10 @@ function deviceReady(){
         });
     }
 
-    
 
-    if(config.chrome){
-        MakeCusReq = async function(url, options) {
+
+    if (config.chrome) {
+        MakeCusReq = async function (url, options) {
             return new Promise(function (resolve, reject) {
                 fetch(url, options).then((response) => response.text()).then((response) => {
                     resolve(response);
@@ -41,10 +41,10 @@ function deviceReady(){
                     reject(response);
                 });
             });
-        } 
+        }
     }
 
-    
+
 
     document.getElementById('submit').addEventListener("click", function () {
         var username = document.getElementById("username").value;
@@ -61,7 +61,7 @@ function deviceReady(){
 
         };
 
-        if(config.chrome){
+        if (config.chrome) {
             fData = {
                 method: 'POST',
                 body: formData,
@@ -98,7 +98,7 @@ document.addEventListener("deviceready", function () {
     deviceReady();
 }, false);
 
-if(config.chrome){
+if (config.chrome) {
     deviceReady();
 }
 

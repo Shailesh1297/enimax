@@ -1,8 +1,4 @@
-
-
 let localDOM = document.getElementById("local");
-
-
 
 document.getElementById("local").onchange = function () {
     let val = localDOM.checked.toString();

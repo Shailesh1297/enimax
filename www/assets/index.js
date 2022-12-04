@@ -14,7 +14,7 @@ function createElement(x) {
     }
 
 
-    
+
     for (value in x.style) {
 
         temp.style[value] = x.style[value];
@@ -48,17 +48,17 @@ function createElement(x) {
 }
 
 
-try{
+try {
     const styleEl = document.createElement('style');
-     document.head.appendChild(styleEl);
-    if(localStorage.getItem("outlineWidth") && isNaN(parseInt(localStorage.getItem("outlineColor")))){
+    document.head.appendChild(styleEl);
+    if (localStorage.getItem("outlineWidth") && isNaN(parseInt(localStorage.getItem("outlineColor")))) {
         document.getElementsByTagName("style")[0].sheet.insertRule(`*:focus {
             outline-width: ${parseInt(localStorage.getItem("outlineWidth"))}px !important;
             outline-style: solid !important;
             outline-color: ${(localStorage.getItem("outlineColor"))} !important;
-        }`,0);
+        }`, 0);
     }
-}catch(err){
+} catch (err) {
 
 }
 

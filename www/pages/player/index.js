@@ -10,62 +10,62 @@ let skipIntroInfo = {};
 var CustomXMLHttpRequest = XMLHttpRequest;
 let curTrack = undefined;
 let marginApplied = false;
-function setSubtitleMarginMain(track){
-    let success = -1;
-    try{
-        let subMargin = parseInt(localStorage.getItem("sub-margin"));
-        if(track && "cues" in track) { 
-            if(!isNaN(subMargin) && subMargin !== 0){
-                for (let j = 0; j < track.cues.length; j++) {
-                    success = 1;
-                    track.cues[j].line = subMargin;
-                }
-            }else{
-                success = -2;
-            }
-        }
-    }catch(err){
-        success = -1;
-        console.error(err);
-    }
+function setSubtitleMarginMain(track) {
+	let success = -1;
+	try {
+		let subMargin = parseInt(localStorage.getItem("sub-margin"));
+		if (track && "cues" in track) {
+			if (!isNaN(subMargin) && subMargin !== 0) {
+				for (let j = 0; j < track.cues.length; j++) {
+					success = 1;
+					track.cues[j].line = subMargin;
+				}
+			} else {
+				success = -2;
+			}
+		}
+	} catch (err) {
+		success = -1;
+		console.error(err);
+	}
 
-    return success;
+	return success;
 }
 
-function setSubtitleMargin(track, count = 0){
-    let status = setSubtitleMarginMain(track);
-    if(status === -1 && count < 20){
-        setTimeout(function(){
-            setSubtitleMargin(track, ++count);
-        }, 400);
-    }
+function setSubtitleMargin(track, count = 0) {
+	let status = setSubtitleMarginMain(track);
+	if (status === -1 && count < 20) {
+		setTimeout(function () {
+			setSubtitleMargin(track, ++count);
+		}, 400);
+	}
 }
 
 document.getElementById("doubleTime").value = doubleTapTime;
 document.getElementById("skipTime").value = skipButTime;
-document.getElementById("subMar").value = isNaN(parseInt(localStorage.getItem("sub-margin"))) ? 0 : parseInt(localStorage.getItem("sub-margin")) ;
-document.getElementById("doubleTime").oninput = function(){
-	if(isNaN(parseInt(document.getElementById("doubleTime").value))){
+document.getElementById("subMar").value = isNaN(parseInt(localStorage.getItem("sub-margin"))) ? 0 : parseInt(localStorage.getItem("sub-margin"));
+document.getElementById("doubleTime").oninput = function () {
+	if (isNaN(parseInt(document.getElementById("doubleTime").value))) {
 		document.getElementById("doubleTime").value = "";
-	}else{
+	} else {
 		localStorage.setItem("doubleTapTime", document.getElementById("doubleTime").value);
-		doubleTapTime =  isNaN(parseInt(localStorage.getItem("doubleTapTime"))) ? 5 : parseInt(localStorage.getItem("doubleTapTime"));
+		doubleTapTime = isNaN(parseInt(localStorage.getItem("doubleTapTime"))) ? 5 : parseInt(localStorage.getItem("doubleTapTime"));
 	}
 }
 
 
-document.getElementById("skipTime").oninput = function(){
-	if(isNaN(parseInt(document.getElementById("skipTime").value))){
+document.getElementById("skipTime").oninput = function () {
+	if (isNaN(parseInt(document.getElementById("skipTime").value))) {
 		document.getElementById("skipTime").value = "";
-	}else{
+	} else {
 		localStorage.setItem("skipButTime", document.getElementById("skipTime").value);
-		skipButTime =  isNaN(parseInt(localStorage.getItem("skipButTime"))) ? 5 : parseInt(localStorage.getItem("skipButTime"));
+		skipButTime = isNaN(parseInt(localStorage.getItem("skipButTime"))) ? 5 : parseInt(localStorage.getItem("skipButTime"));
 	}
 }
 
-document.getElementById("subMar").oninput = function(){
+document.getElementById("subMar").oninput = function () {
 	localStorage.setItem("sub-margin", this.value);
-    setSubtitleMargin(curTrack);
+	setSubtitleMargin(curTrack);
 }
 
 
@@ -98,8 +98,8 @@ class XMLHttpRequest2 {
 			"origin": extensionList[3].config.origin,
 			"referer": extensionList[3].config.referer,
 		};
-		
-		if(tempConfig.sockets){
+
+		if (tempConfig.sockets) {
 			this.requestHeaders["sid"] = sid;
 		}
 		this.responseHeaders = {};
@@ -243,21 +243,21 @@ class XMLHttpRequest2 {
 
 }
 
-function normalise(x){
-    x = x.replace("?watch=","");
-    x = x.split("&engine=")[0];
-    return x;
+function normalise(x) {
+	x = x.replace("?watch=", "");
+	x = x.split("&engine=")[0];
+	return x;
 }
-function checkIfExists(localURL){
-	return (new Promise(function(resolve, reject){
-		let timeout = setTimeout(function(){
+function checkIfExists(localURL) {
+	return (new Promise(function (resolve, reject) {
+		let timeout = setTimeout(function () {
 			reject("timeout");
-		},1000);
+		}, 1000);
 
-		window.parent.makeLocalRequest("GET", `${localURL}`).then(function(x){
+		window.parent.makeLocalRequest("GET", `${localURL}`).then(function (x) {
 			clearTimeout(timeout);
 			resolve("yes");
-		}).catch(function(err){
+		}).catch(function (err) {
 			clearTimeout(timeout);
 			reject("no");
 		});
@@ -266,22 +266,22 @@ function checkIfExists(localURL){
 window.onmessage = async function (x) {
 	if (x.data.action == 1) {
 		data_main = x.data;
-		if(config.chrome){
+		if (config.chrome) {
 			get_ep();
-		}else{
+		} else {
 			let mainName = localStorage.getItem("mainName");
 			let rootDir = `/${mainName}/${btoa(normalise(location.search))}`;
 			let localURL = `${rootDir}/.downloaded`;
 
-			try{
+			try {
 				await checkIfExists(localURL);
 				let res;
-				if(localStorage.getItem("alwaysDown") === "true"){
+				if (localStorage.getItem("alwaysDown") === "true") {
 					res = true;
-				}else{
+				} else {
 					res = confirm("Want to open the downloaded version?");
 				}
-				if(res){
+				if (res) {
 					let viddata = (await window.parent.makeLocalRequest("GET", `${rootDir}/viddata.json`));
 					viddata = JSON.parse(viddata).data;
 					data_main.sources = [{
@@ -291,9 +291,9 @@ window.onmessage = async function (x) {
 					}];
 					CustomXMLHttpRequest = window.parent.XMLHttpRequest;
 				}
-			}catch(err){
+			} catch (err) {
 				console.error(err);
-			}finally{
+			} finally {
 				get_ep();
 			}
 		}
@@ -307,7 +307,7 @@ window.onmessage = async function (x) {
 		next_ep_func(1);
 	} else if (x.data.action == "previous") {
 		next_ep_func(-1);
-	}else if (x.data.action == "elapsed") {
+	} else if (x.data.action == "elapsed") {
 		a.vid.currentTime = x.data.elapsed;
 	} else if (parseInt(x.data.action) == 200) {
 		token = x.data.data;
@@ -489,7 +489,7 @@ class vid {
 
 
 		this.vid.addEventListener("loadedmetadata", function () {
-			window.parent.postMessage({ "action": 12, nameShow: data_main.name, episode: data_main.episode, prev: true, next: true, "duration" : x.vid.duration, "elapsed" : x.vid.currentTime}, "*");
+			window.parent.postMessage({ "action": 12, nameShow: data_main.name, episode: data_main.episode, prev: true, next: true, "duration": x.vid.duration, "elapsed": x.vid.currentTime }, "*");
 			x.total.innerText = x.timeToString(x.vid.duration);
 
 			let whichFit = parseInt(localStorage.getItem("fillMode")) || 0;
@@ -681,28 +681,28 @@ class vid {
 
 		setInterval(function () {
 
-			if(config.beta){
-				window.parent.postMessage({ "action": 301,  "elapsed" : x.vid.currentTime, "isPlaying":!x.vid.paused}, "*");
+			if (config.beta) {
+				window.parent.postMessage({ "action": 301, "elapsed": x.vid.currentTime, "isPlaying": !x.vid.paused }, "*");
 			}
 
-			try{
-				if(skipIntroInfo && x.vid.currentTime > skipIntroInfo.start && x.vid.currentTime < skipIntroInfo.end){
-					if(localStorage.getItem("autoIntro") === "true"){
+			try {
+				if (skipIntroInfo && x.vid.currentTime > skipIntroInfo.start && x.vid.currentTime < skipIntroInfo.end) {
+					if (localStorage.getItem("autoIntro") === "true") {
 						x.vid.currentTime = skipIntroInfo.end;
 					}
 
-					if(localStorage.getItem("showIntro") !== "true"){
+					if (localStorage.getItem("showIntro") !== "true") {
 						document.getElementById("skipIntroDOM").style.display = "block";
-					}else{
+					} else {
 						document.getElementById("skipIntroDOM").style.display = "none";
 
 					}
 
-				}else{
+				} else {
 					document.getElementById("skipIntroDOM").style.display = "none";
 
 				}
-			}catch(err){
+			} catch (err) {
 
 			}
 
@@ -1114,10 +1114,10 @@ class vid {
 
 		}
 
-		if(x.check == 100){
-			if(x.downTown > 130){
+		if (x.check == 100) {
+			if (x.downTown > 130) {
 				openSettingsSemi(-1);
-			}else{
+			} else {
 				closeSettings();
 			}
 		}
@@ -1374,11 +1374,11 @@ window.addEventListener('message', function (x) {
 var a = new vid();
 
 
-if(CSS.supports('backdrop-filter: blur(10px)')){
+if (CSS.supports('backdrop-filter: blur(10px)')) {
 	document.getElementById("setting_con").style.backgroundColor = "#19181caa";
 	document.getElementById("setting_con").style.backdropFilter = " blur(10px)";
 
-}else{
+} else {
 	document.getElementById("setting_con").style.backgroundColor = "#19181c";
 }
 
@@ -1451,7 +1451,7 @@ function get_ep_ini() {
 			}
 
 			let skipIntro;
-			if("skipIntro" in viddata.sources[0]){
+			if ("skipIntro" in viddata.sources[0]) {
 				skipIntro = viddata.sources[0].skipIntro;
 			}
 			data_main.sources = [{
@@ -1460,11 +1460,11 @@ function get_ep_ini() {
 				"url": viddata.sources[0].type == 'hls' ? `${rootDir}/master.m3u8` : `${window.parent.cordova.file.externalDataDirectory}/${rootDir}/master.m3u8`,
 			}];
 
-			if(skipIntro){
+			if (skipIntro) {
 				data_main.sources[0].skipIntro = skipIntro;
 			}
 
-			
+
 
 			engine = data_main.engine;
 			get_ep();
@@ -1567,15 +1567,15 @@ function ini_main() {
 		try {
 			navigator.mediaSession.setActionHandler('nexttrack', () => {
 				next_ep_func(1);
-		
+
 			});
 			navigator.mediaSession.setActionHandler('previoustrack', () => {
 				next_ep_func(-1);
-		
+
 			});
 		}
 		catch (error) {
-		
+
 		}
 
 	}
@@ -1650,7 +1650,7 @@ async function update(x) {
 			errorCount = 0;
 			alert("Time could not be synced with the server.");
 
-		}else if(errorCount == 5){
+		} else if (errorCount == 5) {
 			lastUpdate = a.vid.currentTime;
 		}
 
@@ -1733,7 +1733,7 @@ function loadSubs() {
 			if (a.vid.textTracks[i].label == localStorage.getItem(`${engine}-subtitle`) && check) {
 				selectDOM.value = i;
 				curTrack = a.vid.textTracks[i];
-                setSubtitleMargin(curTrack);
+				setSubtitleMargin(curTrack);
 
 				document.getElementById("fastFor").style.display = "block";
 
@@ -1760,7 +1760,7 @@ function loadSubs() {
 				if (i == parseInt(value)) {
 					a.vid.textTracks[i].mode = "showing";
 					curTrack = a.vid.textTracks[i];
-                    setSubtitleMargin(curTrack);
+					setSubtitleMargin(curTrack);
 					document.getElementById("fastFor").style.display = "block";
 					localStorage.setItem(`${engine}-subtitle`, a.vid.textTracks[i].label);
 				} else {
@@ -1789,11 +1789,11 @@ function chooseQual(x, type, th) {
 	let defURL;
 	if (x !== null) {
 		skipTo = a.vid.currentTime;
-		if(th.getAttribute("data-intro") === "true"){
+		if (th.getAttribute("data-intro") === "true") {
 			skipIntroInfo.start = parseInt(th.getAttribute("data-start"));
 			skipIntroInfo.end = parseInt(th.getAttribute("data-end"));
-		}else{
-			skipIntroInfo = {};	
+		} else {
+			skipIntroInfo = {};
 		}
 		let qCon = document.getElementById("quality_con").children;
 		for (var i = 0; i < qCon.length; i++) {
@@ -1814,11 +1814,11 @@ function chooseQual(x, type, th) {
 		for (let i = 0; i < qCon.length; i++) {
 			if (sName == qCon[i].innerText) {
 				defURL = data_main.sources[i].url;
-				if(qCon[i].getAttribute("data-intro") === "true"){
+				if (qCon[i].getAttribute("data-intro") === "true") {
 					skipIntroInfo.start = parseInt(qCon[i].getAttribute("data-start"));
 					skipIntroInfo.end = parseInt(qCon[i].getAttribute("data-end"));
-				}else{
-					skipIntroInfo = {};	
+				} else {
+					skipIntroInfo = {};
 				}
 
 
@@ -2012,13 +2012,13 @@ async function get_ep(x = 0) {
 				"data-name": data_main.sources[i].name,
 			};
 
-			if("skipIntro" in data_main.sources[i] && "start" in data_main.sources[i].skipIntro && "end" in data_main.sources[i].skipIntro){
+			if ("skipIntro" in data_main.sources[i] && "start" in data_main.sources[i].skipIntro && "end" in data_main.sources[i].skipIntro) {
 				curAttributes["data-intro"] = "true";
 				curAttributes["data-start"] = data_main.sources[i].skipIntro.start;
 				curAttributes["data-end"] = data_main.sources[i].skipIntro.end;
-				if(i == 0){
+				if (i == 0) {
 					skipIntroInfo.start = data_main.sources[i].skipIntro.start;
-					skipIntroInfo.end = data_main.sources[i].skipIntro.end;					
+					skipIntroInfo.end = data_main.sources[i].skipIntro.end;
 				}
 			}
 			// if(data_main.sources[i].type != "hls"){			
@@ -2141,11 +2141,11 @@ if (localStorage.getItem("rewatch")) {
 document.querySelector("#showIntroSlider").checked = localStorage.getItem("showIntro") === "true";
 document.querySelector("#autoIntroSlider").checked = localStorage.getItem("autoIntro") === "true";
 
-document.querySelector("#showIntroSlider").onclick = function(){
+document.querySelector("#showIntroSlider").onclick = function () {
 	localStorage.setItem("showIntro", document.querySelector("#showIntroSlider").checked === true);
 }
 
-document.querySelector("#autoIntroSlider").onclick = function(){
+document.querySelector("#autoIntroSlider").onclick = function () {
 	localStorage.setItem("autoIntro", document.querySelector("#autoIntroSlider").checked === true);
 }
 
@@ -2206,7 +2206,7 @@ if (location.search.includes("engine=3") && config.sockets) {
 	socket.on("connect", () => {
 		sid = socket.id;
 		localStorage.setItem("sid", sid);
-		if(socketCalledIni === false){
+		if (socketCalledIni === false) {
 			if (config.local || downloaded) {
 				ini_main();
 			} else {
@@ -2289,55 +2289,55 @@ if (config.chrome) {
 document.getElementById("fullscreenToggle").onclick = function () {
 	a.goFullScreen(a);
 };
-document.getElementById("skipIntroDOM").onclick = function(){
-	if("end" in skipIntroInfo && !isNaN(skipIntroInfo.end)){
+document.getElementById("skipIntroDOM").onclick = function () {
+	if ("end" in skipIntroInfo && !isNaN(skipIntroInfo.end)) {
 		a.vid.currentTime = skipIntroInfo.end;
 		this.style.display = "none";
 	}
 }
 applyTheme();
 
-function openSettingsSemi(translateY){
+function openSettingsSemi(translateY) {
 
 	let settingCon = document.getElementById("setting_con");
 	settingCon.style.display = "block";
 
-	if(translateY == -1){
+	if (translateY == -1) {
 		settingCon.style.height = `100%`;
-	}else if(translateY == 0){
+	} else if (translateY == 0) {
 		settingCon.style.transitionDuration = "0.2s";
 		settingCon.style.opacity = "0";
 		settingCon.style.height = "0";
-		window.requestAnimationFrame(function(){
-			window.requestAnimationFrame(function(){
+		window.requestAnimationFrame(function () {
+			window.requestAnimationFrame(function () {
 				settingCon.style.opacity = "1";
-				setTimeout(function(){
+				setTimeout(function () {
 					settingCon.style.transitionDuration = "0s";
 				}, 200);
 			});
 		});
-	}else{
+	} else {
 		settingCon.style.height = `${translateY - 50}px`;
 	}
 
 }
 
-function closeSettings(){
+function closeSettings() {
 	let settingCon = document.getElementById("setting_con");
 	settingCon.style.transitionDuration = "0.2s";
 	settingCon.style.transform = "translateY(0px)";
 
-	window.requestAnimationFrame(function(){
-		window.requestAnimationFrame(function(){
+	window.requestAnimationFrame(function () {
+		window.requestAnimationFrame(function () {
 			settingCon.style.transform = "translateY(200px)";
 			settingCon.style.opacity = "0";
-			setTimeout(function(){
+			setTimeout(function () {
 				settingCon.style.transform = "translateY(0px)";
 				settingCon.style.opacity = "1";
 				settingCon.style.height = "100%";
 				settingCon.style.display = "none";
 				settingCon.style.transitionDuration = "0s";
-			},200);
+			}, 200);
 		});
 	});
 }

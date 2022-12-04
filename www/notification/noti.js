@@ -1,37 +1,37 @@
 
-class notification{
-	constructor(DomElem,data){
-		this.data=data;
-		this.elem=DomElem;
-		if("color" in data && data["color"]=="red"){
-			this.className="redNoti";
-		}else{
-			this.className="blueNoti";
+class notification {
+	constructor(DomElem, data) {
+		this.data = data;
+		this.elem = DomElem;
+		if ("color" in data && data["color"] == "red") {
+			this.className = "redNoti";
+		} else {
+			this.className = "blueNoti";
 
 		}
 		this.create();
 
 	}
 
-	create(){
+	create() {
 
-		var newElem=document.createElement("div");
-		var dur="";
-		if(this.data.perm!=0){
-			setTimeout(function(){
-				try{
-				newElem.remove();
-				}catch(err){
+		var newElem = document.createElement("div");
+		var dur = "";
+		if (this.data.perm != 0) {
+			setTimeout(function () {
+				try {
+					newElem.remove();
+				} catch (err) {
 
 				}
-			},(this.data.perm*1000));
+			}, (this.data.perm * 1000));
 		}
-		newElem.className="noti "+this.className;
+		newElem.className = "noti " + this.className;
 
 
 		let dot = document.createElement("div");
 		dot.className = "dot";
-		dot.onclick	= function(){
+		dot.onclick = function () {
 			this.parentElement.remove();
 		}
 
@@ -66,10 +66,10 @@ class notification{
 		// 		</div>`;
 
 		this.elem.prepend(newElem);
-		this.noti=newElem;
+		this.noti = newElem;
 
 	}
 
 
-				
+
 }
