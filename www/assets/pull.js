@@ -183,8 +183,9 @@ class menuPull {
 
 
 class settingsPull {
-	constructor(dom, callback) {
+	constructor(dom, callback, shouldCheck = false) {
 		this.dom = dom;
+		this.shouldCheck = shouldCheck;
 		let self = this;
 		this.callback = callback;
 		this.iniX = 0;
@@ -213,6 +214,9 @@ class settingsPull {
 	}
 
 	touchStart(event, self) {
+		if(self.shouldCheck && self.dom.scrollTop !== 0){
+			return;
+		}
 		const targetTouches = event.targetTouches;
 		let x = targetTouches[0].screenY;
 		self.iniX = x;
@@ -222,7 +226,8 @@ class settingsPull {
 	}
 
 	touchMove(event, self) {
-		if (self.shouldStart === false) {
+		if (self.dom.scrollTop > 0 || self.shouldStart === false) {
+			self.shouldStart = false;
 			return;
 		}
 		const targetTouches = event.targetTouches;
@@ -238,6 +243,9 @@ class settingsPull {
 		// 	self.dom.style.opacity = "1";
 		// 	self.dom.style.transform = `translateX(0px)`;
 		// }
+		if (self.shouldStart === false) {
+			return;
+		}
 
 		if(self.lastX > 75){
 			self.settingCon.style.height = `100%`;

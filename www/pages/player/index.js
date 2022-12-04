@@ -805,9 +805,9 @@ class vid {
 			let curDOM = playerFitDOM[i];
 			if (parseInt(curDOM.getAttribute("data-num")) == x) {
 				curDOM.style.backgroundColor = "white";
-				curDOM.style.color = "rgb(46, 46, 46)";
+				curDOM.style.color = "black";
 			} else {
-				curDOM.style.backgroundColor = "rgb(46, 46, 46)";
+				curDOM.style.backgroundColor = "#606060";
 				curDOM.style.color = "white";
 			}
 		}
@@ -1361,7 +1361,13 @@ window.addEventListener('message', function (x) {
 var a = new vid();
 
 
+if(CSS.supports('backdrop-filter: blur(10px)')){
+	document.getElementById("setting_con").style.backgroundColor = "#19181caa";
+	document.getElementById("setting_con").style.backdropFilter = " blur(10px)";
 
+}else{
+	document.getElementById("setting_con").style.backgroundColor = "#19181c";
+}
 
 function cssToJava(x) {
 	let a = x.split("-");
@@ -1647,7 +1653,7 @@ function chooseQualHls(x, type, th) {
 			qCon[i].style.backgroundColor = "white";
 			qCon[i].style.color = "black";
 		} else {
-			qCon[i].style.backgroundColor = "#2e2e2e";
+			qCon[i].style.backgroundColor = "#606060";
 			qCon[i].style.color = "white";
 		}
 	}
@@ -1782,7 +1788,7 @@ function chooseQual(x, type, th) {
 				qCon[i].style.backgroundColor = "white";
 				qCon[i].style.color = "black";
 			} else {
-				qCon[i].style.backgroundColor = "#2e2e2e";
+				qCon[i].style.backgroundColor = "#606060";
 				qCon[i].style.color = "white";
 			}
 		}
@@ -1808,7 +1814,7 @@ function chooseQual(x, type, th) {
 						qCon[j].style.backgroundColor = "white";
 						qCon[j].style.color = "black";
 					} else {
-						qCon[j].style.backgroundColor = "#2e2e2e";
+						qCon[j].style.backgroundColor = "#606060";
 						qCon[j].style.color = "white";
 					}
 				}
@@ -1917,7 +1923,7 @@ function loadHLSsource() {
 				style["backgroundColor"] = "white";
 				style["color"] = "black";
 			} else {
-				style["backgroundColor"] = "#2e2e2e";
+				style["backgroundColor"] = "#606060";
 				style["color"] = "white";
 			}
 
@@ -1982,7 +1988,7 @@ async function get_ep(x = 0) {
 				style["backgroundColor"] = "white";
 				style["color"] = "black";
 			} else {
-				style["backgroundColor"] = "#2e2e2e";
+				style["backgroundColor"] = "#606060";
 				style["color"] = "white";
 			}
 
@@ -2290,7 +2296,7 @@ function closeSettings(){
 			setTimeout(function(){
 				settingCon.style.transform = "translateY(0px)";
 				settingCon.style.opacity = "1";
-				settingCon.style.height = "60%";
+				settingCon.style.height = "100%";
 				settingCon.style.display = "none";
 				settingCon.style.transitionDuration = "0s";
 			},200);
@@ -2299,3 +2305,4 @@ function closeSettings(){
 }
 
 let settingsPullInstance = new settingsPull(document.getElementById("settingHandlePadding"), closeSettings);
+let settingsPullInstanceT = new settingsPull(document.getElementById("setting_con_main"), closeSettings, true);
