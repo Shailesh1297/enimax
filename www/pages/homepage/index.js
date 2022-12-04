@@ -2118,3 +2118,8 @@ for(themeElem of document.getElementsByClassName("themesContainer")){
 
     themeCount++;
 }
+
+document.getElementById("opSlider").oninput = function(){
+    let elem = document.getElementById("opSlider");
+    window.parent.postMessage({ "action": "updateOpacity", data: elem.value}, "*");
+};

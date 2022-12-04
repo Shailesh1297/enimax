@@ -18,6 +18,37 @@ function returnExtensionNames(){
     return extensionNames;
 }
 
+function setGradient(){
+    let bgGradient = parseInt(localStorage.getItem("themegradient"));
+    if (bgGradient) {
+        document.documentElement.style.setProperty('--theme-gradient', backgroundGradients[bgGradient]);
+    } else {
+        document.documentElement.style.setProperty('--theme-gradient', backgroundGradients[0]);
+
+    }
+}
+
+function updateGradient(index){ 
+    localStorage.setItem("themegradient", index);
+    setGradient();
+}
+
+function setOpacity(){
+    let bgOpacity = parseFloat(localStorage.getItem("bgOpacity"));
+    if (bgOpacity == 0 || bgOpacity) {
+        document.getElementById("bgOpacity").style.backgroundColor = `rgba(0,0,0, ${bgOpacity})`;
+    } else {
+        document.getElementById("bgOpacity").style.backgroundColor = `rgba(0,0,0,0.6)`;
+    }
+}
+
+function updateOpacity(value){ 
+    localStorage.setItem("bgOpacity", value);
+    setOpacity();
+}
+
+
+
 function setURL(url) {
     document.getElementById("frame").style.opacity = "0";
     setTimeout(function () {
@@ -952,6 +983,9 @@ function exec_action(x, reqSource) {
 
     }else if(x.action == "updateGrad"){
         updateGradient(parseInt(x.data));
+    }
+    else if(x.action == "updateOpacity"){
+        updateOpacity(parseFloat(x.data));
     }
 
 }

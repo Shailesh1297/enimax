@@ -1142,3 +1142,39 @@ input:checked+.slider:before {
 .tableCellNoPadding{
   padding: 0 !important;
 }
+
+.range-input {
+  display: inline-block;
+  background-color: #eee;
+  padding: 25px 20px;
+  margin-bottom: 20px;
+  margin-top: 20px;
+  align-items: center;
+  border-radius: 10px;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+
+.range-input input {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 2px;
+  background-color: #4471ef;
+  outline: none;
+  vertical-align: middle;
+}
+
+.range-input input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background-color: #eee;
+  border: 2px solid #4471ef;
+  border-radius: 50%;
+  outline: none;
+}
+
+.range-input input::-webkit-slider-thumb:hover {
+  background-color: #4471ef;
+}

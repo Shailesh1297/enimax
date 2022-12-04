@@ -83,7 +83,7 @@ function changeTheme() {
     }
 }
 
-let backgroundGradients = [
+const backgroundGradients = [
     "linear-gradient(to bottom, #0f2027, #203a43, #2c5364)",
     "linear-gradient(to bottom, #c31432, #240b36)",
     "linear-gradient(to bottom, #c04848, #480048)",
@@ -93,18 +93,3 @@ let backgroundGradients = [
     "linear-gradient(to bottom, #ec008c, #fc6767)",
     "linear-gradient(to bottom, #ffd89b, #19547b)"
 ];
-
-function setGradient(){
-    let bgGradient = parseInt(localStorage.getItem("themegradient"));
-    if (bgGradient) {
-        document.documentElement.style.setProperty('--theme-gradient', backgroundGradients[bgGradient]);
-    } else {
-        document.documentElement.style.setProperty('--theme-gradient', backgroundGradients[0]);
-
-    }
-}
-
-function updateGradient(index){ 
-    localStorage.setItem("themegradient", index);
-    setGradient();
-}
