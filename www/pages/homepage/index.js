@@ -691,6 +691,9 @@ document.getElementById("useImageBack").onchange = function () {
     window.parent.updateImage();
 }
 
+document.getElementById("rangeCon").ontouchmove = function(event){
+    event.stopPropagation();
+}
 
 
 document.getElementById("outlineColor").value = localStorage.getItem("outlineColor");
