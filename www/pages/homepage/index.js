@@ -230,6 +230,19 @@ document.getElementById("importFile").onchange = async function (event) {
     
     
 }
+
+
+document.getElementById("getImage").onchange = async function (event) {
+    try{
+        const fileList = event.target.files;
+        let result = await readImage(fileList[0]);
+        window.parent.saveImage(result);
+    }catch(err){
+        alert("Error reading the file.");
+    }    
+    
+}
+
 document.getElementById("exportData").onclick = function () {
     exportDataSQL();
 }
@@ -662,6 +675,21 @@ document.getElementById("alwaysDown").onchange = function () {
 }
 
 
+function switchOption(value){
+    if(value === "true"){
+        document.getElementById("themeMainCon").style.display = "none";
+        document.getElementById("imageInput").style.display = "table-row";
+    }else{
+        document.getElementById("imageInput").style.display = "none";
+        document.getElementById("themeMainCon").style.display = "block";
+    }
+}
+
+document.getElementById("useImageBack").onchange = function () {
+    localStorage.setItem("useImageBack", this.checked.toString());
+    switchOption(this.checked.toString());
+    window.parent.updateImage();
+}
 
 
 
@@ -676,6 +704,7 @@ document.getElementById("autoPause").checked = localStorage.getItem("autoPause")
 document.getElementById("hideNotification").checked = localStorage.getItem("hideNotification") === "true";
 document.getElementById("fancyHome").checked = localStorage.getItem("fancyHome") === "true";
 document.getElementById("alwaysDown").checked = localStorage.getItem("alwaysDown") === "true";
+document.getElementById("useImageBack").checked = localStorage.getItem("useImageBack") === "true";
 
 
 
@@ -1663,21 +1692,25 @@ if (true) {
 
             let count = 0;
             for(let promise of promiseResult){
-                if(promise === null){
-                    sendNoti([0, "red", "Error", `Could not update ${fix_title(promiseShowData[count].name)}`]);
-                    promiseShowData[count].dom.style.boxSizing = "border-box";
-                    promiseShowData[count].dom.style.border = "3px solid grey";
-                }else{
-                    let latestEpisode = promise.episodes;
-                    latestEpisode = latestEpisode[latestEpisode.length - 1].link;
-                    if(promiseShowData[count].ep != latestEpisode){
-                        await showLastEpDB.lastestEp.put({"name" : promiseShowData[count].name, "latest" : latestEpisode});
+                try{
+                    if(promise === null){
+                        sendNoti([0, "red", "Error", `Could not update ${fix_title(promiseShowData[count].name)}`]);
                         promiseShowData[count].dom.style.boxSizing = "border-box";
-                        promiseShowData[count].dom.style.border = "3px solid white";
+                        promiseShowData[count].dom.style.border = "3px solid grey";
                     }else{
-                        promiseShowData[count].dom.style.boxSizing = "content-box";
-                        promiseShowData[count].dom.style.border = "none";
+                        let latestEpisode = promise.episodes;
+                        latestEpisode = latestEpisode[latestEpisode.length - 1].link;
+                        if(promiseShowData[count].ep != latestEpisode){
+                            await showLastEpDB.lastestEp.put({"name" : promiseShowData[count].name, "latest" : latestEpisode});
+                            promiseShowData[count].dom.style.boxSizing = "border-box";
+                            promiseShowData[count].dom.style.border = "3px solid white";
+                        }else{
+                            promiseShowData[count].dom.style.boxSizing = "content-box";
+                            promiseShowData[count].dom.style.border = "none";
+                        }
                     }
+                }catch(err){
+                    console.error(err);
                 }
                 count++;
             }
@@ -2084,6 +2117,8 @@ for(element of document.getElementsByClassName("menuItem")){
 
 
 applyTheme();
+switchOption(localStorage.getItem("useImageBack"));
+
 let bgGradientIndex = parseInt(localStorage.getItem("themegradient"));
 
 function selectTheme(index){
@@ -2118,6 +2153,8 @@ for(themeElem of document.getElementsByClassName("themesContainer")){
 
     themeCount++;
 }
+
+document.getElementById("opSlider").value = isNaN(parseFloat(localStorage.getItem("bgOpacity"))) ? 0.6 : parseFloat(localStorage.getItem("bgOpacity"));
 
 document.getElementById("opSlider").oninput = function(){
     let elem = document.getElementById("opSlider");

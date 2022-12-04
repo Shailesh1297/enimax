@@ -47,6 +47,14 @@ function updateOpacity(value){
     setOpacity();
 }
 
+function updateImage(){
+    if(localStorage.getItem("useImageBack") === "true"){
+        document.getElementById("bgGrad").style.backgroundImage = `url("${cordova.file.externalDataDirectory}background.png?v=${(new Date()).getTime()}")`;
+    }else{
+        document.getElementById("bgGrad").style.backgroundImage = `var(--theme-gradient)`;       
+        setGradient();
+    }
+}
 
 
 function setURL(url) {
@@ -120,6 +128,45 @@ function saveAsImport(arrayInt) {
 
     }
 
+}
+
+function saveImage(arrayInt) {
+    let blob = new Blob([arrayInt]);
+    window.resolveLocalFileSystemURL(`${window.parent.cordova.file.externalDataDirectory}`, function (fileSystem) {
+
+        fileSystem.getFile("background.png", { create: true, exclusive: false }, function (file) {
+
+            file.createWriter(function (fileWriter) {
+
+                fileWriter.onwriteend = function (e) {
+                    window.parent.updateImage();
+                    alert("Done!");
+
+                };
+
+                fileWriter.onerror = function (e) {
+                    alert("Couldn't write to the file - 2.");
+
+                };
+
+
+                fileWriter.write(blob);
+
+            }, (err) => {
+                alert("Couldn't write to the file.");
+
+            });
+
+
+        }, function (x) {
+            alert("Error opening the database file.");
+
+        });
+
+    }, function (error) {
+        alert("Error opening the database folder.");
+
+    });
 }
 
 function listDir(path) {
@@ -987,6 +1034,9 @@ function exec_action(x, reqSource) {
     else if(x.action == "updateOpacity"){
         updateOpacity(parseFloat(x.data));
     }
+    else if(x.action == "updateImage"){
+        updateImage();
+    }
 
 }
 
@@ -1013,6 +1063,7 @@ async function onDeviceReady() {
     await SQLInit();
     await SQLInitDownloaded();
 
+    updateImage();    
     cordova.plugins.backgroundMode.on('activate', function() {
         cordova.plugins.backgroundMode.disableWebViewOptimizations(); 
         cordova.plugins.backgroundMode.disableBatteryOptimizations();
