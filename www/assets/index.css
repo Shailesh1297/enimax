@@ -954,7 +954,6 @@ display: inline-block;
 	box-sizing: border-box;
 	padding: 15px;
 	margin: 15px auto 15px auto;
-	border-radius: 15px;
 
 }
 
@@ -971,7 +970,34 @@ display: inline-block;
 	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
 }
 
-.episodesTitle {
+.episodesPlaySmall{
+	height: 40px;
+	width: 40px;
+	background-color: white;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3Cpath d='M7.752 5.439l10.508 6.13a.5.5 0 0 1 0 .863l-10.508 6.13A.5.5 0 0 1 7 18.128V5.871a.5.5 0 0 1 .752-.432z' fill='black' /%3E%3C/svg%3E");
+	background-size: 70%;
+	background-position: center;
+	background-repeat: no-repeat;
+	border-radius: 20px;
+	flex-shrink: 0;
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+	margin: 10px;
+}
+
+.episodesThumbnail {
+	height: 90px;
+	width: 160px;
+	object-fit: cover;
+	background-color: white;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	border-radius: 15px;
+	flex-shrink: 0;
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+
+.episodesTitle, .episodesTitleTemp {
 	color: white;
 	border-radius: 15px;
 	font-family: 'Montserrat', sans-serif;
@@ -983,11 +1009,16 @@ display: inline-block;
 
 }
 
+.aLeft{
+	text-align: left !important;
+}
+
 .episodesDownload {
 	height: 40px;
 	width: 40px;
 	margin: 10px;
 	flex-shrink: 0;
+	border: 2px solid white;
 	border-radius: 100%;
 	background-color: black;
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='white'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z'/%3E%3C/svg%3E");
@@ -1060,6 +1091,33 @@ display: inline-block;
 
 }
 
+.episodesDescription{
+    line-height: 14px;
+    text-align: left;
+    font-size: 13px;
+    color: #cbcbcb;
+    /* border-radius: 15px; */
+    font-family: 'Montserrat', sans-serif;
+    margin-left: 10px;
+    flex-shrink: 1;
+    width: 100%;
+    text-align: left;
+    font-size: 13px;
+    max-height: 94px;
+    overflow: hidden;
+}
+
+.episodesDescEllipsis{
+    color: white;
+    text-align: left;
+    font-size: 12px;
+    width: 100%;
+    margin-left: 10px;
+}
+
+.episodesSelected .episodesTitle, .episodesSelected .episodesDescription, .episodesSelected .episodesDescEllipsis{
+	color: black !important;
+}
 .switch {
 	position: relative;
 	display: inline-block;
@@ -1185,4 +1243,10 @@ input:checked+.slider:before {
 
 .range-input input::-webkit-slider-thumb:hover {
 	background-color: #4471ef;
+}
+
+.hozCon{
+	width: 100%;
+	display: flex;
+	align-items: center;
 }

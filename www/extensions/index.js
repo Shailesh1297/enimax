@@ -81,13 +81,31 @@ function extractKey(id, url = null, useCached = false) {
 
 }
 
-async function MakeFetch(url, options) {
+async function MakeFetch(url, options = {}) {
     return new Promise(function (resolve, reject) {
         fetch(url, options).then(response => response.text()).then((response) => {
             resolve(response);
         }).catch(function (err) {
             reject(err);
         });
+    });
+}
+
+async function MakeFetchTimeout(url, options = {}, timeout = 5000) {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    options.signal = signal;
+    return new Promise(function (resolve, reject) {
+        fetch(url, options).then(response => response.text()).then((response) => {
+            resolve(response);
+        }).catch(function (err) {
+            reject(err);
+        });
+
+        setTimeout(function(){
+            controller.abort();
+            reject(new Error("timeout"));
+        },timeout);
     });
 }
 
@@ -608,9 +626,9 @@ var animixplay = {
                 data.image = "";
                 data.description = "";
                 let temp2 = document.createElement("div");
-
+                let malId = null;
                 try {
-                    let malId = parseInt(response.split("malid = '")[1]);
+                    malId = parseInt(response.split("malid = '")[1]);
                     let response2 = await MakeFetch(`https://myanimelist.net/anime/${malId}`, {});
                     temp2.innerHTML = DOMPurify.sanitize(response2, { ALLOWED_ATTR: ['itemprop'] });
 
@@ -633,9 +651,21 @@ var animixplay = {
                     temp2.remove();
                 }
 
+                let thumbnails = {};
+                if(malId !== null){
+                    try{
+                        let thumbnailsTemp = JSON.parse(await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malId}`, {}, 4000)).episodes;
+                        for(let i = 0; i < thumbnailsTemp.length; i++){
+                            thumbnails[thumbnailsTemp[i].number] = thumbnailsTemp[i];
+                        }
+                    }catch(err){
+        
+                    }
+                }
                 let animeEps = [];
                 let animeDOM = JSON.parse(temp.querySelector("#epslistplace").innerHTML);
                 let animeName;
+                let count = 0;
                 for (value in animeDOM) {
                     if (value == "eptotal" || typeof animeDOM[value] != "string") {
                         continue;
@@ -643,14 +673,30 @@ var animixplay = {
 
 
                     try {
-                        let l = animeDOM[value].split("id=")[1].split("&")[0]
-                        animeEps.push({
+                        let l = animeDOM[value].split("id=")[1].split("&")[0];
+                        let tempEp = {
                             "link": "?watch=" + ogURL + "/ep" + value + "&engine=1",
                             "title": `Episode ${parseFloat(value) + 1}`,
-                        });
+                        };
+
+                        try{
+                            let epIndex = parseFloat(value) + 1;
+                            if(epIndex in thumbnails){
+                                tempEp.thumbnail = thumbnails[epIndex].image;
+                                tempEp.title = "Episode " + epIndex + " - " + thumbnails[epIndex].title;
+                                tempEp.description = thumbnails[epIndex].description;
+                            }
+                        }catch(err){
+            
+                        }
+                        
+                        animeEps.push(tempEp);
+
                     } catch (err) {
                         console.error(err);
                     }
+
+                    count++;
                 }
 
                 animeName = url.split("/")[url.split("/").length - 1] + "-";
@@ -1346,6 +1392,16 @@ var zoro = {
         id = id[id.length - 1].split("?")[0];
         let response = {};
         let _res = ((await MakeFetch(`https://zoro.to/${url}`, {})));
+        let malID = null;
+        try{
+            let tempID = parseInt(_res.split(`,"mal_id":"`)[1]);
+            if(!isNaN(tempID)){
+                malID = tempID;
+            }
+        }catch(err){
+
+        }
+
         let _dom = document.createElement("div");
         let ogDOM = _dom;
         _dom.innerHTML = DOMPurify.sanitize(_res);
@@ -1363,8 +1419,17 @@ var zoro = {
 
         ogDOM.remove();
 
+        let thumbnails = {};
+        if(malID !== null){
+            try{
+                let thumbnailsTemp = JSON.parse(await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}, 4000)).episodes;
+                for(let i = 0; i < thumbnailsTemp.length; i++){
+                    thumbnails[thumbnailsTemp[i].number] = thumbnailsTemp[i];
+                }
+            }catch(err){
 
-
+            }
+        }
         let res = JSON.parse((await MakeFetch(`https://zoro.to/ajax/v2/episode/list/${id}`, {})));
         res = res.html;
 
@@ -1376,11 +1441,25 @@ var zoro = {
         let data = [];
 
         for (var i = 0; i < dom.length; i++) {
-            data.push({
+            let tempEp = {
                 "link": dom[i].getAttribute("href").replace("/watch/", "?watch=").replace("?ep=", "&ep=") + "&engine=3",
                 "id": dom[i].getAttribute("data-id"),
                 "title": "Episode " + dom[i].getAttribute("data-number"),
-            });
+            };
+
+            try{
+                let epIndex = parseFloat(dom[i].getAttribute("data-number"));
+                if(epIndex in thumbnails){
+                    tempEp.thumbnail = thumbnails[epIndex].image;
+                    tempEp.title = "Episode " + epIndex + " - " + thumbnails[epIndex].title;
+                    tempEp.description = thumbnails[epIndex].description;
+                }
+            }catch(err){
+
+            }
+
+            data.push(tempEp);
+
 
         }
 
@@ -1673,6 +1752,7 @@ var twitch = {
                             "link": "?watch=" + encodeURIComponent(id) + "&id=" + vod.node.id + "&engine=4",
                             "id": id,
                             "title": vod.node.title,
+                            "thumbnail" : vod.node.previewThumbnailURL
                         });
                     }
                 }

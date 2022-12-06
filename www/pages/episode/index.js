@@ -205,13 +205,7 @@ function ini() {
                 tempDiv.setAttribute('data-url', animeEps[i].link);
 
 
-                let tempDiv2 = document.createElement("div");
-                tempDiv2.className = 'episodesPlay';
 
-                tempDiv2.onclick = function () {
-                    localStorage.setItem("mainName", data.mainName);
-                    window.parent.postMessage({ "action": 4, "data": trr }, "*");
-                };
 
                 let tempDiv4 = document.createElement("div");
                 tempDiv4.className = 'episodesDownload';
@@ -234,9 +228,6 @@ function ini() {
                 tempDiv3.innerText = animeEps[i].title;
 
 
-
-                tempDiv.append(tempDiv2);
-                tempDiv.append(tempDiv3);
                 let check = false;
                 if (!config.chrome) {
 
@@ -282,22 +273,140 @@ function ini() {
 
                 }
 
-                if (downloaded) {
-                    let localQuery = encodeURIComponent(`/${data.mainName}/${btoa(normalise(trr))}`);
-                    tempDiv2.onclick = function () {
-                        window.parent.postMessage({ "action": 4, "data": `?watch=${localQuery}` }, "*");
-                    };
-                }
-                if (!config.chrome) {
-                    tempDiv.append(tempDiv4);
-                }
+               
+
+
+                let tempDiv2 = document.createElement("div");
+                tempDiv2.className = 'episodesPlay';
+
+                tempDiv2.onclick = function () {
+                    localStorage.setItem("mainName", data.mainName);
+                    window.parent.postMessage({ "action": 4, "data": trr }, "*");
+                };
 
                 if (check || !downloaded || config.chrome) {
-                    epCon.append(tempDiv);
+                    
+
+                    
+                    if ((animeEps[i].thumbnail || animeEps[i].description) && !downloaded) {
+                        tempDiv.style.flexDirection = "column";
+                        
+                        tempDiv2.remove();
+                        tempDiv2 = createElement({
+                            "class" : "episodesThumbnail",
+                            "element" : "img",
+                            "attributes": {
+                                "loading" : "lazy",
+                                "src" : (animeEps[i].thumbnail ? animeEps[i].thumbnail : "../../assets/images/anime2.png"),
+                            }
+                        });
+     
+
+                        let horizontalCon = createElement({
+                            "class": "hozCon"
+                        });
+
+                        let horizontalConT = createElement({
+                            "class": "hozCon",
+                            "style" : {
+                                "marginTop" : "12px"
+                            }
+                        });
+
+
+                        horizontalConT.append(tempDiv3);
+                        tempDiv3.className = 'episodesTitle aLeft';
+
+
+                        horizontalConT.append(createElement({
+                            "class" : "episodesPlaySmall",
+                            "listeners" : {
+                                "click" : function() {
+                                    localStorage.setItem("mainName", data.mainName);
+                                    window.parent.postMessage({ "action": 4, "data": trr }, "*");
+                                }
+                            }
+                        }));
+
+
+
+                        horizontalCon.append(tempDiv2);
+                        horizontalCon.append(createElement({
+                            "class": "episodesTitleTemp"
+                        }));
+
+                        if (!config.chrome) {
+                            horizontalCon.append(tempDiv4);
+                        }
+                        tempDiv.append(horizontalCon);
+                        tempDiv.append(horizontalConT);
+
+                        let horizontalConD;
+                        if(animeEps[i].description){
+                            horizontalConD = createElement({
+                                "class": "hozCon",
+                                "style" : {
+                                    "marginTop" : "12px",
+                                    "flex-direction" : "column"
+                                }
+                            });
+
+                            horizontalConD.append(createElement({
+                                "class": "episodesDescription",
+                                "innerText" : animeEps[i].description,
+                                "listeners":{
+                                    "click": function(){
+                                        let collapsed = this.getAttribute("collapsed");
+                                        let readMore = this.nextSibling;
+                                        if(collapsed !== "false"){
+                                            this.style.maxHeight = "none";
+                                            this.setAttribute("collapsed", "false");
+
+                                            if(readMore){
+                                                readMore.style.display = "none";
+                                            }
+                                        }else{
+                                            this.style.maxHeight = "94px";
+                                            this.setAttribute("collapsed", "true");
+                                            if(readMore){
+                                                readMore.style.display = "block";
+                                            }
+                                        }
+                                    }
+                                }
+                            }));
+
+                            tempDiv.append(horizontalConD);
+
+                        }
+                        epCon.append(tempDiv);
+
+                        if(horizontalConD && horizontalConD.offsetHeight >= 94){
+                            horizontalConD.append(createElement({
+                                "class" : "episodesDescEllipsis",
+                                "innerText" : "Read more..."
+                            }));
+                        }
+                    } else {
+                        if (downloaded) {
+                            let localQuery = encodeURIComponent(`/${data.mainName}/${btoa(normalise(trr))}`);
+                            tempDiv2.onclick = function () {
+                                window.parent.postMessage({ "action": 4, "data": `?watch=${localQuery}` }, "*");
+                            };
+                        }    
+                        tempDiv.append(tempDiv2);
+                        tempDiv.append(tempDiv3);
+                        if (!config.chrome) {
+                            tempDiv.append(tempDiv4);
+                        }
+                        epCon.append(tempDiv);
+                    }
+                    
+
                     if (trr == currentLink) {
                         scrollToDOM = tempDiv;
-                        tempDiv.style.backgroundColor = "rgba(255,255,255,0.7)";
-                        tempDiv.querySelector(".episodesTitle").style.color = "black";
+                        tempDiv.style.backgroundColor = "rgba(255,255,255,1)";
+                        tempDiv.classList.add("episodesSelected");
                     }
                 } else {
                     try {
