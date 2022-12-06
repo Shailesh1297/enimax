@@ -196,8 +196,10 @@ function ini() {
             animeEps = data.episodes;
 
             let epCon = document.getElementById("epListCon");
-            for (var i = 0; i < animeEps.length; i++) {
+            let start = performance.now();
 
+            let toAdd = [];
+            for (var i = 0; i < animeEps.length; i++) {
                 let trr = animeEps[i].link;
 
                 let tempDiv = document.createElement("div");
@@ -379,7 +381,8 @@ function ini() {
                             tempDiv.append(horizontalConD);
 
                         }
-                        epCon.append(tempDiv);
+                        // epCon.append(tempDiv);
+                        toAdd.push(tempDiv);
 
                         if(horizontalConD && horizontalConD.offsetHeight >= 94){
                             horizontalConD.append(createElement({
@@ -399,7 +402,8 @@ function ini() {
                         if (!config.chrome) {
                             tempDiv.append(tempDiv4);
                         }
-                        epCon.append(tempDiv);
+                        // epCon.append(tempDiv);
+                        toAdd.push(tempDiv);
                     }
                     
 
@@ -415,6 +419,11 @@ function ini() {
 
                     }
                 }
+
+            }
+
+            for(let e of toAdd){
+                epCon.append(e);
             }
 
             if (downloaded) {
