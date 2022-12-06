@@ -633,6 +633,11 @@ document.getElementById("outlineWidth").oninput = function () {
     localStorage.setItem("outlineWidth", this.value);
 }
 
+document.getElementById("backgroundBlur").oninput = function () {
+    localStorage.setItem("backgroundBlur", this.value);
+    window.parent.updateBackgroundBlur();
+}
+
 document.getElementById("fmoviesBase").oninput = function () {
     localStorage.setItem("fmoviesBaseURL", this.value);
     window.parent.setFmoviesBase();
@@ -679,8 +684,10 @@ function switchOption(value) {
     if (value === "true") {
         document.getElementById("themeMainCon").style.display = "none";
         document.getElementById("imageInput").style.display = "table-row";
+        document.getElementById("blurInput").style.display = "table-row";
     } else {
         document.getElementById("imageInput").style.display = "none";
+        document.getElementById("blurInput").style.display = "none";
         document.getElementById("themeMainCon").style.display = "block";
     }
 }
@@ -698,6 +705,7 @@ document.getElementById("rangeCon").ontouchmove = function (event) {
 
 document.getElementById("outlineColor").value = localStorage.getItem("outlineColor");
 document.getElementById("outlineWidth").value = localStorage.getItem("outlineWidth");
+document.getElementById("backgroundBlur").value = localStorage.getItem("backgroundBlur");
 document.getElementById("fmoviesBase").value = localStorage.getItem("fmoviesBaseURL");
 document.getElementById("themeColor").value = localStorage.getItem("themecolor");
 document.getElementById("downloadTimeout").value = localStorage.getItem("downloadTimeout");

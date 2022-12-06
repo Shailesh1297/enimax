@@ -49,10 +49,22 @@ function updateOpacity(value) {
 
 function updateImage() {
     if (localStorage.getItem("useImageBack") === "true") {
+        let backgroundBlur = parseInt(localStorage.getItem("backgroundBlur"));
+        document.getElementById("bgGrad").style.filter = `blur(${isNaN(backgroundBlur) ? 0 : backgroundBlur}px)`;
         document.getElementById("bgGrad").style.backgroundImage = `url("${cordova.file.externalDataDirectory}background.png?v=${(new Date()).getTime()}")`;
     } else {
         document.getElementById("bgGrad").style.backgroundImage = `var(--theme-gradient)`;
+        document.getElementById("bgGrad").style.filter = `none`;
         setGradient();
+    }
+}
+
+function updateBackgroundBlur(){
+    if (localStorage.getItem("useImageBack") === "true") {
+        let backgroundBlur = parseInt(localStorage.getItem("backgroundBlur"));
+        document.getElementById("bgGrad").style.filter = `blur(${isNaN(backgroundBlur) ? 0 : backgroundBlur}px)`;
+    }else{
+        document.getElementById("bgGrad").style.filter = `none`;
     }
 }
 
@@ -1064,6 +1076,7 @@ async function onDeviceReady() {
     await SQLInitDownloaded();
 
     updateImage();
+    updateBackgroundBlur();
     cordova.plugins.backgroundMode.on('activate', function () {
         cordova.plugins.backgroundMode.disableWebViewOptimizations();
         cordova.plugins.backgroundMode.disableBatteryOptimizations();
