@@ -985,8 +985,8 @@ display: inline-block;
 }
 
 .episodesThumbnail {
-	height: 90px;
-	width: 160px;
+	height: 120px;
+	width: 200px;
 	object-fit: cover;
 	background-color: white;
 	background-size: cover;
