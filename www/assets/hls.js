@@ -4864,7 +4864,7 @@ var EMEController = /*#__PURE__*/function () {
    * @throws if XMLHttpRequest construction failed
    */;
   _proto._createLicenseXhr = function _createLicenseXhr(url, keyMessage, callback) {
-    var xhr = new XMLHttpRequest();
+    var xhr = new CustomXMLHttpRequest();
     xhr.responseType = 'arraybuffer';
     xhr.onreadystatechange = this._onLicenseRequestReadyStageChange.bind(this, xhr, url, keyMessage, callback);
     var licenseXhrSetup = this._licenseXhrSetup;
@@ -24912,7 +24912,7 @@ var XhrLoader = /*#__PURE__*/function () {
     if (!config) {
       return;
     }
-    var xhr = this.loader = new self.XMLHttpRequest();
+    var xhr = this.loader = new self.CustomXMLHttpRequest();
     var stats = this.stats;
     stats.loading.first = 0;
     stats.loaded = 0;
