@@ -1965,19 +1965,6 @@ if (true) {
         }
 
         pullTabArray = [];
-        let catMainDOM = document.getElementsByClassName("categoriesDataMain");
-        for (var i = 0; i < catMainDOM.length; i++) {
-            pullTabArray.push(new pullToRefresh(catMainDOM[i]));
-            if (catMainDOM[i].id == "discoverCon") {
-                continue;
-            }
-            catMainDOM[i].append(createElement({
-                "style": {
-                    "width": "100%",
-                    "height": "70px"
-                }
-            }));
-        }
 
         last_order = getCurrentOrder();
 
@@ -2045,6 +2032,20 @@ if (true) {
 
                 domToAppend.append(tempDiv);
             }
+        }
+
+        let catMainDOM = document.getElementsByClassName("categoriesDataMain");
+        for (var i = 0; i < catMainDOM.length; i++) {
+            pullTabArray.push(new pullToRefresh(catMainDOM[i]));
+            if (catMainDOM[i].id == "discoverCon") {
+                continue;
+            }
+            catMainDOM[i].append(createElement({
+                "style": {
+                    "width": "100%",
+                    "height": "70px"
+                }
+            }));
         }
 
         if (isNaN(parseInt(localStorage.getItem("lastupdatelib")))) {

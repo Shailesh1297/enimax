@@ -377,19 +377,15 @@ function ini() {
                                     }
                                 }
                             }));
-
+                            horizontalConD.append(createElement({
+                                "class" : "episodesDescEllipsis",
+                                "innerText" : "Read more..."
+                            }));
                             tempDiv.append(horizontalConD);
 
                         }
                         // epCon.append(tempDiv);
                         toAdd.push(tempDiv);
-
-                        if(horizontalConD && horizontalConD.offsetHeight >= 94){
-                            horizontalConD.append(createElement({
-                                "class" : "episodesDescEllipsis",
-                                "innerText" : "Read more..."
-                            }));
-                        }
                     } else {
                         if (downloaded) {
                             let localQuery = encodeURIComponent(`/${data.mainName}/${btoa(normalise(trr))}`);
@@ -422,9 +418,21 @@ function ini() {
 
             }
 
+            // alert(performance.now() - start);
+            start = performance.now();
             for(let e of toAdd){
                 epCon.append(e);
             }
+            // alert(performance.now() - start);
+            start = performance.now();
+            for(let e of toAdd){
+                epCon.append(e);
+            }
+
+            // alert(performance.now() - start);
+            start = performance.now();
+            // alert(performance.now() - start);
+            start = performance.now();
 
             if (downloaded) {
                 for (let downloadIndex = 0; downloadIndex < downloadedList.length; downloadIndex++) {
@@ -470,7 +478,6 @@ function ini() {
                     tempDiv.append(tempDiv3);
                     tempDiv.append(tempDiv4);
                     epCon.append(tempDiv);
-
                 }
             }
 

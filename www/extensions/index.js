@@ -616,6 +616,10 @@ var animixplay = {
             }
             let ogURL = url;
             url = "https://animixplay.to/" + url;
+
+            let settled = "allSettled" in Promise;
+
+
             fetch(url).then(response => response.text()).then(async function (response) {
                 let temp = document.createElement("div");
                 temp.innerHTML = DOMPurify.sanitize(response);
@@ -1393,6 +1397,7 @@ var zoro = {
         let response = {};
         let _res = ((await MakeFetch(`https://zoro.to/${url}`, {})));
         let malID = null;
+        let settled = "allSettled" in Promise;
         try{
             let tempID = parseInt(_res.split(`,"mal_id":"`)[1]);
             if(!isNaN(tempID)){
@@ -1420,18 +1425,50 @@ var zoro = {
         ogDOM.remove();
 
         let thumbnails = {};
+        let promises = [];
+        let res;
+        let check = false;
         if(malID !== null){
             try{
-                let thumbnailsTemp = JSON.parse(await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}, 4000)).episodes;
+
+                let thumbnailsTemp = [];
+
+                if(settled){
+                    promises.push(MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}, 4000));
+                    promises.push(MakeFetch(`https://zoro.to/ajax/v2/episode/list/${id}`, {}));
+
+                    let responses = await Promise.allSettled(promises);
+
+                    try{
+                        if(responses[0].status === "fulfilled"){
+                            thumbnailsTemp = JSON.parse(responses[0].value).episodes;
+                        }
+                    }catch(err){
+
+                    }
+
+
+                    if(responses[1].status === "fulfilled"){
+                        res = responses[1].value;
+                        check = true;
+                    }
+                }else{
+                    thumbnailsTemp = JSON.parse(await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}, 4000)).episodes;
+                }
+
                 for(let i = 0; i < thumbnailsTemp.length; i++){
                     thumbnails[thumbnailsTemp[i].number] = thumbnailsTemp[i];
                 }
             }catch(err){
-
+                console.error(err);
             }
         }
-        let res = JSON.parse((await MakeFetch(`https://zoro.to/ajax/v2/episode/list/${id}`, {})));
-        res = res.html;
+        
+        if(!check){
+            res = (await MakeFetch(`https://zoro.to/ajax/v2/episode/list/${id}`, {}));
+        }
+
+        res = JSON.parse(res).html;
 
 
         let dom = document.createElement("div");
