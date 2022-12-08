@@ -1260,20 +1260,23 @@ var fmovies = {
 
                     let sourceJSON = parallelReqs[0];
                     let encryptedURL = sourceJSON.sources;
-                    let decryptKey, tempFile;
+                    let decryptKey;
 
                     try {
                         decryptKey = await extractKey(4, null, true);
                         // decryptKey = "dfdfdfdf";
-                        tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                        sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
 
                     } catch (err) {
                         if (err.message == "Malformed UTF-8 data") {
                             decryptKey = await extractKey(4);
-                            tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                            try{
+                                sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                            }catch(err){
+
+                            }
                         }
                     }
-                    sourceJSON.sources = tempFile;
 
                     data.status = 200;
                     data.message = "done";
@@ -1569,15 +1572,17 @@ var zoro = {
                     let decryptKey, tempFile;
                     try {
                         decryptKey = await extractKey(6, null, true);
-                        // decryptKey = "dfdfdfdf";
-                        tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                        sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
                     } catch (err) {
                         if (err.message == "Malformed UTF-8 data") {
                             decryptKey = await extractKey(6);
-                            tempFile = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                            try{
+                                sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                            }catch(err){
+
+                            }
                         }
                     }
-                    sourceJSON.sources = tempFile;
                 }
                 let tempSrc = { "url": sourceJSON.sources[0].file, "name": "HLS#" + type, "type": "hls" };
                 if ("intro" in sourceJSON && "start" in sourceJSON.intro && "end" in sourceJSON.intro) {

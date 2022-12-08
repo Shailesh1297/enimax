@@ -43,7 +43,7 @@ async function testIt(idx = -1) {
         }
         let searchResult, episodeResult, playerResult;
         try {
-            searchResult = (await extensionList[i].searchApi(searchQuery)).data;
+            searchResult = (await extensionList[i].searchApi((i == 2) ? "friends" : searchQuery)).data;
         } catch (err) {
             errored = true;
             alert(`${extensionNames[i]} - search :  ${err.toString()}`);
