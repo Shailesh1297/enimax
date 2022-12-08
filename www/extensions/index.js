@@ -1055,7 +1055,9 @@ var fmovies = {
     },
 
     'getLinkFromUrl': function (url) {
-
+        if(!url.includes("-online-")){
+            url = url.replace("-full-", "-online-");
+        }
         return (new Promise(async function (resolve, reject) {
             let start = performance.now();
             url = url.split("&engine");
