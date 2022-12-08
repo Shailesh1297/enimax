@@ -1262,18 +1262,19 @@ var fmovies = {
                     let encryptedURL = sourceJSON.sources;
                     let decryptKey;
 
-                    try {
-                        decryptKey = await extractKey(4, null, true);
-                        // decryptKey = "dfdfdfdf";
-                        sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                    if(typeof encryptedURL == "string"){
+                        try {
+                            decryptKey = await extractKey(4, null, true);
+                            sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
 
-                    } catch (err) {
-                        if (err.message == "Malformed UTF-8 data") {
-                            decryptKey = await extractKey(4);
-                            try{
-                                sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
-                            }catch(err){
+                        } catch (err) {
+                            if (err.message == "Malformed UTF-8 data") {
+                                decryptKey = await extractKey(4);
+                                try{
+                                    sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                                }catch(err){
 
+                                }
                             }
                         }
                     }
@@ -1567,7 +1568,7 @@ var zoro = {
 
             }
             try {
-                if (sourceJSON.encrypted) {
+                if (sourceJSON.encrypted && typeof sourceJSON.sources == "string") {
                     let encryptedURL = sourceJSON.sources;
                     let decryptKey, tempFile;
                     try {
