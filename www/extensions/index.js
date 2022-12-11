@@ -1405,7 +1405,7 @@ var zoro = {
         let malID = null;
         let settled = "allSettled" in Promise;
         try{
-            let tempID = parseInt(_res.split(`,"mal_id":"`)[1]);
+            let tempID = parseInt(_res.split(`"mal_id":"`)[1]);
             if(!isNaN(tempID)){
                 malID = tempID;
             }
