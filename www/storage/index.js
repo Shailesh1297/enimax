@@ -2,16 +2,16 @@ var offlineDB;
 let db;
 let downloadedSqlite;
 offlineDB = new Dexie("database");
-offlineDB.version(1.3).stores({
-    vid: "++id,cur_time, ep, name,time1,time2,image,curlink,main_link,times,comp",
+offlineDB.version(1.4).stores({
+    vid: "++id,cur_time, ep, name,time1,time2,image,curlink,main_link,times,comp,parent_name",
     playlist: "++id,room_name",
     playlistOrder: "++id, order"
 });
 
 var downloadedDB;
 downloadedDB = new Dexie("downloaded");
-downloadedDB.version(1.4).stores({
-    vid: "++id,cur_time, ep, name,time1,time2,image,curlink,main_link,times,comp",
+downloadedDB.version(1.5).stores({
+    vid: "++id,cur_time, ep, name,time1,time2,image,curlink,main_link,times,comp,parent_name",
     playlist: "++id,room_name",
     playlistOrder: "++id, order",
     keyValue: "++id, key, value"
@@ -20,8 +20,9 @@ downloadedDB.version(1.4).stores({
 let initQueries = [
     "CREATE TABLE IF NOT EXISTS `playlist` (`id` INTEGER PRIMARY KEY,`room_name` text NOT NULL)",
     "CREATE TABLE IF NOT EXISTS `playlistOrder` (`id` INTEGER PRIMARY KEY, `order1` text NOT NULL)",
-    "CREATE TABLE IF NOT EXISTS `video` (`id` INTEGER PRIMARY KEY,`cur_time` float(12,3) NOT NULL,`ep` float(12,3) NOT NULL,`name` text NOT NULL,`time1` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,`time2` int DEFAULT NULL,`image` text,`curlink` text,`comp` int NOT NULL DEFAULT '0',`main_link` text,`times` int NOT NULL DEFAULT '0' );",
-    "CREATE INDEX IF NOT EXISTS video_idx_name ON video (name)"
+    "CREATE TABLE IF NOT EXISTS `video` (`id` INTEGER PRIMARY KEY,`cur_time` float(12,3) NOT NULL,`ep` float(12,3) NOT NULL,`name` text NOT NULL,`time1` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,`time2` int DEFAULT NULL,`image` text,`curlink` text,`comp` int NOT NULL DEFAULT '0',`main_link` text,`times` int NOT NULL DEFAULT '0',`parent_name` text);",
+    "CREATE INDEX IF NOT EXISTS video_idx_name ON video (name)",
+    "ALTER TABLE `video` ADD `parent_name` text;"
 ];
 
 
@@ -396,7 +397,10 @@ if (true) {
 
         try {
 
-            if ("cur" in req.body && "name" in req.body && "ep" in req.body) {
+            if("fallbackDuration" in req.body){
+                return getDurationInfo(req);
+            }
+            else if ("cur" in req.body && "name" in req.body && "ep" in req.body) {
                 var cur = req.body.cur;
                 var name = req.body.name;
                 var nameUm;
@@ -404,7 +408,6 @@ if (true) {
                     nameUm = req.body.nameUm;
                 } else {
                     nameUm = req.body.name;
-
                 }
 
                 var ep = req.body.ep;
@@ -437,12 +440,31 @@ if (true) {
                     var getdata = await mysql_query("SELECT cur_time as curtime from video where ep=? and name=? LIMIT 1", [ep, name], currentDB);
 
 
-                    if (getdata.length != 0) {
-                        response.time = getdata[0].curtime;
-                    } else {
-                        response.time = 0;
-                        await mysql_query("INSERT INTO video (ep,cur_time,name) VALUES (?,?,?)", [ep, 0, name], currentDB);
+                    if("duration" in req.body){
+                        let dur = parseInt(req.body.duration);
+                        if(isNaN(dur)){
+                            return { "status": 400, "message": "Duration can't be NaN" };
+                        }else{
+                            if (getdata.length != 0) {
 
+                                await mysql_query("UPDATE video set comp=?, main_link=? where name=? and ep=?", [dur, cur, name, ep], currentDB);
+
+                                await mysql_query("UPDATE video set parent_name=? where name=? and ep=? and parent_name is NULL", [nameUm, name, ep], currentDB);
+                            
+                            } else {
+
+                                await mysql_query("INSERT INTO video (ep,cur_time,name,comp, main_link, parent_name) VALUES (?,?,?,?,?,?)", [ep, 0, name, dur, cur, nameUm], currentDB);
+
+                            }
+                        }
+                    }else{
+                        if (getdata.length != 0) {
+                            response.time = getdata[0].curtime;
+                        } else {
+                            response.time = 0;
+                            await mysql_query("INSERT INTO video (ep,cur_time,name) VALUES (?,?,?)", [ep, 0, name], currentDB);
+
+                        }
                     }
 
 
@@ -469,6 +491,27 @@ if (true) {
 
     }
 
+    async function getDurationInfo(req, isDownloaded) {
+        let currentDB = db;
+        if (isDownloaded) {
+            currentDB = downloadedSqlite;
+        }
+
+        try{
+            if ("name" in req.body) {
+                let name = req.body.name;
+                let getdata = await mysql_query("SELECT cur_time as curtime, comp as duration, main_link as name, ep from video where parent_name=?", [name], currentDB);
+
+                return { "status": 200, "data": getdata };
+            }else{
+                return { "status": 400, "message": "Bad request" };
+            }
+        }catch(err){
+            console.error(err);
+            return { "status": 500, "errorCode": 10000, "message": "Database error." }; 
+        }
+        
+    }
 
     async function getUserInfo(req, isDownloaded) {
         let currentDB = db;
@@ -980,8 +1023,10 @@ if (true) {
         }
 
         try {
-            console.error(req.body);
-            if ("cur" in req.body && "name" in req.body && "ep" in req.body) {
+            if("fallbackDuration" in req.body){
+                return getDurationInfo(req);
+            }
+            else if ("cur" in req.body && "name" in req.body && "ep" in req.body) {
                 var cur = req.body.cur;
                 var name = req.body.name;
                 var nameUm;
@@ -1034,16 +1079,35 @@ if (true) {
                     }).toArray();
 
 
-                    if (getdata.length != 0) {
-                        response.time = getdata[0].cur_time;
-                    } else {
-                        response.time = 0;
-                        // await mysql_query("INSERT INTO video (ep,cur_time,name,username) VALUES (?,?,?,?)", [ep, 0, name, username]);
 
-                        await db.vid.add({ ep: ep, cur_time: 0, name: name });
+                    if("duration" in req.body){
+                        let dur = parseInt(req.body.duration);
+                        if(isNaN(dur)){
+                            return { "status": 400, "message": "Duration can't be NaN" };
+                        }else{
+                            if (getdata.length != 0) {
+                                await db.vid.where({ ep: ep, name: name }).modify({ comp: dur, main_link: cur});
+                                // await mysql_query("UPDATE video set comp=?, main_link=? where name=? and ep=?", [dur, cur, name, ep], currentDB);
 
+                                await db.vid.where({ ep: ep, name: name }).modify({ parent_name: nameUm});
+
+                                // await mysql_query("UPDATE video set parent_name=? where name=? and ep=? and parent_name is NULL", [nameUm, name, ep], currentDB);
+                            
+                            } else {
+
+                                // await mysql_query("INSERT INTO video (ep,cur_time,name,comp, main_link, parent_name) VALUES (?,?,?,?,?,?)", [ep, 0, name, dur, cur, nameUm], currentDB);
+
+                                await db.vid.add({ ep:ep,cur_time:0,name:name,comp:dur, main_link: cur, parent_name: nameUm});
+                            }
+                        }
+                    }else{
+                        if (getdata.length != 0) {
+                            response.time = getdata[0].curtime;
+                        } else {
+                            response.time = 0;
+                            await db.vid.add({ ep: ep, cur_time: 0, name: name });
+                        }
                     }
-
 
 
 
@@ -1069,7 +1133,32 @@ if (true) {
 
 
 
+    async function getDurationInfo(req, offline = true) {
+        let db = offlineDB;
+        if (!offline || downloadedStorage) {
+            db = downloadedDB;
+        }
 
+        try{
+            if ("name" in req.body) {
+                let name = req.body.name;
+                // let getdata = await mysql_query("SELECT cur_time as curtime, comp as duration, main_link as name, ep from video where parent_name=?", [name], currentDB);
+
+                let getdata = await db.vid.where({
+                    "parent_name" : name
+                }).toArray();
+
+
+                return { "status": 200, "data": getdata, "dexie" : true };
+            }else{
+                return { "status": 400, "message": "Bad request" };
+            }
+        }catch(err){
+            console.error(err);
+            return { "status": 500, "errorCode": 10000, "message": "Database error." }; 
+        }
+        
+    }
 
     async function getUserInfo(req, offline = true) {
         let db = offlineDB;
