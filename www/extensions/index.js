@@ -658,7 +658,7 @@ var animixplay = {
                 let thumbnails = {};
                 if(malId !== null){
                     try{
-                        let thumbnailsTemp = JSON.parse(await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malId}`, {}, 4000)).episodes;
+                        let thumbnailsTemp = JSON.parse(await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malId}`, {})).episodes;
                         for(let i = 0; i < thumbnailsTemp.length; i++){
                             thumbnails[thumbnailsTemp[i].number] = thumbnailsTemp[i];
                         }
@@ -1440,7 +1440,7 @@ var zoro = {
                 let thumbnailsTemp = [];
 
                 if(settled){
-                    promises.push(MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}, 4000));
+                    promises.push(MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}));
                     promises.push(MakeFetch(`https://zoro.to/ajax/v2/episode/list/${id}`, {}));
 
                     let responses = await Promise.allSettled(promises);
@@ -1459,7 +1459,7 @@ var zoro = {
                         check = true;
                     }
                 }else{
-                    thumbnailsTemp = JSON.parse(await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}, 4000)).episodes;
+                    thumbnailsTemp = JSON.parse(await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {})).episodes;
                 }
 
                 for(let i = 0; i < thumbnailsTemp.length; i++){

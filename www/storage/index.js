@@ -301,8 +301,7 @@ async function apiCall(method, form, callback, args = [], timeout = false) {
                 response = await actionDexie[form.action]({ "body": form });
 
             } else {
-                response = await actionDexie[form.action]({ "body": form });
-                // response = await actionSQLite[form.action]({ "body": form });
+                response = await actionSQLite[form.action]({ "body": form });
 
             }
 
