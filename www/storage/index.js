@@ -301,7 +301,8 @@ async function apiCall(method, form, callback, args = [], timeout = false) {
                 response = await actionDexie[form.action]({ "body": form });
 
             } else {
-                response = await actionSQLite[form.action]({ "body": form });
+                response = await actionDexie[form.action]({ "body": form });
+                // response = await actionSQLite[form.action]({ "body": form });
 
             }
 
@@ -342,7 +343,13 @@ if (true) {
                 var cur = req.body.time;
                 var name = req.body.name;
                 var ep = parseFloat(req.body.ep);
+                let nameUm;
+                if ("nameUm" in req.body) {
+                    nameUm = req.body.nameUm;
+                } else {
+                    nameUm = req.body.name;
 
+                }
 
 
                 var getcount = await mysql_query("SELECT count(*) as count from video where ep=? and name=?", [ep, name], currentDB);
@@ -351,7 +358,20 @@ if (true) {
 
                     var update = await mysql_query("UPDATE video set cur_time=?,time2=?, times=times+1 where ep=? and name=?", [cur, timern(), ep, name], currentDB);
 
-                    var update = await mysql_query("UPDATE video set time2=? where ep=0 and name=?", [timern(), name], currentDB);
+                    let executed = false;
+                    if("prog" in req.body){
+                        let duration = parseInt(req.body.prog);
+                        let current = parseInt(cur);
+                        
+                        if(!isNaN(duration) && !isNaN(current) && duration != 0){
+                            await mysql_query("UPDATE video set time2=?, parent_name=? where ep=0 and name=?", [timern(), JSON.stringify([current, duration]), nameUm], currentDB);
+                            executed = true;
+                        }
+                    }
+
+                    if(!executed){
+                        await mysql_query("UPDATE video set time2=? where ep=0 and name=?", [timern(), nameUm], currentDB);
+                    }
 
 
 
@@ -530,14 +550,14 @@ if (true) {
                     []
                 ];
 
-                var getData = await mysql_query("SELECT DISTINCT(name) as b,cur_time as a,image,time2,curlink,comp,main_link from video where ep=0  and curlink IS NOT NULL ORDER BY time2 DESC", [], currentDB);
+                var getData = await mysql_query("SELECT DISTINCT(name) as b,cur_time as a,image,time2,curlink,comp,main_link,parent_name from video where ep=0  and curlink IS NOT NULL ORDER BY time2 DESC", [], currentDB);
 
 
 
                 if (getData.length > 0) {
                     for (var i = 0; i < getData.length; i++) {
                         let temp = [];
-                        temp.push(getData[i]["b"], getData[i]["a"], getData[i]["image"], getData[i]["curlink"], getData[i]["comp"], getData[i]["main_link"]);
+                        temp.push(getData[i]["b"], getData[i]["a"], getData[i]["image"], getData[i]["curlink"], getData[i]["comp"], getData[i]["main_link"], getData[i]["parent_name"]);
                         response[0].push(temp);
                     }
 
@@ -969,7 +989,13 @@ if (true) {
                 var cur = req.body.time;
                 var name = req.body.name;
                 var ep = parseFloat(req.body.ep);
+                let nameUm;
+                if ("nameUm" in req.body) {
+                    nameUm = req.body.nameUm;
+                } else {
+                    nameUm = req.body.name;
 
+                }
 
 
                 var count = await db.vid.filter((data) => (data.ep == ep && data.name == name)).count();
@@ -977,8 +1003,21 @@ if (true) {
                 if (count >= 1) {
                     await db.vid.where({ ep: ep, name: name }).modify({ cur_time: cur, time2: timern() });
 
-                    await db.vid.where({ ep: 0, name: name }).modify({ time2: timern() });
 
+
+                    let executed = false;
+                    if("prog" in req.body){
+                        let duration = parseInt(req.body.prog);
+                        let current = parseInt(cur);
+                        if(!isNaN(duration) && !isNaN(current) && duration != 0){
+                            await db.vid.where({ ep: 0, name: nameUm }).modify({ time2: timern(), parent_name: JSON.stringify([current, duration]) });
+                            executed = true;
+                        }
+                    }
+
+                    if(!executed){
+                        await db.vid.where({ ep: 0, name: nameUm }).modify({ time2: timern() });
+                    }
 
 
 
@@ -1005,6 +1044,7 @@ if (true) {
             }
 
         } catch (error) {
+            console.log(error);
             return { "status": 500, "errorCode": 10000, "message": "Database error." };
         }
 
@@ -1102,7 +1142,7 @@ if (true) {
                         }
                     }else{
                         if (getdata.length != 0) {
-                            response.time = getdata[0].curtime;
+                            response.time = getdata[0].cur_time;
                         } else {
                             response.time = 0;
                             await db.vid.add({ ep: ep, cur_time: 0, name: name });
@@ -1192,7 +1232,7 @@ if (true) {
                         getData[i]["comp"] = 0;
                     }
                     let temp = [];
-                    temp.push(getData[i]["name"], getData[i]["cur_time"], getData[i]["image"], getData[i]["curlink"], getData[i]["comp"], getData[i]["main_link"]);
+                    temp.push(getData[i]["name"], getData[i]["cur_time"], getData[i]["image"], getData[i]["curlink"], getData[i]["comp"], getData[i]["main_link"], getData[i]["parent_name"]);
                     response[0].push(temp);
                 }
 

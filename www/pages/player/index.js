@@ -541,6 +541,13 @@ class vid {
 		this.vid.addEventListener("durationchange", function () {
 
 			x.total.innerText = x.timeToString(x.vid.duration);
+
+			try{
+				window.parent.apiCall("POST", { "username": username, "action": 2, "name": data_main.nameWSeason, "nameUm": data_main.name, "ep": data_main.episode, "duration": parseInt(x.vid.duration), "cur" : location.search}, (x) => { });
+			}catch(err){
+
+			}
+
 		});
 
 
@@ -1607,6 +1614,7 @@ let didNotWork1 = 0;
 let didNotWork2 = 0;
 async function update(x) {
 	let currentTime = a.vid.currentTime;
+	let currentDuration = parseInt(a.vid.duration);
 
 	if (update_check == 1 && (a.vid.currentTime - lastUpdate) > 60 && x != 19) {
 		alert("Could not sync time with the server.");
@@ -1618,7 +1626,7 @@ async function update(x) {
 
 	update_check = 1;
 
-	window.parent.apiCall("POST", { "username": username, "action": 1, "time": currentTime, "ep": data_main.episode, "name": data_main.nameWSeason }, (x) => { }, [], true).then(function (x) {
+	window.parent.apiCall("POST", { "username": username, "action": 1, "time": currentTime, "ep": data_main.episode, "name": data_main.nameWSeason, "nameUm" : data_main.name, "prog": currentDuration}, (x) => { }, [], true).then(function (x) {
 		try {
 
 			if (x.status == 200) {

@@ -290,10 +290,19 @@ function ini() {
                     
 
                     
-                    if ((animeEps[i].thumbnail || animeEps[i].description) && !downloaded) {
+                    if (!downloaded) {
                         tempDiv.style.flexDirection = "column";
                         
                         tempDiv2.remove();
+                        let tempDiv2Con = createElement({
+                            class : "episodesImageCon",
+                        });
+
+                        tempDiv2Con.append(createElement({
+                            class : "episodesBackdrop",
+                        }));
+                        
+                        
                         tempDiv2 = createElement({
                             "class" : "episodesThumbnail",
                             "element" : "img",
@@ -331,8 +340,8 @@ function ini() {
                         }));
 
 
-
-                        horizontalCon.append(tempDiv2);
+                        tempDiv2Con.append(tempDiv2);
+                        horizontalCon.append(tempDiv2Con);
                         horizontalCon.append(createElement({
                             "class": "episodesTitleTemp"
                         }));
@@ -528,7 +537,63 @@ function ini() {
             }
 
             window.parent.apiCall("POST", { "username": username, "action": 5, "name": data.mainName, "img": data.image, "url": location.search }, (x) => { });
+            window.parent.apiCall("POST", { "username": username, "action": 2, "name": data.mainName, "fallbackDuration" : true}, (epData) => {
+                let episodes = {};
+                for(let ep of epData.data){
+                    console.log(epData);
+                    if(epData.dexie){
+                        if(ep.comp != 0 && ep.ep != 0){
+                            let thisEp = {};
+                            thisEp.duration = ep.comp;
+                            thisEp.curtime = ep.cur_time;
+                            episodes[ep.main_link] = thisEp;
+                        }
+                    }else{
+                        if(ep.duration != 0 && ep.ep != 0){
+                            let thisEp = {};
+                            thisEp.duration = ep.duration;
+                            thisEp.curtime = ep.curtime;
+                            episodes[ep.name] = thisEp;
+                        }
+                    }
+                }
 
+                console.log(episodes);
+
+
+                for(let elem of document.getElementsByClassName("episodesCon")){
+                    let dataURL = elem.getAttribute("data-url");
+                    if(dataURL in episodes){
+                        try{
+                            let imageCon = elem.children[0].children[0];
+                            let curEp = episodes[dataURL];
+
+                            let tempDiv = createElement({
+                                "class" : "episodesProgressCon",
+                            });
+
+                            tempDiv.append(createElement({
+                                "class" : "episodesProgress",
+                                "style" : {
+                                    "width" : `${100*(parseInt(curEp.curtime)/parseInt(curEp.duration))}%`
+                                }
+                            }));
+
+                            imageCon.append(tempDiv);
+                        }catch(err){
+                            console.error(err);
+                        }
+
+                        delete episodes[dataURL];
+                    }
+
+
+                    if(Object.keys(episodes).length == 0){
+                        break;
+                    }
+                }
+
+            });
         }
 
 

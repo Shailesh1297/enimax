@@ -1960,6 +1960,26 @@ if (true) {
             tempDiv1.append(tempDivEx);
             tempDiv.append(tempDiv1);
 
+            if(data[i].length >= 7){
+                try{
+                    let progData = JSON.parse(data[i][6]);
+                    let tempProgDiv = createElement({
+                        "class" : "episodesProgressCon",
+                    });
+
+                    tempProgDiv.append(createElement({
+                        "class" : "episodesProgress",
+                        "style" : {
+                            "width" : `${100*(parseInt(progData[0])/parseInt(progData[1]))}%`
+                        }
+                    }));
+
+                    tempDiv1.append(tempProgDiv);
+                }catch(err){
+
+                }
+
+            }
             domToAppend.append(tempDiv);
 
         }
