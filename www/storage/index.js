@@ -301,7 +301,8 @@ async function apiCall(method, form, callback, args = [], timeout = false) {
                 response = await actionDexie[form.action]({ "body": form });
 
             } else {
-                response = await actionSQLite[form.action]({ "body": form });
+                response = await actionDexie[form.action]({ "body": form });
+                // response = await actionSQLite[form.action]({ "body": form });
 
             }
 
@@ -450,14 +451,14 @@ if (true) {
                     }
 
 
-                    await mysql_query("UPDATE video set cur_time=?,curlink=?,time2=? where name=? and ep=0", [ep, cur, timern(), nameUm], currentDB);
-
-
-
-
-
                     var getdata = await mysql_query("SELECT cur_time as curtime from video where ep=? and name=? LIMIT 1", [ep, name], currentDB);
 
+                    if("duration" in req.body && !isNaN(parseInt(req.body.duration))){
+                        let dur = parseInt(req.body.duration);
+                        await mysql_query("UPDATE video set cur_time=?,curlink=?,time2=?,parent_name=? where name=? and ep=0", [ep, cur, timern(),JSON.stringify([getdata[0].curtime,dur]), nameUm], currentDB);
+                    }else{
+                        await mysql_query("UPDATE video set cur_time=?,curlink=?,time2=?,parent_name=? where name=? and ep=0", [ep, cur, timern(),JSON.stringify([-1,-1]), nameUm], currentDB);
+                    }
 
                     if("duration" in req.body){
                         let dur = parseInt(req.body.duration);
@@ -1103,7 +1104,6 @@ if (true) {
 
 
                     // await mysql_query("UPDATE video set cur_time=?,curlink=?,time2=? where name=? and ep=0 and username=?", [ep, cur, timern(), nameUm, username]);
-                    await db.vid.where({ ep: 0, name: nameUm }).modify({ cur_time: ep, curlink: cur, time2: timern() });
 
 
 
@@ -1117,6 +1117,14 @@ if (true) {
                         name: name
                     }).toArray();
 
+
+
+                    if("duration" in req.body && !isNaN(parseInt(req.body.duration))){
+                        let dur = parseInt(req.body.duration);
+                        await db.vid.where({ ep: 0, name: nameUm }).modify({ cur_time: ep, curlink: cur, time2: timern(), parent_name: JSON.stringify([getdata[0].cur_time,dur]) });
+                    }else{
+                        await db.vid.where({ ep: 0, name: nameUm }).modify({ cur_time: ep, curlink: cur, time2: timern(), parent_name: JSON.stringify([-1,-1]) });
+                    }
 
 
                     if("duration" in req.body){

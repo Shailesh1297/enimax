@@ -1758,7 +1758,6 @@ if (true) {
         rooms = a[1].slice(0);
         let data = a[0];
 
-
         rooms_order = [];
         if (a[2].length > 0) {
             rooms_order = a[2][0].split(",");
@@ -1960,8 +1959,8 @@ if (true) {
             tempDiv1.append(tempDivEx);
             tempDiv.append(tempDiv1);
 
-            if(data[i].length >= 7){
-                try{
+            try{
+                if(data[i].length >= 7 && JSON.parse(data[i][6])[1] > 0){
                     let progData = JSON.parse(data[i][6]);
                     let tempProgDiv = createElement({
                         "class" : "episodesProgressCon",
@@ -1974,10 +1973,10 @@ if (true) {
                         }
                     }));
 
-                    tempDiv1.append(tempProgDiv);
-                }catch(err){
+                    tempDiv1.append(tempProgDiv);             
 
                 }
+            }catch(err){
 
             }
             domToAppend.append(tempDiv);
