@@ -5,12 +5,11 @@ body {
 
 #bar_con {
     position: absolute;
-    bottom: 0px;
-    width: calc(100% - 20px);
-    transform: translate(10px, -10px);
+    bottom: 10px;
+    left: 40px;
+    width: calc(100% - 80px);
     border-radius: 100px;
     background-color: transparent;
-    height: 50px;
     transition-duration: 0.2s;
 
 }
@@ -20,8 +19,11 @@ body {
     height: 4px;
     background-color: white;
     position: absolute;
-    top: calc(50% - 2px);
-    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0px;
+    overflow: hidden;
+    border-radius: 10px;
 }
 
 #time {
@@ -63,7 +65,7 @@ div {
     width: 20px;
     position: relative;
     border-radius: 100%;
-    transform: translate(-10px, -7.5px);
+    transform: translate(-10px, 0px);
     background-color: var(--theme-color);
     pointer-events: none;
     z-index: 9;
@@ -345,6 +347,9 @@ div {
     opacity: 1;
 }
 
+#epCon{
+    transition-duration: 200ms;
+}
 #list li a {
     color: black;
     text-decoration: none;
@@ -393,14 +398,14 @@ div {
 
 .play_bg {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3Cpath d='M7.752 5.439l10.508 6.13a.5.5 0 0 1 0 .863l-10.508 6.13A.5.5 0 0 1 7 18.128V5.871a.5.5 0 0 1 .752-.432z' fill='white' /%3E%3C/svg%3E");
-    background-size: 60% 60%;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
 
 .pause_bg {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24' fill='white'%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3Cpath d='M15 7a1 1 0 0 1 2 0v10a1 1 0 1 1-2 0V7zM7 7a1 1 0 1 1 2 0v10a1 1 0 1 1-2 0V7z'/%3E%3C/svg%3E%0A");
-    background-size: 80% 80%;
+    background-size: cover;
 
     background-position: center;
     background-repeat: no-repeat;
@@ -544,6 +549,7 @@ div {
     top: 0;
     height: 50px;
     display: table;
+    transition-duration: 200ms;
 }
 
 select {
@@ -630,8 +636,8 @@ select {
 }
 
 #settingHandle {
-    height: 10px;
-    width: 50px;
+    height: 6px;
+    width: 40px;
     background-color: white;
     border-radius: 10px;
     display: inline-block;
@@ -639,10 +645,16 @@ select {
 
 #settingHandlePadding {
     display: inline-block;
-    padding: 20px;
+    padding: 0 10px;
+    padding-top: 10px;
     box-sizing: border-box;
     width: 100%;
     text-align: center;
+    position: absolute;
+    top:0;
+    left:0;
+    z-index: 11;
+    pointer-events: all;
 }
 
 .accessTable {

@@ -191,7 +191,7 @@ class settingsPull {
 		this.iniX = 0;
 		this.lastX = 0;
 		this.sensitivity = 50;
-		this.iniHeight = 0;
+		this.iniTop = 0;
 		this.dom.addEventListener("touchstart", function (event) {
 			self.touchStart(event, self);
 		}, { passive: true });
@@ -210,30 +210,45 @@ class settingsPull {
 
 		self.shouldStart = false;
 		self.hasMoved = false;
-		self.settingCon = document.getElementById("setting_con");
+		self.settingCon = document.querySelector(".menuCon");
 	}
 
 	touchStart(event, self) {
-		if (self.shouldCheck && self.dom.scrollTop !== 0) {
+		
+		if(self.shouldCheck){
+			self.scrollCon = self.dom.querySelector(".sceneCon.active");
+		}
+
+		if (self.shouldCheck && self.scrollCon.scrollTop !== 0) {
 			return;
 		}
+
 		const targetTouches = event.targetTouches;
 		let x = targetTouches[0].screenY;
 		self.iniX = x;
 		self.shouldStart = true;
-		self.iniHeight = self.settingCon.offsetHeight;
+		self.iniTop = self.settingCon.offsetTop;
+		self.settingCon.style.transitionDuration = "0ms";
 
 	}
 
 	touchMove(event, self) {
-		if (self.dom.scrollTop > 0 || self.shouldStart === false) {
+		
+		if ((self.shouldCheck && self.scrollCon.scrollTop > 0) || self.shouldStart === false) {
 			self.shouldStart = false;
 			return;
 		}
+		
 		const targetTouches = event.targetTouches;
 		let x = targetTouches[0].screenY;
-		self.settingCon.style.height = `${(self.iniHeight + -x + self.iniX)}px`;
-		self.lastX = -x + self.iniX;
+
+		let translate = -(-x + self.iniX);
+		if(translate > 0){
+
+			console.log(`translateY(${-(-x + self.iniX)}px)`, self.settingCon.style.transform);
+			self.settingCon.style.transform = `translateY(${-(-x + self.iniX)}px)`;
+			self.lastX = -x + self.iniX;
+		}
 	}
 
 	touchEnd(self) {
@@ -243,19 +258,24 @@ class settingsPull {
 		// 	self.dom.style.opacity = "1";
 		// 	self.dom.style.transform = `translateX(0px)`;
 		// }
+
+		console.log(self.shouldStart);
+
 		if (self.shouldStart === false) {
+			self.settingCon.style.transform = `translateY(0)`;
 			return;
 		}
 
-		if (self.lastX > 75) {
-			self.settingCon.style.height = `100%`;
-		} else if (self.lastX < -75) {
+		if (self.lastX < -75) {
 			self.callback();
 		} else {
-			self.settingCon.style.height = `${self.iniHeight}px`;
+			self.settingCon.style.transform = `translateY(0)`;
 		}
 
-		self.iniHeight = 0;
+		self.settingCon.style.transitionDuration = "200ms";
+
+
+		self.iniTop = 0;
 		self.iniX = 0;
 		self.lastX = 0;
 		self.shouldStart = false;

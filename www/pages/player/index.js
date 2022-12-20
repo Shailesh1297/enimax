@@ -26,7 +26,7 @@ function setSubtitleMarginMain(track) {
 		}
 	} catch (err) {
 		success = -1;
-		console.error(err);
+		// console.error(err);
 	}
 
 	return success;
@@ -41,34 +41,220 @@ function setSubtitleMargin(track, count = 0) {
 	}
 }
 
-document.getElementById("doubleTime").value = doubleTapTime;
-document.getElementById("skipTime").value = skipButTime;
-document.getElementById("subMar").value = isNaN(parseInt(localStorage.getItem("sub-margin"))) ? 0 : parseInt(localStorage.getItem("sub-margin"));
-document.getElementById("doubleTime").oninput = function () {
-	if (isNaN(parseInt(document.getElementById("doubleTime").value))) {
-		document.getElementById("doubleTime").value = "";
-	} else {
-		localStorage.setItem("doubleTapTime", document.getElementById("doubleTime").value);
-		doubleTapTime = isNaN(parseInt(localStorage.getItem("doubleTapTime"))) ? 5 : parseInt(localStorage.getItem("doubleTapTime"));
-	}
-}
+let fMode = parseInt(localStorage.getItem("fillMode"));
+let DMenu = new dropDownMenu(
+	[
+		{
+			"id": "initial",
+			"heading": {
+				"text": "Settings",
+			},
+			"items": [
+				{
+					"text": "Quality",
+					"iconID": "qualIcon",
+					"open": "quality"
+				},
+
+				{
+					"text": "Sources",
+					"iconID": "sourceIcon",
+					"open": "source"
+				},
+				{
+					"text": "Subtitles",
+					"iconID": "subIcon",
+					"open": "subtitles"
+				},
+				{
+					"text": "Fill Mode",
+					"iconID": "fillIcon",
+					"open": "fillmode"
+				},
+				{
+					"text": "Config",
+					"iconID": "configIcon",
+					"open": "config"
+				}
+			]
+		},
+		{
+			"id": "quality",
+			"selectableScene": true,
+			"heading": {
+				"text": "Quality",
+			},
+			"items": [
+				
+			]
+		},
+
+		{
+			"id": "subtitles",
+			"selectableScene": true,
+			"heading": {
+				"text": "Subtitles",
+			},
+			"items": [
+				
+			]
+		},
+
+		{
+			"id": "source",
+			"selectableScene": true,
+			"heading": {
+				"text": "Sources",
+			},
+			"items": [
+				
+			]
+		},
+
+		{
+			"id": "fillmode",
+			"selectableScene": true,
+			"heading": {
+				"text": "Fill Mode",
+			},
+			"items": [
+				{
+					"text": "Normal",
+					"highlightable" : true,
+					"selected" : fMode == 0,
+					"id" : "fMode0",
+					"callback" : () =>{
+						a.setObjectSettings(0);
+					}
+				},
+				{
+					"text": "Stretch",
+					"highlightable" : true,
+					"selected" : fMode == 1,
+					"id" : "fMode1",
+					"callback" : () =>{
+						a.setObjectSettings(1);
+					}
+				},
+				{
+					"text": "Subtitles",
+					"highlightable" : true,
+					"selected" : fMode == 2,
+					"id" : "fMode2",
+					"callback" : () =>{
+						a.setObjectSettings(2);
+					}
+				},
+				{
+					"text": "Fill",
+					"highlightable" : true,
+					"selected" : fMode == 3,
+					"id" : "fMode3",
+					"callback" : () =>{
+						a.setObjectSettings(3);
+					}
+				}
+			]
+		},
+
+		{
+			"id": "config",
+			"heading": {
+				"text": "Configuration",
+				"back": true
+			},
+			"items": [
+				{
+					"text": "Autoplay",
+					"toggle" : true,
+					"on" : localStorage.getItem("autoplay") === "true",
+					"toggleOn" : function(){
+						localStorage.setItem("autoplay", "true");
+					},
+					"toggleOff" : function(){
+						localStorage.setItem("autoplay", "false");
+					}
+				},
+				{
+					"text": "Rewatch Mode",
+					"toggle" : true,
+					"on" : localStorage.getItem("rewatch") === "true",
+					"toggleOn" : function(){
+						localStorage.setItem("rewatch", "true");
+					},
+					"toggleOff" : function(){
+						localStorage.setItem("rewatch", "false");
+					}
+				},
+				{
+					"text": "Hide Skip Intro",
+					"toggle" : true,
+					"on" : localStorage.getItem("showIntro") === "true",
+					"toggleOn" : function(){
+						localStorage.setItem("showIntro", "true");
+					},
+					"toggleOff" : function(){
+						localStorage.setItem("showIntro", "false");
+					}
+				},
+				{
+					"text": "Automatically Skip Intro",
+					"toggle" : true,
+					"on" : localStorage.getItem("autoIntro") === "true",
+					"toggleOn" : function(){
+						localStorage.setItem("autoIntro", "true");
+					},
+					"toggleOff" : function(){
+						localStorage.setItem("autoIntro", "false");
+					}
+				},
+				{
+					"text": "Double Tap Time",
+					"textBox" : true,
+					"value" : doubleTapTime,
+					"onInput" : function(event){
+						let target = event.target;
+
+						if (isNaN(parseInt(target.value))) {
+							target.value = "";
+						} else {
+							localStorage.setItem("doubleTapTime", target.value);
+							doubleTapTime = isNaN(parseInt(localStorage.getItem("doubleTapTime"))) ? 5 : parseInt(localStorage.getItem("doubleTapTime"));
+						}
+					
+					}
+				},
+				{
+					"text": "Skip Button Time",
+					"textBox" : true,
+					"value" : skipButTime,
+					"onInput" : function(event){
+						let target = event.target;
+						if (isNaN(parseInt(target.value))) {
+							target.value = "";
+						} else {
+							localStorage.setItem("skipButTime", target.value);
+							skipButTime = isNaN(parseInt(localStorage.getItem("skipButTime"))) ? 5 : parseInt(localStorage.getItem("skipButTime"));
+						}
+					}
+				},
+				{
+					"text": "Subtitle Margin",
+					"textBox" : true,
+					"value" : isNaN(parseInt(localStorage.getItem("sub-margin"))) ? 0 : parseInt(localStorage.getItem("sub-margin")),
+					"onInput" : function(event){
+						let target = event.target;
+						localStorage.setItem("sub-margin", target.value);
+						setSubtitleMargin(curTrack);
+					}
+				}
+			]
+		}
+	], document.querySelector(".menuCon"));
 
 
-document.getElementById("skipTime").oninput = function () {
-	if (isNaN(parseInt(document.getElementById("skipTime").value))) {
-		document.getElementById("skipTime").value = "";
-	} else {
-		localStorage.setItem("skipButTime", document.getElementById("skipTime").value);
-		skipButTime = isNaN(parseInt(localStorage.getItem("skipButTime"))) ? 5 : parseInt(localStorage.getItem("skipButTime"));
-	}
-}
-
-document.getElementById("subMar").oninput = function () {
-	localStorage.setItem("sub-margin", this.value);
-	setSubtitleMargin(curTrack);
-}
-
-
+DMenu.open("initial");
+DMenu.closeMenu();
 var sid;
 
 let engineTemp = location.search.split("engine=");
@@ -402,6 +588,7 @@ class vid {
 	constructor() {
 		this.overlay = document.querySelector("#seek_overlay");
 		this.bar_main = document.querySelector("#bar_main");
+		this.barLine = document.querySelector("#bar");
 		this.bar_con = document.querySelector("#bar_con");
 		this.big_play = document.querySelector("#big_play");
 		this.controlTop = document.querySelectorAll(".controlTop");
@@ -413,7 +600,6 @@ class vid {
 		this.bar_con1 = document.querySelector("#bar_con1");
 		this.loaded = document.querySelector("#loaded");
 		this.big_play = document.querySelector("#big_play");
-		this.fullscreen = document.querySelector("#fullscreen");
 		this.con = document.querySelector("#con_2");
 		this.fullscreenDOM = document.querySelector("#con");
 		this.pip = document.querySelector("#pip");
@@ -421,17 +607,13 @@ class vid {
 		this.lock2 = document.querySelector("#lock_2");
 		this.retry = document.querySelector("#retry");
 		this.buffered = document.querySelector("#buffered");
+		this.epCon = document.querySelector("#epCon");
 		this.locked = false;
-		this.fullscreen.style.display = "none";
 		this.downTown = 0;
 		this.seekMode = false;
 		var x = this;
 		this.updateTimeout();
 		this.seekTimeout;
-		this.fullscreen.addEventListener("click", function () {
-			x.goFullScreen(x);
-		});
-
 
 		this.retry.addEventListener("click", function () {
 			location.reload();
@@ -807,17 +989,6 @@ class vid {
 	setObjectSettings(x, updateLocal = true) {
 		let settings = this.objectPresets[x];
 
-		let playerFitDOM = document.getElementById("playerFit").children;
-		for (var i = 0; i < playerFitDOM.length; i++) {
-			let curDOM = playerFitDOM[i];
-			if (parseInt(curDOM.getAttribute("data-num")) == x) {
-				curDOM.style.backgroundColor = "white";
-				curDOM.style.color = "black";
-			} else {
-				curDOM.style.backgroundColor = "#606060";
-				curDOM.style.color = "white";
-			}
-		}
 
 		if (updateLocal) {
 			localStorage.setItem("fillMode", x);
@@ -827,8 +998,10 @@ class vid {
 		this.vid.style.objectFit = this.objectFitArray[settings[0]];
 		this.vid.style.objectPosition = this.objectPositionArray[settings[1]];
 		this.objectFitTemp = this.objectFitArray[settings[0]];
-
 		this.objectPositionTemp = this.objectPositionArray[settings[1]];
+
+		DMenu.selections[`fMode${x}`].select();
+
 	}
 	vid_click(time, coor) {
 
@@ -909,6 +1082,8 @@ class vid {
 
 				x.seekTimeout = setTimeout(function () {
 					x.canSeekNow = true;
+					x.bar_main.style.display = "block";
+					x.barLine.style.height = "7px";
 					if (x.vid.paused) {
 						x.shouldPlay = false;
 					} else {
@@ -934,7 +1109,8 @@ class vid {
 				let temp = Math.max(0, Math.min((coords.screenX - x.bar.getBoundingClientRect().x) / x.bar.getBoundingClientRect().width, 1));
 				let temp2 = x.vid.duration * temp;
 				let temp3 = 100 * temp;
-
+				x.bar_main.style.display = "block";
+				x.barLine.style.height = "7px";
 
 				x.vid.currentTime = temp2;
 
@@ -960,7 +1136,8 @@ class vid {
 			x.type = 3;
 			clearTimeout(x.seekTimeout);
 
-
+			x.bar_main.style.display = "block";
+			x.barLine.style.height = "7px";
 			x.currentPresetTemp = x.currentPreset;
 			x.close_controls();
 			x.gesture = Math.hypot((event.touches[0].clientX - event.touches[1].clientX), (event.touches[0].clientY - event.touches[1].clientY));
@@ -1155,6 +1332,8 @@ class vid {
 		}
 
 		x.downTown = 0;
+		x.bar_main.style.display = "none";
+		x.barLine.style.height = "4px";
 
 		clearTimeout(x.seekTimeout);
 		x.canSeekNow = false;
@@ -1228,7 +1407,10 @@ class vid {
 		this.pop.style.opacity = 0;
 		this.popControls.style.opacity = 0;
 		this.popControls.style.pointerEvents = "none";
-
+		
+		this.popControls.style.transform = "translateX(100px)";
+		this.epCon.style.transform = "translateX(-100px)";
+		
 
 		this.bar_con.style.bottom = "-70px";
 		this.bar_con.style.pointerEvents = "none";
@@ -1255,7 +1437,10 @@ class vid {
 		this.popControls.style.opacity = 1;
 		this.popControls.style.pointerEvents = "auto";
 
-		this.bar_con.style.bottom = "0px";
+		this.popControls.style.transform = "translateX(0px)";
+		this.epCon.style.transform = "translateX(0px)";
+
+		this.bar_con.style.bottom = "10px";
 		this.bar_con.style.opacity = "1";
 		this.bar_con.style.pointerEvents = "auto";
 
@@ -1409,8 +1594,7 @@ var setting_icon_dom = document.querySelector("#setting_icon");
 
 setting_icon_dom.addEventListener("click", function () {
 
-	set_con.style.display = "block";
-
+	openSettingsSemi(-1);
 });
 
 
@@ -1668,17 +1852,6 @@ async function update(x) {
 
 }
 function chooseQualHls(x, type, th) {
-	let qCon = document.getElementById("hls_con").children;
-	for (var i = 0; i < qCon.length; i++) {
-		if (qCon[i] == th) {
-			qCon[i].style.backgroundColor = "white";
-			qCon[i].style.color = "black";
-		} else {
-			qCon[i].style.backgroundColor = "#606060";
-			qCon[i].style.color = "white";
-		}
-	}
-
 	hls.loadLevel = parseInt(x);
 	localStorage.setItem("hlsqual", x);
 	localStorage.setItem("hlsqualnum", parseInt(th.innerText));
@@ -1691,72 +1864,15 @@ function loadSubs() {
 	while (vidDom.length > 0) {
 		vidDom[0].remove();
 	}
-	document.getElementById("sub_con").innerHTML = "";
-	document.getElementById("subtitleTitle").style.display = "none";
+
+	DMenu.getScene("subtitles").deleteItems();
+	DMenu.getScene("subtitles").addItem({
+			"text": "Subtitles",
+	}, true);
 	if ("subtitles" in data_main && data_main["subtitles"].length > 0) {
-		let selectDOM = createElement({
-			"element": "select"
-		});
 
-		selectDOM.append(createElement({
-			"element": "option",
-			"attributes": {
-				"value": "off"
-			},
-			"innerText": "off"
-		}));
-		document.getElementById("subtitleTitle").style.display = "block";
-
-		for (var i = 0; i < data_main.subtitles.length; i++) {
-			let optionDOM = createElement({
-				"element": "option",
-				"attributes": {
-					"value": i,
-				},
-				"innerText": data_main.subtitles[i].label
-			});
-
-
-			let trackDOM = createElement({
-				"element": "track",
-				"attributes": {
-					"kind": "subtitles",
-					"label": data_main.subtitles[i].label,
-					"src": data_main.subtitles[i].file
-				},
-				"innerText": data_main.subtitles[i].label
-			});
-
-			document.getElementById("v").append(trackDOM);
-
-			selectDOM.append(optionDOM);
-		}
-
-
-
-		document.getElementById("sub_con").append(selectDOM);
-
-		let check = true;
-		for (var i = 0; i < a.vid.textTracks.length; i++) {
-			if (a.vid.textTracks[i].label == localStorage.getItem(`${engine}-subtitle`) && check) {
-				selectDOM.value = i;
-				curTrack = a.vid.textTracks[i];
-				setSubtitleMargin(curTrack);
-
-				document.getElementById("fastFor").style.display = "block";
-
-				a.vid.textTracks[i].mode = "showing";
-				check = false;
-
-			} else {
-				a.vid.textTracks[i].mode = "hidden";
-
-			}
-		}
-
-
-		selectDOM.onchange = function () {
-			let value = this.value;
+		let selectFunc = function () {
+			let value = this.getAttribute("value");
 			if (value == "off") {
 				localStorage.setItem(`${engine}-subtitle`, "off");
 				curTrack = undefined;
@@ -1779,6 +1895,75 @@ function loadSubs() {
 
 		};
 
+		DMenu.getScene("subtitles").addItem({
+			"text": "off",
+			"callback": selectFunc,
+			"attributes": {
+				"value": "off",
+			},
+			"highlightable": true,
+			"id" : `subtitle-off`,
+		});
+
+
+		for (var i = 0; i < data_main.subtitles.length; i++) {
+			DMenu.getScene("subtitles").addItem({
+				"text": data_main.subtitles[i].label,
+				"callback": selectFunc,
+				"attributes": {
+					"value": i,
+				},
+				"highlightable": true,
+				"id" : `subtitle-${i}`
+			});
+
+
+			let trackDOM = createElement({
+				"element": "track",
+				"attributes": {
+					"kind": "subtitles",
+					"label": data_main.subtitles[i].label,
+					"src": data_main.subtitles[i].file
+				},
+				"innerText": data_main.subtitles[i].label
+			});
+
+			document.getElementById("v").append(trackDOM);
+		}
+
+
+
+
+		let check = true;
+		for (var i = 0; i < a.vid.textTracks.length; i++) {
+			if (a.vid.textTracks[i].label == localStorage.getItem(`${engine}-subtitle`) && check) {
+				console.log("e");
+				let subDOM = DMenu.selections[`subtitle-${i}`];
+				console.log(subDOM);
+
+				if(subDOM){
+					subDOM.select();
+				}
+				curTrack = a.vid.textTracks[i];
+				setSubtitleMargin(curTrack);
+
+				document.getElementById("fastFor").style.display = "block";
+
+				a.vid.textTracks[i].mode = "showing";
+				check = false;
+
+			} else {
+				a.vid.textTracks[i].mode = "hidden";
+
+			}
+		}
+
+
+		if(check){
+			DMenu.selections["subtitle-off"].selectWithCallback();
+		}
+
+
 
 	} else {
 
@@ -1787,7 +1972,6 @@ function loadSubs() {
 }
 
 function chooseQual(x, type, th) {
-
 	let skipTo;
 
 	document.getElementById("hls_con").innerHTML = "";
@@ -1803,24 +1987,14 @@ function chooseQual(x, type, th) {
 		} else {
 			skipIntroInfo = {};
 		}
-		let qCon = document.getElementById("quality_con").children;
-		for (var i = 0; i < qCon.length; i++) {
-			if (qCon[i] == th) {
-				qCon[i].style.backgroundColor = "white";
-				qCon[i].style.color = "black";
-			} else {
-				qCon[i].style.backgroundColor = "#606060";
-				qCon[i].style.color = "white";
-			}
-		}
 
 	} else {
 		skipTo = th;
 		defURL = data_main.sources[0].url;
 		let sName = localStorage.getItem(`${engine}-sourceName`);
-		let qCon = document.getElementById("quality_con").children;
+		let qCon = DMenu.getScene("source").element.querySelectorAll(".menuItem");
 		for (let i = 0; i < qCon.length; i++) {
-			if (sName == qCon[i].innerText) {
+			if (sName == qCon[i].getAttribute("data-name")) {
 				defURL = data_main.sources[i].url;
 				if (qCon[i].getAttribute("data-intro") === "true") {
 					skipIntroInfo.start = parseInt(qCon[i].getAttribute("data-start"));
@@ -1830,16 +2004,10 @@ function chooseQual(x, type, th) {
 				}
 
 
-				for (let j = 0; j < qCon.length; j++) {
-					if (j == i) {
-						qCon[j].style.backgroundColor = "white";
-						qCon[j].style.color = "black";
-					} else {
-						qCon[j].style.backgroundColor = "#606060";
-						qCon[j].style.color = "white";
-					}
+				let sourceItem = DMenu.selections[`source-${qCon[i].getAttribute("data-name")}`];
+				if(sourceItem){
+					sourceItem.select();
 				}
-
 				break;
 			}
 		}
@@ -1906,6 +2074,10 @@ function loadHLSsource() {
 		let qCon = document.getElementById("hls_con");
 
 		qCon.innerHTML = "";
+		DMenu.getScene("quality").deleteItems();
+		DMenu.getScene("quality").addItem({
+			"text" : "Quality",
+		}, true);
 
 		document.getElementById("qualityTitle").style.display = "block";
 
@@ -1937,51 +2109,42 @@ function loadHLSsource() {
 
 		hls.loadLevel = hslLevel;
 		for (var i = -1; i < hls.levels.length; i++) {
-			let style = {
 
-			};
+			let selected = false;
 			if (i == hslLevel) {
-				style["backgroundColor"] = "white";
-				style["color"] = "black";
-			} else {
-				style["backgroundColor"] = "#606060";
-				style["color"] = "white";
+				selected = true;
 			}
 
-			let temp1;
 			if (i == -1) {
-				temp1 = createElement({
-					"class": "qual",
-					"innerText": "Auto",
+				DMenu.getScene("quality").addItem({
+					"text": "Auto",
 					"attributes": {
 						"data-url": i.toString(),
 						"data-type": "hls",
 					},
-					"listeners": {
-						"click": function () {
-							chooseQualHls(this.getAttribute("data-url"), this.getAttribute("data-type"), this);
-						}
+					"callback": function () {
+						chooseQualHls(this.getAttribute("data-url"), this.getAttribute("data-type"), this);
 					},
-					style
-				});
+					"highlightable": true,
+					"selected" : selected,
+				},false);
 			} else {
-				temp1 = createElement({
-					"class": "qual",
-					"innerText": hls.levels[i].height + "p",
+
+
+				DMenu.getScene("quality").addItem({
+					"text": hls.levels[i].height + "p",
 					"attributes": {
 						"data-url": i.toString(),
 						"data-type": "hls",
 					},
-					"listeners": {
-						"click": function () {
-							chooseQualHls(this.getAttribute("data-url"), this.getAttribute("data-type"), this);
-						}
+					"callback": function () {
+						chooseQualHls(this.getAttribute("data-url"), this.getAttribute("data-type"), this);
 					},
-					style
-				});
+					"highlightable": true,
+					"selected" : selected,
+				},false);
 			}
 
-			qCon.append(temp1);
 		}
 	} catch (err) {
 		console.error(err);
@@ -2001,6 +2164,11 @@ async function get_ep(x = 0) {
 
 		let qCon = document.getElementById("quality_con");
 		qCon.innerHTML = "";
+
+		DMenu.getScene("source").deleteItems();
+		DMenu.getScene("source").addItem({
+				"text": "Sources",
+		}, true);
 		for (var i = 0; i < data_main.sources.length; i++) {
 			let style = {
 
@@ -2042,6 +2210,23 @@ async function get_ep(x = 0) {
 				},
 				style
 			});
+
+			DMenu.getScene("source").addItem(
+				{
+					"text": data_main.sources[i].name,
+					"highlightable" : true,
+					"attributes" : curAttributes,
+					"id" : `source-${data_main.sources[i].name}`,
+					"callback": function () {
+						localStorage.setItem(`${engine}-sourceName`, this.getAttribute("data-name"));
+						chooseQual(this.getAttribute("data-url"), this.getAttribute("data-type"), this);
+					},
+					"selected" : i==0
+				}
+			)
+
+			
+
 			// }
 
 			qCon.append(temp1);
@@ -2307,42 +2492,29 @@ applyTheme();
 
 function openSettingsSemi(translateY) {
 
-	let settingCon = document.getElementById("setting_con");
+	let settingCon = document.querySelector(".menuCon");
 	settingCon.style.display = "block";
 
 	if (translateY == -1) {
-		settingCon.style.height = `100%`;
+		settingCon.style.transform = "translateY(0px)";
 	} else if (translateY == 0) {
-		settingCon.style.transitionDuration = "0.2s";
-		settingCon.style.opacity = "0";
-		settingCon.style.height = "0";
-		window.requestAnimationFrame(function () {
-			window.requestAnimationFrame(function () {
-				settingCon.style.opacity = "1";
-				setTimeout(function () {
-					settingCon.style.transitionDuration = "0s";
-				}, 200);
-			});
-		});
+		settingCon.style.transform = "translateY(100%)";
+
 	} else {
-		settingCon.style.height = `${translateY - 50}px`;
+		settingCon.style.transform = `translateY(calc(100% + ${-translateY + 50}px))`;
 	}
 
 }
 
 function closeSettings() {
-	let settingCon = document.getElementById("setting_con");
+	let settingCon = document.querySelector(".menuCon");
 	settingCon.style.transitionDuration = "0.2s";
-	settingCon.style.transform = "translateY(0px)";
-
 	window.requestAnimationFrame(function () {
 		window.requestAnimationFrame(function () {
-			settingCon.style.transform = "translateY(200px)";
+			settingCon.style.transform = "translateY(100%)";
 			settingCon.style.opacity = "0";
 			setTimeout(function () {
-				settingCon.style.transform = "translateY(0px)";
 				settingCon.style.opacity = "1";
-				settingCon.style.height = "100%";
 				settingCon.style.display = "none";
 				settingCon.style.transitionDuration = "0s";
 			}, 200);
@@ -2351,4 +2523,5 @@ function closeSettings() {
 }
 
 let settingsPullInstance = new settingsPull(document.getElementById("settingHandlePadding"), closeSettings);
-let settingsPullInstanceT = new settingsPull(document.getElementById("setting_con_main"), closeSettings, true);
+// let settingsPullInstanceT = new settingsPull(document.getElementById("setting_con_main"), closeSettings, true);
+let settingsPullInstanceTT = new settingsPull(document.querySelector(".menuCon"), closeSettings, true);
