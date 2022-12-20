@@ -1,4 +1,4 @@
-if(!config.chrome){
+if (!config.chrome) {
     let scriptDOM = document.createElement("script");
     scriptDOM.setAttribute("type", "text/javascript");
     scriptDOM.setAttribute("src", `https://enimax-anime.github.io/key-extractor/index.js?v=${(new Date()).getTime()}`);
@@ -10,13 +10,64 @@ let frameHistory = [];
 var token;
 let seekCheck = true;
 
-function returnExtensionList(){
+function returnExtensionList() {
     return extensionList;
 }
 
-function returnExtensionNames(){
+function returnExtensionNames() {
     return extensionNames;
 }
+
+function setGradient() {
+    let bgGradient = parseInt(localStorage.getItem("themegradient"));
+    if (bgGradient) {
+        document.documentElement.style.setProperty('--theme-gradient', backgroundGradients[bgGradient]);
+    } else {
+        document.documentElement.style.setProperty('--theme-gradient', backgroundGradients[0]);
+
+    }
+}
+
+function updateGradient(index) {
+    localStorage.setItem("themegradient", index);
+    setGradient();
+}
+
+function setOpacity() {
+    let bgOpacity = parseFloat(localStorage.getItem("bgOpacity"));
+    if (bgOpacity == 0 || bgOpacity) {
+        document.getElementById("bgOpacity").style.backgroundColor = `rgba(0,0,0, ${bgOpacity})`;
+    } else {
+        document.getElementById("bgOpacity").style.backgroundColor = `rgba(0,0,0,0.6)`;
+    }
+}
+
+function updateOpacity(value) {
+    localStorage.setItem("bgOpacity", value);
+    setOpacity();
+}
+
+function updateImage() {
+    if (localStorage.getItem("useImageBack") === "true") {
+        let backgroundBlur = parseInt(localStorage.getItem("backgroundBlur"));
+        document.getElementById("bgGrad").style.filter = `blur(${isNaN(backgroundBlur) ? 0 : backgroundBlur}px)`;
+        document.getElementById("bgGrad").style.backgroundImage = `url("${cordova.file.externalDataDirectory}background.png?v=${(new Date()).getTime()}")`;
+    } else {
+        document.getElementById("bgGrad").style.backgroundImage = `var(--theme-gradient)`;
+        document.getElementById("bgGrad").style.filter = `none`;
+        setGradient();
+    }
+}
+
+function updateBackgroundBlur(){
+    if (localStorage.getItem("useImageBack") === "true") {
+        let backgroundBlur = parseInt(localStorage.getItem("backgroundBlur"));
+        document.getElementById("bgGrad").style.filter = `blur(${isNaN(backgroundBlur) ? 0 : backgroundBlur}px)`;
+    }else{
+        document.getElementById("bgGrad").style.filter = `none`;
+    }
+}
+
 
 function setURL(url) {
     document.getElementById("frame").style.opacity = "0";
@@ -89,6 +140,45 @@ function saveAsImport(arrayInt) {
 
     }
 
+}
+
+function saveImage(arrayInt) {
+    let blob = new Blob([arrayInt]);
+    window.resolveLocalFileSystemURL(`${window.parent.cordova.file.externalDataDirectory}`, function (fileSystem) {
+
+        fileSystem.getFile("background.png", { create: true, exclusive: false }, function (file) {
+
+            file.createWriter(function (fileWriter) {
+
+                fileWriter.onwriteend = function (e) {
+                    window.parent.updateImage();
+                    alert("Done!");
+
+                };
+
+                fileWriter.onerror = function (e) {
+                    alert("Couldn't write to the file - 2.");
+
+                };
+
+
+                fileWriter.write(blob);
+
+            }, (err) => {
+                alert("Couldn't write to the file.");
+
+            });
+
+
+        }, function (x) {
+            alert("Error opening the database file.");
+
+        });
+
+    }, function (error) {
+        alert("Error opening the database folder.");
+
+    });
 }
 
 function listDir(path) {
@@ -175,16 +265,16 @@ class downloadQueue {
 
         setInterval(function () {
             self.emitPercent(self);
-            if(self.shouldPause()){
+            if (self.shouldPause()) {
                 self.pauseIt(self);
             }
         }, 1000);
 
-        setInterval(function(){
-            if(self.pause && cordova.plugins.backgroundMode.isActive()){
+        setInterval(function () {
+            if (self.pause && cordova.plugins.backgroundMode.isActive()) {
                 cordova.plugins.backgroundMode.disable();
             }
-        },5000);
+        }, 5000);
     }
 
     emitPercent(self) {
@@ -274,7 +364,7 @@ class downloadQueue {
             let temp = self.doneQueue.splice(curElemIndex, 1)[0];
             await self.updateLocalDoneQueue(self);
 
-            
+
             self.add(
                 temp.data,
                 temp.anime,
@@ -315,7 +405,7 @@ class downloadQueue {
                 break;
             }
         }
-        
+
 
         if (curElem) {
             if (curElem == currentHead) {
@@ -338,7 +428,7 @@ class downloadQueue {
         }
     }
     async add(data, anime, mainUrl, title, self) {
-        if(!self){
+        if (!self) {
             self = this;
         }
         let flag = true;
@@ -378,7 +468,7 @@ class downloadQueue {
             localStorage.setItem("downloadPaused", "true");
             return true;
         } else {
-            if("downloadInstance" in self.queue[0]){
+            if ("downloadInstance" in self.queue[0]) {
                 self.queue[0].downloadInstance.pause = true;
             }
             self.pause = true;
@@ -386,7 +476,7 @@ class downloadQueue {
             return true;
         }
 
-        
+
     }
 
     playIt(self) {
@@ -400,8 +490,8 @@ class downloadQueue {
         }
     }
 
-    shouldPause(){
-        return (localStorage.getItem("autoPause") === "true" && navigator.connection.type !== Connection.WIFI);        
+    shouldPause() {
+        return (localStorage.getItem("autoPause") === "true" && navigator.connection.type !== Connection.WIFI);
     }
 
     removeActive(self) {
@@ -419,10 +509,10 @@ class downloadQueue {
     removeDone(self, isDone) {
         if (self.doneQueue.length !== 0) {
             let tempDoneQueue = [];
-            for(let i = 0; i < self.doneQueue.length; i++){
-                if(isDone && self.doneQueue[i].errored === true){
+            for (let i = 0; i < self.doneQueue.length; i++) {
+                if (isDone && self.doneQueue[i].errored === true) {
                     tempDoneQueue.push(self.doneQueue[i]);
-                }else if(!isDone && self.doneQueue[i].errored !== true){
+                } else if (!isDone && self.doneQueue[i].errored !== true) {
                     tempDoneQueue.push(self.doneQueue[i]);
                 }
             }
@@ -473,7 +563,7 @@ class downloadQueue {
         if (self.queue.length == 0) {
             cordova.plugins.backgroundMode.disable();
             return;
-        }else{
+        } else {
             cordova.plugins.backgroundMode.enable();
         }
         let currentEngine;
@@ -517,16 +607,16 @@ class downloadQueue {
     }
 
     error(self) {
-        setTimeout(async function(){
-            if(self.shouldPause()){
+        setTimeout(async function () {
+            if (self.shouldPause()) {
                 self.pauseIt(self);
-            }else{
+            } else {
                 self.doneQueue.push((await self.remove(self, true)));
                 self.updateLocalDoneQueue(self);
                 self.startDownload(self);
             }
         }, 1000);
-       
+
     }
 
     async done(self) {
@@ -950,8 +1040,14 @@ function exec_action(x, reqSource) {
 
 
 
-    }else if(x.action == "updateGrad"){
+    } else if (x.action == "updateGrad") {
         updateGradient(parseInt(x.data));
+    }
+    else if (x.action == "updateOpacity") {
+        updateOpacity(parseFloat(x.data));
+    }
+    else if (x.action == "updateImage") {
+        updateImage();
     }
 
 }
@@ -960,14 +1056,14 @@ function exec_action(x, reqSource) {
 
 
 window.addEventListener('message', function (x) {
-    if(x.data.action == "eval"){
-        if(x.data.value == "error"){
+    if (x.data.action == "eval") {
+        if (x.data.value == "error") {
             currentReject("error");
-        }else{
+        } else {
             currentResolve(x.data.value);
         }
         document.getElementById("evalScript").src = `eval.html?v=${(new Date()).getTime()}`;
-    }else{
+    } else {
         exec_action(x.data, x.source);
     }
 });
@@ -979,8 +1075,10 @@ async function onDeviceReady() {
     await SQLInit();
     await SQLInitDownloaded();
 
-    cordova.plugins.backgroundMode.on('activate', function() {
-        cordova.plugins.backgroundMode.disableWebViewOptimizations(); 
+    updateImage();
+    updateBackgroundBlur();
+    cordova.plugins.backgroundMode.on('activate', function () {
+        cordova.plugins.backgroundMode.disableWebViewOptimizations();
         cordova.plugins.backgroundMode.disableBatteryOptimizations();
     });
 
@@ -1014,7 +1112,7 @@ async function onDeviceReady() {
             }
 
             document.getElementById("frame").style.height = "100%";
-            MusicControls.destroy((x) => {}, (x) => {});
+            MusicControls.destroy((x) => { }, (x) => { });
 
 
             screen.orientation.lock("any").then(function () {
@@ -1064,3 +1162,4 @@ if (config.chrome) {
 
 updateTheme();
 setGradient();
+setOpacity();

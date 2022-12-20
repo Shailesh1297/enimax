@@ -1,17 +1,17 @@
 <script>
-    window.onmessage = function(x){
+    window.onmessage = function (x) {
         let evaled;
 
-        try{
+        try {
             evaled = eval(x.data);
         }
-        catch(err){
-           evaled = "error"; 
+        catch (err) {
+            evaled = "error";
         }
         let temp = {
-            "value" : evaled,
-            "action" : "eval"
+            "value": evaled,
+            "action": "eval"
         };
-        window.parent.postMessage(temp,"*");
+        window.parent.postMessage(temp, "*");
     };
 </script>

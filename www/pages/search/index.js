@@ -67,7 +67,7 @@ function close_search(event) {
 
 
 
-document.getElementById("searchForm").onsubmit = function(event){
+document.getElementById("searchForm").onsubmit = function (event) {
     event.preventDefault();
     search();
 };
@@ -87,7 +87,7 @@ function search() {
             currentEngine = extensionList[currentEngine];
         }
     }
-    if(document.getElementById('search_x').value === "devmode"){
+    if (document.getElementById('search_x').value === "devmode") {
         localStorage.setItem("devmode", "true");
     }
     currentEngine.searchApi(document.getElementById('search_x').value).then(function (x) {

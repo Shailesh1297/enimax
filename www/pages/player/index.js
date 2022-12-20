@@ -10,65 +10,251 @@ let skipIntroInfo = {};
 var CustomXMLHttpRequest = XMLHttpRequest;
 let curTrack = undefined;
 let marginApplied = false;
-function setSubtitleMarginMain(track){
-    let success = -1;
-    try{
-        let subMargin = parseInt(localStorage.getItem("sub-margin"));
-        if(track && "cues" in track) { 
-            if(!isNaN(subMargin) && subMargin !== 0){
-                for (let j = 0; j < track.cues.length; j++) {
-                    success = 1;
-                    track.cues[j].line = subMargin;
-                }
-            }else{
-                success = -2;
-            }
-        }
-    }catch(err){
-        success = -1;
-        console.error(err);
-    }
+function setSubtitleMarginMain(track) {
+	let success = -1;
+	try {
+		let subMargin = parseInt(localStorage.getItem("sub-margin"));
+		if (track && "cues" in track) {
+			if (!isNaN(subMargin) && subMargin !== 0) {
+				for (let j = 0; j < track.cues.length; j++) {
+					success = 1;
+					track.cues[j].line = subMargin;
+				}
+			} else {
+				success = -2;
+			}
+		}
+	} catch (err) {
+		success = -1;
+		// console.error(err);
+	}
 
-    return success;
+	return success;
 }
 
-function setSubtitleMargin(track, count = 0){
-    let status = setSubtitleMarginMain(track);
-    if(status === -1 && count < 20){
-        setTimeout(function(){
-            setSubtitleMargin(track, ++count);
-        }, 400);
-    }
-}
-
-document.getElementById("doubleTime").value = doubleTapTime;
-document.getElementById("skipTime").value = skipButTime;
-document.getElementById("subMar").value = isNaN(parseInt(localStorage.getItem("sub-margin"))) ? 0 : parseInt(localStorage.getItem("sub-margin")) ;
-document.getElementById("doubleTime").oninput = function(){
-	if(isNaN(parseInt(document.getElementById("doubleTime").value))){
-		document.getElementById("doubleTime").value = "";
-	}else{
-		localStorage.setItem("doubleTapTime", document.getElementById("doubleTime").value);
-		doubleTapTime =  isNaN(parseInt(localStorage.getItem("doubleTapTime"))) ? 5 : parseInt(localStorage.getItem("doubleTapTime"));
+function setSubtitleMargin(track, count = 0) {
+	let status = setSubtitleMarginMain(track);
+	if (status === -1 && count < 20) {
+		setTimeout(function () {
+			setSubtitleMargin(track, ++count);
+		}, 400);
 	}
 }
 
+let fMode = parseInt(localStorage.getItem("fillMode"));
+let DMenu = new dropDownMenu(
+	[
+		{
+			"id": "initial",
+			"heading": {
+				"text": "Settings",
+			},
+			"items": [
+				{
+					"text": "Quality",
+					"iconID": "qualIcon",
+					"open": "quality"
+				},
 
-document.getElementById("skipTime").oninput = function(){
-	if(isNaN(parseInt(document.getElementById("skipTime").value))){
-		document.getElementById("skipTime").value = "";
-	}else{
-		localStorage.setItem("skipButTime", document.getElementById("skipTime").value);
-		skipButTime =  isNaN(parseInt(localStorage.getItem("skipButTime"))) ? 5 : parseInt(localStorage.getItem("skipButTime"));
-	}
-}
+				{
+					"text": "Sources",
+					"iconID": "sourceIcon",
+					"open": "source"
+				},
+				{
+					"text": "Subtitles",
+					"iconID": "subIcon",
+					"open": "subtitles"
+				},
+				{
+					"text": "Fill Mode",
+					"iconID": "fillIcon",
+					"open": "fillmode"
+				},
+				{
+					"text": "Config",
+					"iconID": "configIcon",
+					"open": "config"
+				}
+			]
+		},
+		{
+			"id": "quality",
+			"selectableScene": true,
+			"heading": {
+				"text": "Quality",
+			},
+			"items": [
+				
+			]
+		},
 
-document.getElementById("subMar").oninput = function(){
-	localStorage.setItem("sub-margin", this.value);
-    setSubtitleMargin(curTrack);
-}
+		{
+			"id": "subtitles",
+			"selectableScene": true,
+			"heading": {
+				"text": "Subtitles",
+			},
+			"items": [
+				
+			]
+		},
+
+		{
+			"id": "source",
+			"selectableScene": true,
+			"heading": {
+				"text": "Sources",
+			},
+			"items": [
+				
+			]
+		},
+
+		{
+			"id": "fillmode",
+			"selectableScene": true,
+			"heading": {
+				"text": "Fill Mode",
+			},
+			"items": [
+				{
+					"text": "Normal",
+					"highlightable" : true,
+					"selected" : fMode == 0,
+					"id" : "fMode0",
+					"callback" : () =>{
+						a.setObjectSettings(0);
+					}
+				},
+				{
+					"text": "Stretch",
+					"highlightable" : true,
+					"selected" : fMode == 1,
+					"id" : "fMode1",
+					"callback" : () =>{
+						a.setObjectSettings(1);
+					}
+				},
+				{
+					"text": "Subtitles",
+					"highlightable" : true,
+					"selected" : fMode == 2,
+					"id" : "fMode2",
+					"callback" : () =>{
+						a.setObjectSettings(2);
+					}
+				},
+				{
+					"text": "Fill",
+					"highlightable" : true,
+					"selected" : fMode == 3,
+					"id" : "fMode3",
+					"callback" : () =>{
+						a.setObjectSettings(3);
+					}
+				}
+			]
+		},
+
+		{
+			"id": "config",
+			"heading": {
+				"text": "Configuration",
+				"back": true
+			},
+			"items": [
+				{
+					"text": "Autoplay",
+					"toggle" : true,
+					"on" : localStorage.getItem("autoplay") === "true",
+					"toggleOn" : function(){
+						localStorage.setItem("autoplay", "true");
+					},
+					"toggleOff" : function(){
+						localStorage.setItem("autoplay", "false");
+					}
+				},
+				{
+					"text": "Rewatch Mode",
+					"toggle" : true,
+					"on" : localStorage.getItem("rewatch") === "true",
+					"toggleOn" : function(){
+						localStorage.setItem("rewatch", "true");
+					},
+					"toggleOff" : function(){
+						localStorage.setItem("rewatch", "false");
+					}
+				},
+				{
+					"text": "Hide Skip Intro",
+					"toggle" : true,
+					"on" : localStorage.getItem("showIntro") === "true",
+					"toggleOn" : function(){
+						localStorage.setItem("showIntro", "true");
+					},
+					"toggleOff" : function(){
+						localStorage.setItem("showIntro", "false");
+					}
+				},
+				{
+					"text": "Automatically Skip Intro",
+					"toggle" : true,
+					"on" : localStorage.getItem("autoIntro") === "true",
+					"toggleOn" : function(){
+						localStorage.setItem("autoIntro", "true");
+					},
+					"toggleOff" : function(){
+						localStorage.setItem("autoIntro", "false");
+					}
+				},
+				{
+					"text": "Double Tap Time",
+					"textBox" : true,
+					"value" : doubleTapTime,
+					"onInput" : function(event){
+						let target = event.target;
+
+						if (isNaN(parseInt(target.value))) {
+							target.value = "";
+						} else {
+							localStorage.setItem("doubleTapTime", target.value);
+							doubleTapTime = isNaN(parseInt(localStorage.getItem("doubleTapTime"))) ? 5 : parseInt(localStorage.getItem("doubleTapTime"));
+						}
+					
+					}
+				},
+				{
+					"text": "Skip Button Time",
+					"textBox" : true,
+					"value" : skipButTime,
+					"onInput" : function(event){
+						let target = event.target;
+						if (isNaN(parseInt(target.value))) {
+							target.value = "";
+						} else {
+							localStorage.setItem("skipButTime", target.value);
+							skipButTime = isNaN(parseInt(localStorage.getItem("skipButTime"))) ? 5 : parseInt(localStorage.getItem("skipButTime"));
+						}
+					}
+				},
+				{
+					"text": "Subtitle Margin",
+					"textBox" : true,
+					"value" : isNaN(parseInt(localStorage.getItem("sub-margin"))) ? 0 : parseInt(localStorage.getItem("sub-margin")),
+					"onInput" : function(event){
+						let target = event.target;
+						localStorage.setItem("sub-margin", target.value);
+						setSubtitleMargin(curTrack);
+					}
+				}
+			]
+		}
+	], document.querySelector(".menuCon"));
 
 
+DMenu.open("initial");
+DMenu.closeMenu();
 var sid;
 
 let engineTemp = location.search.split("engine=");
@@ -98,8 +284,8 @@ class XMLHttpRequest2 {
 			"origin": extensionList[3].config.origin,
 			"referer": extensionList[3].config.referer,
 		};
-		
-		if(tempConfig.sockets){
+
+		if (tempConfig.sockets) {
 			this.requestHeaders["sid"] = sid;
 		}
 		this.responseHeaders = {};
@@ -243,21 +429,21 @@ class XMLHttpRequest2 {
 
 }
 
-function normalise(x){
-    x = x.replace("?watch=","");
-    x = x.split("&engine=")[0];
-    return x;
+function normalise(x) {
+	x = x.replace("?watch=", "");
+	x = x.split("&engine=")[0];
+	return x;
 }
-function checkIfExists(localURL){
-	return (new Promise(function(resolve, reject){
-		let timeout = setTimeout(function(){
+function checkIfExists(localURL) {
+	return (new Promise(function (resolve, reject) {
+		let timeout = setTimeout(function () {
 			reject("timeout");
-		},1000);
+		}, 1000);
 
-		window.parent.makeLocalRequest("GET", `${localURL}`).then(function(x){
+		window.parent.makeLocalRequest("GET", `${localURL}`).then(function (x) {
 			clearTimeout(timeout);
 			resolve("yes");
-		}).catch(function(err){
+		}).catch(function (err) {
 			clearTimeout(timeout);
 			reject("no");
 		});
@@ -266,22 +452,22 @@ function checkIfExists(localURL){
 window.onmessage = async function (x) {
 	if (x.data.action == 1) {
 		data_main = x.data;
-		if(config.chrome){
+		if (config.chrome) {
 			get_ep();
-		}else{
+		} else {
 			let mainName = localStorage.getItem("mainName");
 			let rootDir = `/${mainName}/${btoa(normalise(location.search))}`;
 			let localURL = `${rootDir}/.downloaded`;
 
-			try{
+			try {
 				await checkIfExists(localURL);
 				let res;
-				if(localStorage.getItem("alwaysDown") === "true"){
+				if (localStorage.getItem("alwaysDown") === "true") {
 					res = true;
-				}else{
+				} else {
 					res = confirm("Want to open the downloaded version?");
 				}
-				if(res){
+				if (res) {
 					let viddata = (await window.parent.makeLocalRequest("GET", `${rootDir}/viddata.json`));
 					viddata = JSON.parse(viddata).data;
 					data_main.sources = [{
@@ -291,9 +477,9 @@ window.onmessage = async function (x) {
 					}];
 					CustomXMLHttpRequest = window.parent.XMLHttpRequest;
 				}
-			}catch(err){
+			} catch (err) {
 				console.error(err);
-			}finally{
+			} finally {
 				get_ep();
 			}
 		}
@@ -307,7 +493,7 @@ window.onmessage = async function (x) {
 		next_ep_func(1);
 	} else if (x.data.action == "previous") {
 		next_ep_func(-1);
-	}else if (x.data.action == "elapsed") {
+	} else if (x.data.action == "elapsed") {
 		a.vid.currentTime = x.data.elapsed;
 	} else if (parseInt(x.data.action) == 200) {
 		token = x.data.data;
@@ -402,6 +588,7 @@ class vid {
 	constructor() {
 		this.overlay = document.querySelector("#seek_overlay");
 		this.bar_main = document.querySelector("#bar_main");
+		this.barLine = document.querySelector("#bar");
 		this.bar_con = document.querySelector("#bar_con");
 		this.big_play = document.querySelector("#big_play");
 		this.controlTop = document.querySelectorAll(".controlTop");
@@ -413,7 +600,6 @@ class vid {
 		this.bar_con1 = document.querySelector("#bar_con1");
 		this.loaded = document.querySelector("#loaded");
 		this.big_play = document.querySelector("#big_play");
-		this.fullscreen = document.querySelector("#fullscreen");
 		this.con = document.querySelector("#con_2");
 		this.fullscreenDOM = document.querySelector("#con");
 		this.pip = document.querySelector("#pip");
@@ -421,17 +607,13 @@ class vid {
 		this.lock2 = document.querySelector("#lock_2");
 		this.retry = document.querySelector("#retry");
 		this.buffered = document.querySelector("#buffered");
+		this.epCon = document.querySelector("#epCon");
 		this.locked = false;
-		this.fullscreen.style.display = "none";
 		this.downTown = 0;
 		this.seekMode = false;
 		var x = this;
 		this.updateTimeout();
 		this.seekTimeout;
-		this.fullscreen.addEventListener("click", function () {
-			x.goFullScreen(x);
-		});
-
 
 		this.retry.addEventListener("click", function () {
 			location.reload();
@@ -489,7 +671,7 @@ class vid {
 
 
 		this.vid.addEventListener("loadedmetadata", function () {
-			window.parent.postMessage({ "action": 12, nameShow: data_main.name, episode: data_main.episode, prev: true, next: true, "duration" : x.vid.duration, "elapsed" : x.vid.currentTime}, "*");
+			window.parent.postMessage({ "action": 12, nameShow: data_main.name, episode: data_main.episode, prev: true, next: true, "duration": x.vid.duration, "elapsed": x.vid.currentTime }, "*");
 			x.total.innerText = x.timeToString(x.vid.duration);
 
 			let whichFit = parseInt(localStorage.getItem("fillMode")) || 0;
@@ -541,6 +723,13 @@ class vid {
 		this.vid.addEventListener("durationchange", function () {
 
 			x.total.innerText = x.timeToString(x.vid.duration);
+
+			try{
+				window.parent.apiCall("POST", { "username": username, "action": 2, "name": data_main.nameWSeason, "nameUm": data_main.name, "ep": data_main.episode, "duration": parseInt(x.vid.duration), "cur" : location.search}, (x) => { });
+			}catch(err){
+
+			}
+
 		});
 
 
@@ -681,28 +870,28 @@ class vid {
 
 		setInterval(function () {
 
-			if(config.beta){
-				window.parent.postMessage({ "action": 301,  "elapsed" : x.vid.currentTime, "isPlaying":!x.vid.paused}, "*");
+			if (config.beta) {
+				window.parent.postMessage({ "action": 301, "elapsed": x.vid.currentTime, "isPlaying": !x.vid.paused }, "*");
 			}
 
-			try{
-				if(skipIntroInfo && x.vid.currentTime > skipIntroInfo.start && x.vid.currentTime < skipIntroInfo.end){
-					if(localStorage.getItem("autoIntro") === "true"){
+			try {
+				if (skipIntroInfo && x.vid.currentTime > skipIntroInfo.start && x.vid.currentTime < skipIntroInfo.end) {
+					if (localStorage.getItem("autoIntro") === "true") {
 						x.vid.currentTime = skipIntroInfo.end;
 					}
 
-					if(localStorage.getItem("showIntro") !== "true"){
+					if (localStorage.getItem("showIntro") !== "true") {
 						document.getElementById("skipIntroDOM").style.display = "block";
-					}else{
+					} else {
 						document.getElementById("skipIntroDOM").style.display = "none";
 
 					}
 
-				}else{
+				} else {
 					document.getElementById("skipIntroDOM").style.display = "none";
 
 				}
-			}catch(err){
+			} catch (err) {
 
 			}
 
@@ -800,17 +989,6 @@ class vid {
 	setObjectSettings(x, updateLocal = true) {
 		let settings = this.objectPresets[x];
 
-		let playerFitDOM = document.getElementById("playerFit").children;
-		for (var i = 0; i < playerFitDOM.length; i++) {
-			let curDOM = playerFitDOM[i];
-			if (parseInt(curDOM.getAttribute("data-num")) == x) {
-				curDOM.style.backgroundColor = "white";
-				curDOM.style.color = "rgb(46, 46, 46)";
-			} else {
-				curDOM.style.backgroundColor = "rgb(46, 46, 46)";
-				curDOM.style.color = "white";
-			}
-		}
 
 		if (updateLocal) {
 			localStorage.setItem("fillMode", x);
@@ -820,8 +998,10 @@ class vid {
 		this.vid.style.objectFit = this.objectFitArray[settings[0]];
 		this.vid.style.objectPosition = this.objectPositionArray[settings[1]];
 		this.objectFitTemp = this.objectFitArray[settings[0]];
-
 		this.objectPositionTemp = this.objectPositionArray[settings[1]];
+
+		DMenu.selections[`fMode${x}`].select();
+
 	}
 	vid_click(time, coor) {
 
@@ -902,6 +1082,8 @@ class vid {
 
 				x.seekTimeout = setTimeout(function () {
 					x.canSeekNow = true;
+					x.bar_main.style.display = "block";
+					x.barLine.style.height = "7px";
 					if (x.vid.paused) {
 						x.shouldPlay = false;
 					} else {
@@ -927,7 +1109,8 @@ class vid {
 				let temp = Math.max(0, Math.min((coords.screenX - x.bar.getBoundingClientRect().x) / x.bar.getBoundingClientRect().width, 1));
 				let temp2 = x.vid.duration * temp;
 				let temp3 = 100 * temp;
-
+				x.bar_main.style.display = "block";
+				x.barLine.style.height = "7px";
 
 				x.vid.currentTime = temp2;
 
@@ -953,7 +1136,8 @@ class vid {
 			x.type = 3;
 			clearTimeout(x.seekTimeout);
 
-
+			x.bar_main.style.display = "block";
+			x.barLine.style.height = "7px";
 			x.currentPresetTemp = x.currentPreset;
 			x.close_controls();
 			x.gesture = Math.hypot((event.touches[0].clientX - event.touches[1].clientX), (event.touches[0].clientY - event.touches[1].clientY));
@@ -1023,22 +1207,27 @@ class vid {
 				x.current.innerText = x.timeToString(temp);
 
 				x.updateTimeout("f");
-			} else if ((Math.abs(x.iniX - coords.screenX) > 50) || (Math.abs(x.iniY - coords.screenY) > 50)) {
+			} else if (x.check != 100 && (Math.abs(x.iniX - coords.screenX) > 50) || ((x.iniY - coords.screenY) < -50)) {
 				x.canSeekNow = false;
 				clearTimeout(x.seekTimeout);
 				x.downTown = -x.iniY + coords.screenY;
-				if (-x.iniY + coords.screenY > 0 && -x.iniY + coords.screenY <= 100) {
-					document.body.style.backgroundColor = `rgba(255,255,255,${Math.floor((-x.iniY + coords.screenY) / 100)})`;
-				}
 				x.check = 99;
 				document.getElementById('con').style.transform = `translateY(${Math.max(Math.min(-x.iniY + coords.screenY, 100), 0)}px)`;
 
 			} else if (x.check == 99) {
 				x.downTown = -x.iniY + coords.screenY;
-
 				document.getElementById('con').style.transform = `translateY(${Math.max(Math.min(-x.iniY + coords.screenY, 100), 0)}px)`;
 
+			} else if (x.check != 100 && (x.iniY - coords.screenY) > 50) {
+				x.check = 100;
+				x.canSeekNow = false;
+				openSettingsSemi(0);
+				clearTimeout(x.seekTimeout);
+			} else if (x.check == 100) {
+				openSettingsSemi(x.iniY - coords.screenY);
+				x.downTown = x.iniY - coords.screenY;
 			}
+
 
 
 		} else if (x.type == 3) {
@@ -1109,13 +1298,21 @@ class vid {
 
 		}
 
+		if (x.check == 100) {
+			if (x.downTown > 130) {
+				openSettingsSemi(-1);
+			} else {
+				closeSettings();
+			}
+		}
+
 		x.updateTime(x);
 		x.updateBuffer(x);
 		document.getElementById('con').style.transitionDuration = "0.2s";
 		document.body.style.backgroundColor = "black";
 
 
-		if (x.downTown >= 100 && !config.chrome) {
+		if (x.check == 99 && x.downTown >= 100 && !config.chrome) {
 
 			window.parent.postMessage({ "action": 400 }, "*");
 
@@ -1135,6 +1332,8 @@ class vid {
 		}
 
 		x.downTown = 0;
+		x.bar_main.style.display = "none";
+		x.barLine.style.height = "4px";
 
 		clearTimeout(x.seekTimeout);
 		x.canSeekNow = false;
@@ -1208,7 +1407,10 @@ class vid {
 		this.pop.style.opacity = 0;
 		this.popControls.style.opacity = 0;
 		this.popControls.style.pointerEvents = "none";
-
+		
+		this.popControls.style.transform = "translateX(100px)";
+		this.epCon.style.transform = "translateX(-100px)";
+		
 
 		this.bar_con.style.bottom = "-70px";
 		this.bar_con.style.pointerEvents = "none";
@@ -1235,7 +1437,10 @@ class vid {
 		this.popControls.style.opacity = 1;
 		this.popControls.style.pointerEvents = "auto";
 
-		this.bar_con.style.bottom = "0px";
+		this.popControls.style.transform = "translateX(0px)";
+		this.epCon.style.transform = "translateX(0px)";
+
+		this.bar_con.style.bottom = "10px";
 		this.bar_con.style.opacity = "1";
 		this.bar_con.style.pointerEvents = "auto";
 
@@ -1361,7 +1566,13 @@ window.addEventListener('message', function (x) {
 var a = new vid();
 
 
+if (CSS.supports('backdrop-filter: blur(10px)')) {
+	document.getElementById("setting_con").style.backgroundColor = "#19181caa";
+	document.getElementById("setting_con").style.backdropFilter = " blur(10px)";
 
+} else {
+	document.getElementById("setting_con").style.backgroundColor = "#19181c";
+}
 
 function cssToJava(x) {
 	let a = x.split("-");
@@ -1383,8 +1594,7 @@ var setting_icon_dom = document.querySelector("#setting_icon");
 
 setting_icon_dom.addEventListener("click", function () {
 
-	set_con.style.display = "block";
-
+	openSettingsSemi(-1);
 });
 
 
@@ -1432,7 +1642,7 @@ function get_ep_ini() {
 			}
 
 			let skipIntro;
-			if("skipIntro" in viddata.sources[0]){
+			if ("skipIntro" in viddata.sources[0]) {
 				skipIntro = viddata.sources[0].skipIntro;
 			}
 			data_main.sources = [{
@@ -1441,11 +1651,11 @@ function get_ep_ini() {
 				"url": viddata.sources[0].type == 'hls' ? `${rootDir}/master.m3u8` : `${window.parent.cordova.file.externalDataDirectory}/${rootDir}/master.m3u8`,
 			}];
 
-			if(skipIntro){
+			if (skipIntro) {
 				data_main.sources[0].skipIntro = skipIntro;
 			}
 
-			
+
 
 			engine = data_main.engine;
 			get_ep();
@@ -1548,15 +1758,15 @@ function ini_main() {
 		try {
 			navigator.mediaSession.setActionHandler('nexttrack', () => {
 				next_ep_func(1);
-		
+
 			});
 			navigator.mediaSession.setActionHandler('previoustrack', () => {
 				next_ep_func(-1);
-		
+
 			});
 		}
 		catch (error) {
-		
+
 		}
 
 	}
@@ -1588,6 +1798,7 @@ let didNotWork1 = 0;
 let didNotWork2 = 0;
 async function update(x) {
 	let currentTime = a.vid.currentTime;
+	let currentDuration = parseInt(a.vid.duration);
 
 	if (update_check == 1 && (a.vid.currentTime - lastUpdate) > 60 && x != 19) {
 		alert("Could not sync time with the server.");
@@ -1599,7 +1810,7 @@ async function update(x) {
 
 	update_check = 1;
 
-	window.parent.apiCall("POST", { "username": username, "action": 1, "time": currentTime, "ep": data_main.episode, "name": data_main.nameWSeason }, (x) => { }, [], true).then(function (x) {
+	window.parent.apiCall("POST", { "username": username, "action": 1, "time": currentTime, "ep": data_main.episode, "name": data_main.nameWSeason, "nameUm" : data_main.name, "prog": currentDuration}, (x) => { }, [], true).then(function (x) {
 		try {
 
 			if (x.status == 200) {
@@ -1631,7 +1842,7 @@ async function update(x) {
 			errorCount = 0;
 			alert("Time could not be synced with the server.");
 
-		}else if(errorCount == 5){
+		} else if (errorCount == 5) {
 			lastUpdate = a.vid.currentTime;
 		}
 
@@ -1641,17 +1852,6 @@ async function update(x) {
 
 }
 function chooseQualHls(x, type, th) {
-	let qCon = document.getElementById("hls_con").children;
-	for (var i = 0; i < qCon.length; i++) {
-		if (qCon[i] == th) {
-			qCon[i].style.backgroundColor = "white";
-			qCon[i].style.color = "black";
-		} else {
-			qCon[i].style.backgroundColor = "#2e2e2e";
-			qCon[i].style.color = "white";
-		}
-	}
-
 	hls.loadLevel = parseInt(x);
 	localStorage.setItem("hlsqual", x);
 	localStorage.setItem("hlsqualnum", parseInt(th.innerText));
@@ -1664,29 +1864,57 @@ function loadSubs() {
 	while (vidDom.length > 0) {
 		vidDom[0].remove();
 	}
-	document.getElementById("sub_con").innerHTML = "";
-	document.getElementById("subtitleTitle").style.display = "none";
+
+	DMenu.getScene("subtitles").deleteItems();
+	DMenu.getScene("subtitles").addItem({
+			"text": "Subtitles",
+	}, true);
 	if ("subtitles" in data_main && data_main["subtitles"].length > 0) {
-		let selectDOM = createElement({
-			"element": "select"
+
+		let selectFunc = function () {
+			let value = this.getAttribute("value");
+			if (value == "off") {
+				localStorage.setItem(`${engine}-subtitle`, "off");
+				curTrack = undefined;
+				document.getElementById("fastFor").style.display = "none";
+
+			}
+
+			for (let i = 0; i < a.vid.textTracks.length; i++) {
+				if (i == parseInt(value)) {
+					a.vid.textTracks[i].mode = "showing";
+					curTrack = a.vid.textTracks[i];
+					setSubtitleMargin(curTrack);
+					document.getElementById("fastFor").style.display = "block";
+					localStorage.setItem(`${engine}-subtitle`, a.vid.textTracks[i].label);
+				} else {
+					a.vid.textTracks[i].mode = "hidden";
+
+				}
+			}
+
+		};
+
+		DMenu.getScene("subtitles").addItem({
+			"text": "off",
+			"callback": selectFunc,
+			"attributes": {
+				"value": "off",
+			},
+			"highlightable": true,
+			"id" : `subtitle-off`,
 		});
 
-		selectDOM.append(createElement({
-			"element": "option",
-			"attributes": {
-				"value": "off"
-			},
-			"innerText": "off"
-		}));
-		document.getElementById("subtitleTitle").style.display = "block";
 
 		for (var i = 0; i < data_main.subtitles.length; i++) {
-			let optionDOM = createElement({
-				"element": "option",
+			DMenu.getScene("subtitles").addItem({
+				"text": data_main.subtitles[i].label,
+				"callback": selectFunc,
 				"attributes": {
 					"value": i,
 				},
-				"innerText": data_main.subtitles[i].label
+				"highlightable": true,
+				"id" : `subtitle-${i}`
 			});
 
 
@@ -1701,20 +1929,23 @@ function loadSubs() {
 			});
 
 			document.getElementById("v").append(trackDOM);
-
-			selectDOM.append(optionDOM);
 		}
 
 
 
-		document.getElementById("sub_con").append(selectDOM);
 
 		let check = true;
 		for (var i = 0; i < a.vid.textTracks.length; i++) {
 			if (a.vid.textTracks[i].label == localStorage.getItem(`${engine}-subtitle`) && check) {
-				selectDOM.value = i;
+				console.log("e");
+				let subDOM = DMenu.selections[`subtitle-${i}`];
+				console.log(subDOM);
+
+				if(subDOM){
+					subDOM.select();
+				}
 				curTrack = a.vid.textTracks[i];
-                setSubtitleMargin(curTrack);
+				setSubtitleMargin(curTrack);
 
 				document.getElementById("fastFor").style.display = "block";
 
@@ -1728,29 +1959,10 @@ function loadSubs() {
 		}
 
 
-		selectDOM.onchange = function () {
-			let value = this.value;
-			if (value == "off") {
-				localStorage.setItem(`${engine}-subtitle`, "off");
-				curTrack = undefined;
-				document.getElementById("fastFor").style.display = "none";
+		if(check){
+			DMenu.selections["subtitle-off"].selectWithCallback();
+		}
 
-			}
-
-			for (let i = 0; i < a.vid.textTracks.length; i++) {
-				if (i == parseInt(value)) {
-					a.vid.textTracks[i].mode = "showing";
-					curTrack = a.vid.textTracks[i];
-                    setSubtitleMargin(curTrack);
-					document.getElementById("fastFor").style.display = "block";
-					localStorage.setItem(`${engine}-subtitle`, a.vid.textTracks[i].label);
-				} else {
-					a.vid.textTracks[i].mode = "hidden";
-
-				}
-			}
-
-		};
 
 
 	} else {
@@ -1760,7 +1972,6 @@ function loadSubs() {
 }
 
 function chooseQual(x, type, th) {
-
 	let skipTo;
 
 	document.getElementById("hls_con").innerHTML = "";
@@ -1770,49 +1981,33 @@ function chooseQual(x, type, th) {
 	let defURL;
 	if (x !== null) {
 		skipTo = a.vid.currentTime;
-		if(th.getAttribute("data-intro") === "true"){
+		if (th.getAttribute("data-intro") === "true") {
 			skipIntroInfo.start = parseInt(th.getAttribute("data-start"));
 			skipIntroInfo.end = parseInt(th.getAttribute("data-end"));
-		}else{
-			skipIntroInfo = {};	
-		}
-		let qCon = document.getElementById("quality_con").children;
-		for (var i = 0; i < qCon.length; i++) {
-			if (qCon[i] == th) {
-				qCon[i].style.backgroundColor = "white";
-				qCon[i].style.color = "black";
-			} else {
-				qCon[i].style.backgroundColor = "#2e2e2e";
-				qCon[i].style.color = "white";
-			}
+		} else {
+			skipIntroInfo = {};
 		}
 
 	} else {
 		skipTo = th;
 		defURL = data_main.sources[0].url;
 		let sName = localStorage.getItem(`${engine}-sourceName`);
-		let qCon = document.getElementById("quality_con").children;
+		let qCon = DMenu.getScene("source").element.querySelectorAll(".menuItem");
 		for (let i = 0; i < qCon.length; i++) {
-			if (sName == qCon[i].innerText) {
+			if (sName == qCon[i].getAttribute("data-name")) {
 				defURL = data_main.sources[i].url;
-				if(qCon[i].getAttribute("data-intro") === "true"){
+				if (qCon[i].getAttribute("data-intro") === "true") {
 					skipIntroInfo.start = parseInt(qCon[i].getAttribute("data-start"));
 					skipIntroInfo.end = parseInt(qCon[i].getAttribute("data-end"));
-				}else{
-					skipIntroInfo = {};	
+				} else {
+					skipIntroInfo = {};
 				}
 
 
-				for (let j = 0; j < qCon.length; j++) {
-					if (j == i) {
-						qCon[j].style.backgroundColor = "white";
-						qCon[j].style.color = "black";
-					} else {
-						qCon[j].style.backgroundColor = "#2e2e2e";
-						qCon[j].style.color = "white";
-					}
+				let sourceItem = DMenu.selections[`source-${qCon[i].getAttribute("data-name")}`];
+				if(sourceItem){
+					sourceItem.select();
 				}
-
 				break;
 			}
 		}
@@ -1879,6 +2074,10 @@ function loadHLSsource() {
 		let qCon = document.getElementById("hls_con");
 
 		qCon.innerHTML = "";
+		DMenu.getScene("quality").deleteItems();
+		DMenu.getScene("quality").addItem({
+			"text" : "Quality",
+		}, true);
 
 		document.getElementById("qualityTitle").style.display = "block";
 
@@ -1910,51 +2109,42 @@ function loadHLSsource() {
 
 		hls.loadLevel = hslLevel;
 		for (var i = -1; i < hls.levels.length; i++) {
-			let style = {
 
-			};
+			let selected = false;
 			if (i == hslLevel) {
-				style["backgroundColor"] = "white";
-				style["color"] = "black";
-			} else {
-				style["backgroundColor"] = "#2e2e2e";
-				style["color"] = "white";
+				selected = true;
 			}
 
-			let temp1;
 			if (i == -1) {
-				temp1 = createElement({
-					"class": "qual",
-					"innerText": "Auto",
+				DMenu.getScene("quality").addItem({
+					"text": "Auto",
 					"attributes": {
 						"data-url": i.toString(),
 						"data-type": "hls",
 					},
-					"listeners": {
-						"click": function () {
-							chooseQualHls(this.getAttribute("data-url"), this.getAttribute("data-type"), this);
-						}
+					"callback": function () {
+						chooseQualHls(this.getAttribute("data-url"), this.getAttribute("data-type"), this);
 					},
-					style
-				});
+					"highlightable": true,
+					"selected" : selected,
+				},false);
 			} else {
-				temp1 = createElement({
-					"class": "qual",
-					"innerText": hls.levels[i].height + "p",
+
+
+				DMenu.getScene("quality").addItem({
+					"text": hls.levels[i].height + "p",
 					"attributes": {
 						"data-url": i.toString(),
 						"data-type": "hls",
 					},
-					"listeners": {
-						"click": function () {
-							chooseQualHls(this.getAttribute("data-url"), this.getAttribute("data-type"), this);
-						}
+					"callback": function () {
+						chooseQualHls(this.getAttribute("data-url"), this.getAttribute("data-type"), this);
 					},
-					style
-				});
+					"highlightable": true,
+					"selected" : selected,
+				},false);
 			}
 
-			qCon.append(temp1);
 		}
 	} catch (err) {
 		console.error(err);
@@ -1974,6 +2164,11 @@ async function get_ep(x = 0) {
 
 		let qCon = document.getElementById("quality_con");
 		qCon.innerHTML = "";
+
+		DMenu.getScene("source").deleteItems();
+		DMenu.getScene("source").addItem({
+				"text": "Sources",
+		}, true);
 		for (var i = 0; i < data_main.sources.length; i++) {
 			let style = {
 
@@ -1982,7 +2177,7 @@ async function get_ep(x = 0) {
 				style["backgroundColor"] = "white";
 				style["color"] = "black";
 			} else {
-				style["backgroundColor"] = "#2e2e2e";
+				style["backgroundColor"] = "#606060";
 				style["color"] = "white";
 			}
 
@@ -1993,13 +2188,13 @@ async function get_ep(x = 0) {
 				"data-name": data_main.sources[i].name,
 			};
 
-			if("skipIntro" in data_main.sources[i] && "start" in data_main.sources[i].skipIntro && "end" in data_main.sources[i].skipIntro){
+			if ("skipIntro" in data_main.sources[i] && "start" in data_main.sources[i].skipIntro && "end" in data_main.sources[i].skipIntro) {
 				curAttributes["data-intro"] = "true";
 				curAttributes["data-start"] = data_main.sources[i].skipIntro.start;
 				curAttributes["data-end"] = data_main.sources[i].skipIntro.end;
-				if(i == 0){
+				if (i == 0) {
 					skipIntroInfo.start = data_main.sources[i].skipIntro.start;
-					skipIntroInfo.end = data_main.sources[i].skipIntro.end;					
+					skipIntroInfo.end = data_main.sources[i].skipIntro.end;
 				}
 			}
 			// if(data_main.sources[i].type != "hls"){			
@@ -2015,6 +2210,23 @@ async function get_ep(x = 0) {
 				},
 				style
 			});
+
+			DMenu.getScene("source").addItem(
+				{
+					"text": data_main.sources[i].name,
+					"highlightable" : true,
+					"attributes" : curAttributes,
+					"id" : `source-${data_main.sources[i].name}`,
+					"callback": function () {
+						localStorage.setItem(`${engine}-sourceName`, this.getAttribute("data-name"));
+						chooseQual(this.getAttribute("data-url"), this.getAttribute("data-type"), this);
+					},
+					"selected" : i==0
+				}
+			)
+
+			
+
 			// }
 
 			qCon.append(temp1);
@@ -2122,11 +2334,11 @@ if (localStorage.getItem("rewatch")) {
 document.querySelector("#showIntroSlider").checked = localStorage.getItem("showIntro") === "true";
 document.querySelector("#autoIntroSlider").checked = localStorage.getItem("autoIntro") === "true";
 
-document.querySelector("#showIntroSlider").onclick = function(){
+document.querySelector("#showIntroSlider").onclick = function () {
 	localStorage.setItem("showIntro", document.querySelector("#showIntroSlider").checked === true);
 }
 
-document.querySelector("#autoIntroSlider").onclick = function(){
+document.querySelector("#autoIntroSlider").onclick = function () {
 	localStorage.setItem("autoIntro", document.querySelector("#autoIntroSlider").checked === true);
 }
 
@@ -2187,7 +2399,7 @@ if (location.search.includes("engine=3") && config.sockets) {
 	socket.on("connect", () => {
 		sid = socket.id;
 		localStorage.setItem("sid", sid);
-		if(socketCalledIni === false){
+		if (socketCalledIni === false) {
 			if (config.local || downloaded) {
 				ini_main();
 			} else {
@@ -2270,32 +2482,46 @@ if (config.chrome) {
 document.getElementById("fullscreenToggle").onclick = function () {
 	a.goFullScreen(a);
 };
-document.getElementById("skipIntroDOM").onclick = function(){
-	if("end" in skipIntroInfo && !isNaN(skipIntroInfo.end)){
+document.getElementById("skipIntroDOM").onclick = function () {
+	if ("end" in skipIntroInfo && !isNaN(skipIntroInfo.end)) {
 		a.vid.currentTime = skipIntroInfo.end;
 		this.style.display = "none";
 	}
 }
 applyTheme();
 
-function closeSettings(){
-	let settingCon = document.getElementById("setting_con");
-	settingCon.style.transitionDuration = "0.2s";
-	settingCon.style.transform = "translateY(0px)";
+function openSettingsSemi(translateY) {
 
-	window.requestAnimationFrame(function(){
-		window.requestAnimationFrame(function(){
-			settingCon.style.transform = "translateY(200px)";
+	let settingCon = document.querySelector(".menuCon");
+	settingCon.style.display = "block";
+
+	if (translateY == -1) {
+		settingCon.style.transform = "translateY(0px)";
+	} else if (translateY == 0) {
+		settingCon.style.transform = "translateY(100%)";
+
+	} else {
+		settingCon.style.transform = `translateY(calc(100% + ${-translateY + 50}px))`;
+	}
+
+}
+
+function closeSettings() {
+	let settingCon = document.querySelector(".menuCon");
+	settingCon.style.transitionDuration = "0.2s";
+	window.requestAnimationFrame(function () {
+		window.requestAnimationFrame(function () {
+			settingCon.style.transform = "translateY(100%)";
 			settingCon.style.opacity = "0";
-			setTimeout(function(){
-				settingCon.style.transform = "translateY(0px)";
+			setTimeout(function () {
 				settingCon.style.opacity = "1";
-				settingCon.style.height = "60%";
 				settingCon.style.display = "none";
 				settingCon.style.transitionDuration = "0s";
-			},200);
+			}, 200);
 		});
 	});
 }
 
 let settingsPullInstance = new settingsPull(document.getElementById("settingHandlePadding"), closeSettings);
+// let settingsPullInstanceT = new settingsPull(document.getElementById("setting_con_main"), closeSettings, true);
+let settingsPullInstanceTT = new settingsPull(document.querySelector(".menuCon"), closeSettings, true);

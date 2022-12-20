@@ -11,8 +11,8 @@ function fix_title(x) {
     }
 }
 
-function normalise(x){
-    x = x.replace("?watch=","");
+function normalise(x) {
+    x = x.replace("?watch=", "");
     x = x.split("&engine=")[0];
     return x;
 }
@@ -143,7 +143,7 @@ class DownloadVid {
 
             await actionSQLite[14]({
                 "body": {
-                    "name": vidData.name,                    
+                    "name": vidData.name,
                     "url": `?watch=/${self.name}`,
                 }
 
@@ -183,16 +183,16 @@ class DownloadVid {
     }
 
     updateNoti(x_name, self, type = 0) {
-        if(cordova.plugins.backgroundMode.isActive() === false || localStorage.getItem("hideNotification") === "true"){
+        if (cordova.plugins.backgroundMode.isActive() === false || localStorage.getItem("hideNotification") === "true") {
             return;
         }
         let progNumDeci = (self.downloaded / self.total);
         let progNum = Math.floor(progNumDeci * 100);
-        progNumDeci = Math.floor(progNumDeci*10000)/100;
-        if(type == 2){            
-        }else if(progNum == 100){
+        progNumDeci = Math.floor(progNumDeci * 10000) / 100;
+        if (type == 2) {
+        } else if (progNum == 100) {
             x_name = "Storing the downloaded data...";
-        }else{
+        } else {
             x_name = `${progNumDeci}% - ` + x_name;
 
         }
@@ -202,10 +202,10 @@ class DownloadVid {
             title: x_name,
             progressBar: { value: progNum },
             vibrate: false,
-            smallIcon : 'res://ic_launcher',
-            color : "blue",
-            lockscreen : true,
-            wakeup : false,
+            smallIcon: 'res://ic_launcher',
+            color: "blue",
+            lockscreen: true,
+            wakeup: false,
             sound: false,
         };
         if (self.sent == true) {
@@ -479,10 +479,10 @@ class DownloadVid {
                 var fileURL = fileEntry.toURL();
                 headers.suppressProgress = true;
                 let timeoutMS = parseInt(localStorage.getItem("downloadTimeout"));
-                timeoutMS = isNaN(timeoutMS) ? 20000 : timeoutMS*1000;
-                let timeout = setTimeout(function(){
+                timeoutMS = isNaN(timeoutMS) ? 20000 : timeoutMS * 1000;
+                let timeout = setTimeout(function () {
                     fileTransfer.abort();
-                    reject("timeout");      
+                    reject("timeout");
                 }, timeoutMS);
                 fileTransfer.download(
                     uri,
@@ -493,13 +493,13 @@ class DownloadVid {
                     },
                     function (error) {
                         clearTimeout(timeout);
-                        reject(error);                        
+                        reject(error);
                     },
                     null,
                     headers,
                 );
 
-                fileTransfer.onprogress = function(progressEvent) {};
+                fileTransfer.onprogress = function (progressEvent) { };
             }, function (x) {
                 console.error(x);
                 reject("err");
@@ -543,7 +543,7 @@ class DownloadVid {
 
 
     saveToLocal(x = 0, self) {
-        if(self.pause){
+        if (self.pause) {
             return;
         }
         if (x == 1) {
@@ -558,7 +558,7 @@ class DownloadVid {
                         self.check = 0;
                         if (self.buffers.length != 0) {
                             self.saveToLocal(1, self);
-                        }else{
+                        } else {
                             self.done(self);
                         }
                     };
@@ -618,7 +618,7 @@ class DownloadVid {
                 self.controller = controller;
                 self.updateNoti("Starting...", self, 1);
 
-                let timeoutId = setTimeout(function(){
+                let timeoutId = setTimeout(function () {
                     controller.abort();
                 }, 60000);
                 fetch(self.url, {
@@ -758,7 +758,7 @@ class DownloadVid {
                 for (let i = 0; i < tempMapping.length; i++) {
                     let cur = tempMapping[i];
                     let tempDownloaded = cur.downloaded;
-                    if(tempDownloaded === -1){
+                    if (tempDownloaded === -1) {
                         tempDownloaded = false;
                     }
                     localMapping[cur.fileName] = {
@@ -852,16 +852,16 @@ class DownloadVid {
                         if (mapping[j].downloaded === true) {
                             self.downloaded++;
                             continue;
-                        }else if(mapping[j].downloaded === -1){
+                        } else if (mapping[j].downloaded === -1) {
                             continue;
                         }
 
                         if (self.engine == 3 && config.sockets) {
                             promises.push(self.downloadFileTransfer(mapping[j].fileName, mapping[j].uri, self, {
                                 "headers": {
-                                "origin": extensionList[3].config.origin,
-                                "referer": extensionList[3].config.referer,
-                                "sid": self.sid
+                                    "origin": extensionList[3].config.origin,
+                                    "referer": extensionList[3].config.referer,
+                                    "sid": self.sid
                                 }
                             }));
 
@@ -894,14 +894,14 @@ class DownloadVid {
                             let thisRes = response[index++];
                             check = false;
                             if (settled) {
-                                if(thisRes.status == "fulfilled"){
+                                if (thisRes.status == "fulfilled") {
                                     mapping[j].downloaded = true;
                                     self.downloaded++;
-                                }else{
+                                } else {
                                     mapping[j].downloaded = false;
 
                                 }
-                            }else{
+                            } else {
                                 self.downloaded++;
                                 mapping[j].downloaded = true;
                             }
@@ -932,47 +932,47 @@ class DownloadVid {
                 let count = 0;
                 let interval;
 
-                interval = setInterval(function(){
+                interval = setInterval(function () {
 
-                    if(self.pause){
+                    if (self.pause) {
                         clearInterval(interval);
                         return;
                     }
                     let sum = 0;
                     for (let j = 0; j < mapping.length; j++) {
-                        if(mapping[j].downloaded === -1){
+                        if (mapping[j].downloaded === -1) {
                             sum++;
                         }
                     }
 
-                    if(sum == lastSum){
+                    if (sum == lastSum) {
                         count++;
                     }
                     lastSum = sum;
 
-                    if(sum == 0){                    
+                    if (sum == 0) {
                         for (let j = 0; j < mapping.length; j++) {
-                            if(mapping[j].downloaded !== true){
+                            if (mapping[j].downloaded !== true) {
                                 doneFR = false;
                                 break;
                             }
                         }
-        
-                        if(doneFR){
-                            clearInterval(interval);                            
+
+                        if (doneFR) {
+                            clearInterval(interval);
                             self.done(self);
-                        }else{
-                            clearInterval(interval);                            
+                        } else {
+                            clearInterval(interval);
                             self.errorHandler(self, "Could not download the whole video. Try Again");
                         }
-                    }else if(count > 4){
+                    } else if (count > 4) {
                         clearInterval(interval);
                         self.errorHandler(self, "Could not download the whole video. Try Again");
                     }
                 }, 1000);
 
-                
-                
+
+
             } else {
                 self.errorHandler(self, "Could not download the whole video. Try Again");
 
@@ -995,7 +995,7 @@ class DownloadVid {
 
         self.fileDir.getFile(`.downloaded`, { create: true, exclusive: false }, function (dir) {
             self.updateNoti(`Done - Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self, 2);
-            
+
             self.pause = true;
             self.message = "Done";
             self.success();
@@ -1010,16 +1010,16 @@ class DownloadVid {
     errorHandler(self, x) {
         if (socket) {
             socket.disconnect();
-        } 
+        }
         if (self.controller) {
             self.controller.abort();
         }
-        
+
         if (self.pause) {
             return;
         }
 
-        
+
 
         self.updateNoti(`Error - Episode ${self.vidData.episode} - ${fix_title(self.name)}`, self, 2);
 

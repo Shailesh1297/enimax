@@ -1,127 +1,127 @@
-#sources{
-    position: fixed;
-    top:10px;
-    right: 10px;
-    border-radius: 30px;
-    padding: 0 20px 0 20px;
+#sources {
+	position: fixed;
+	top: 10px;
+	right: 10px;
+	border-radius: 30px;
+	padding: 0 20px 0 20px;
 }
 
 select {
-    -webkit-appearance:none;
-    -moz-appearance:none;
-    -ms-appearance:none;
-    appearance:none;
-    box-shadow:none;
-    border:0!important;
-    background-image: none;
-    flex: 1;
-    padding: 0 .5em;
-    color:#fff;
-    cursor:pointer;
-    font-size: 1em;
-    font-family: 'Montserrat', sans-serif;
-    
-    line-height: 3;
-    
-    width: calc(100% - 90px);
-    height: 60px;
-    line-height: 3;
-    background-color: var(--theme-color);
-    
-    border-radius: .25em;
-    
- }
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	-ms-appearance: none;
+	appearance: none;
+	box-shadow: none;
+	border: 0 !important;
+	background-image: none;
+	flex: 1;
+	padding: 0 .5em;
+	color: #fff;
+	cursor: pointer;
+	font-size: 1em;
+	font-family: 'Montserrat', sans-serif;
+
+	line-height: 3;
+
+	width: calc(100% - 90px);
+	height: 60px;
+	line-height: 3;
+	background-color: var(--theme-color);
+
+	border-radius: .25em;
+
+}
 
 
- #searchBoxCon {
-    position: absolute;
-  
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 20px;
-    box-sizing: border-box;
-  }
-  
-  .searchBox {
-    position: fixed;
-    z-index: 99;
-    top: 10px;
-    left: 10px;
-    transition-duration: 0.2s;
-    background: var(--theme-color);
-    height: 40px;
-    width: 40px;
-    border-radius: 40px;
-    padding: 10px;
-  }
-  
-  #s_c{
-    font-size: 15px;
-    position: absolute;
-    left: 20px;
-    height: 100%;
-    top: 0px;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    display: none;
-    z-index: 10;
-  }
-  
-  #search_x{
-    width: 0px;
-    padding-left: 0px;
-  }
-  
-  .searchButton {
-    color: white;
-    float: right;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: transparent;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23FFFFFF'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
-    background-size: 25px 25px;
-    background-repeat: no-repeat;
-    background-position: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: 0.4s;
-    border: 0px;
-  }
-  
-  .searchInput {
-    border: none;
-    background: none;
-    float: left;
-    transition-duration: 0.2s;
+#searchBoxCon {
+	position: absolute;
 
-    padding: 0;
-    color: white;
-    font-size: 16px;
-    line-height: 40px;
-    width: 0px;
-    font-family: 'Raleway', sans-serif;
-  }
-  
-  .searchInput::placeholder {
-    color: white;
-  }
+	width: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	padding: 20px;
+	box-sizing: border-box;
+}
+
+.searchBox {
+	position: fixed;
+	z-index: 99;
+	top: 10px;
+	left: 10px;
+	transition-duration: 0.2s;
+	background: var(--theme-color);
+	height: 40px;
+	width: 40px;
+	border-radius: 40px;
+	padding: 10px;
+}
+
+#s_c {
+	font-size: 15px;
+	position: absolute;
+	left: 20px;
+	height: 100%;
+	top: 0px;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	display: none;
+	z-index: 10;
+}
+
+#search_x {
+	width: 0px;
+	padding-left: 0px;
+}
+
+.searchButton {
+	color: white;
+	float: right;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background-color: transparent;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23FFFFFF'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
+	background-size: 25px 25px;
+	background-repeat: no-repeat;
+	background-position: center;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	transition: 0.4s;
+	border: 0px;
+}
+
+.searchInput {
+	border: none;
+	background: none;
+	float: left;
+	transition-duration: 0.2s;
+
+	padding: 0;
+	color: white;
+	font-size: 16px;
+	line-height: 40px;
+	width: 0px;
+	font-family: 'Raleway', sans-serif;
+}
+
+.searchInput::placeholder {
+	color: white;
+}
 
 
-  #mainConSearch {
-    overflow-y: hidden;
-    height: calc(100% - 85px);
-    width: 100%;
-    position: absolute;
-    bottom: 0;
-    display: flex;
-    color:white;
-    flex-direction: column;
-    flex-wrap: wrap;
-    overflow-x: auto;
-    left: 0;
-  }
+#mainConSearch {
+	overflow-y: hidden;
+	height: calc(100% - 85px);
+	width: 100%;
+	position: absolute;
+	bottom: 0;
+	display: flex;
+	color: white;
+	flex-direction: column;
+	flex-wrap: wrap;
+	overflow-x: auto;
+	left: 0;
+}

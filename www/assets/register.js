@@ -79,10 +79,10 @@ function deviceReady() {
                 sendNoti([0, "red", "Error", JSON.parse(data).message]);
 
             } catch (err) {
-                try{
+                try {
                     let error = data.toString();
                     sendNoti([0, "red", "Error", "Couldn't sign you up. Make sure that the server-url is correct. Error message: " + error]);
-                }catch(err){
+                } catch (err) {
                     sendNoti([0, "red", "Error", "Couldn't sign you up. Make sure that the server-url is correct. Error message: " + data]);
                 }
             }
