@@ -678,9 +678,10 @@ var animixplay = {
 
                     try {
                         let l = animeDOM[value].split("id=")[1].split("&")[0];
+                        let epNum = parseFloat(value) + 1;
                         let tempEp = {
                             "link": "?watch=" + ogURL + "/ep" + value + "&engine=1",
-                            "title": `Episode ${parseFloat(value) + 1}`,
+                            "title": `Episode ${isNaN(epNum) ? 0.1 : epNum}`,
                         };
 
                         try{
@@ -749,10 +750,14 @@ var animixplay = {
 
             }
 
+            if(isNaN(data.episode)){
+                data.episode = 0.1;
+            }
+
             data.nameWSeason = url.split("/")[1].split("-").join("-") + "-";
             data.name = (url.split("/")[1].split("-").join("-")) + "-";
 
-            let l = animeDOM[episode.toString()].split("id=")[1].split("&")[0];
+            let l = animeDOM[isNaN(episode) ? url.substringAfter("ep") :  episode.toString()].split("id=")[1].split("&")[0];
 
             function padding(string, len) {
                 let length = len - string.length;
@@ -1802,7 +1807,7 @@ var twitch = {
                     }
                 }
 
-                if (isLive) {
+                if (isLive && !sibling) {
                     data.push({
                         "link": "?watch=" + encodeURIComponent(id) + "&id=" + "live" + "&engine=4",
                         "id": id,
