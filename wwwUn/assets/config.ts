@@ -7,4 +7,3 @@ var config = {
     "beta": false,
     "sockets": false
 };
-//# sourceMappingURL=config.js.map

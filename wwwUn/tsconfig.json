@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "outDir": "../www",
+        "target": "ES2017",
+        "module": "commonjs",
+        "lib": [
+            "es5",
+            "es6",
+            "dom"
+        ],
+        "sourceMap": true
+    },
+    "exclude": [
+        "node_modules",
+        "plugins",
+        "platforms"
+    ]
+}
