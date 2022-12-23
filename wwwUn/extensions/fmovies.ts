@@ -1,0 +1,411 @@
+var fmovies: extension = {
+    "baseURL": fmoviesBaseURL,
+    "searchApi": async function (query: string): Promise<extensionSearch> {
+        query = decodeURIComponent(query);
+        let response = await MakeFetch(`https://${fmoviesBaseURL}/search/${query.replace(" ", "-")}`, {});
+
+        let tempDOM = document.createElement("div");
+        tempDOM.innerHTML = DOMPurify.sanitize(response);
+        let data: Array<extensionSearchData> = [];
+
+        let section = tempDOM.querySelectorAll(".flw-item");
+        for (var i = 0; i < section.length; i++) {
+
+            let current = section[i];
+
+
+            let dataCur: extensionSearchData = {
+                "image": "",
+                "link": "",
+                "name": "",
+            };
+            let poster = current.querySelector(".film-poster");
+            let detail = current.querySelector(".film-detail");
+
+            let temlLink = poster.querySelector("a").getAttribute("href");
+
+            if (temlLink.includes("http")) {
+                temlLink = (new URL(temlLink)).pathname;
+            }
+
+
+            dataCur.image = poster.querySelector("img").getAttribute("data-src");
+            dataCur.link = temlLink + "&engine=2";
+            dataCur.name = (detail.querySelector(".film-name") as HTMLElement).innerText.trim();
+
+
+
+            data.push(dataCur);
+
+
+
+        }
+
+        tempDOM.remove();
+
+        return {
+            "status": 200,
+            "data": data
+        };
+
+
+    },
+
+    "getSeason": async function getSeason(showID: string, showURL: string) {
+        try {
+            let seasonHTML = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/tv/seasons/${showID}`);
+
+            let tempSeasonDIV = document.createElement("div");
+            tempSeasonDIV.innerHTML = DOMPurify.sanitize(seasonHTML);
+            let tempDOM = tempSeasonDIV.getElementsByClassName("dropdown-item ss-item");
+            let seasonInfo = {};
+
+            for (var i = 0; i < tempDOM.length; i++) {
+                seasonInfo[(tempDOM[i] as HTMLElement).innerText] = tempDOM[i].getAttribute("data-id");
+            }
+
+
+
+            let showMetaData = await MakeFetch(`https://${fmoviesBaseURL}/${showURL}`);
+            let tempMetaDataDIV = document.createElement("div");
+            tempMetaDataDIV.innerHTML = DOMPurify.sanitize(showMetaData);
+            let metaData = {
+                "name": (tempMetaDataDIV.querySelector(".movie_information").querySelector(".heading-name") as HTMLElement).innerText,
+                "image": (tempMetaDataDIV.querySelector(".movie_information").querySelector(".film-poster-img") as HTMLImageElement).src,
+                "des": (tempMetaDataDIV.querySelector(".m_i-d-content").querySelector(".description") as HTMLElement).innerText,
+            };
+
+            tempSeasonDIV.remove();
+            tempMetaDataDIV.remove();
+            return { "status": 200, "data": { "seasons": seasonInfo, "meta": metaData } };
+
+        } catch (error) {
+            return { "status": 400, "data": error.toString() };
+        }
+    },
+
+
+    "getEpisode": async function getEpisode(seasonID: string) {
+        try {
+            let r = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/season/episodes/${seasonID}`);
+            let temp = document.createElement("div");
+            temp.innerHTML = DOMPurify.sanitize(r);
+            let tempDOM = temp.getElementsByClassName("nav-link btn btn-sm btn-secondary eps-item");
+            let data = [];
+            for (var i = 0; i < tempDOM.length; i++) {
+                let episodeData = {
+                    title: tempDOM[i].getAttribute("title"),
+                    id: tempDOM[i].getAttribute("data-id"),
+                };
+                data.push(episodeData);
+            }
+
+            temp.remove();
+
+            return { "status": 200, "data": data };
+
+
+        } catch (error) {
+            return { "status": 400, "data": error.toString() };
+        }
+    },
+
+    'getAnimeInfo': async function (url: string): Promise<extensionInfo> {
+        let self = this;
+        let urlSplit = url.split("&engine");
+        if (urlSplit.length >= 2) {
+            url = urlSplit[0];
+        }
+
+        let data: extensionInfo = {
+            "name": "",
+            "image": "",
+            "description": "",
+            "episodes": [],
+            "mainName": ""
+        };
+
+        let showIdSplit = url.split("-");
+        let showId = showIdSplit[showIdSplit.length - 1].split(".")[0];
+        let response = await self.getSeason(showId, url);
+
+
+        if (response.status == 200) {
+            data.name = response.data.meta.name;
+            data.image = response.data.meta.image;
+            data.description = response.data.meta.des;
+            data.mainName = url.split("/watch-")[1].split("-online")[0] + "-" + showId + "-";
+            data.episodes = [];
+
+            let allAwaits = [];
+            let seasonNames = [];
+            for (let season in response.data.seasons) {
+                seasonNames.push(season);
+                allAwaits.push(self.getEpisode(response.data.seasons[season]));
+            }
+
+            let values = await Promise.all(allAwaits);
+
+            for (let key = 0; key < values.length; key++) {
+
+                let seasonData = values[key];
+                for (let i = 0; i < seasonData.data.length; i++) {
+                    let tempData: extensionInfoEpisode = {
+                        title: `${seasonNames[key]} | ${seasonData.data[i].title}`,
+                        link: `?watch=${url}.${seasonData.data[i].id}&engine=2`,
+                    };
+
+                    data.episodes.push(tempData);
+                }
+            }
+
+            if (Object.keys(response.data.seasons).length === 0) {
+                let tempData: extensionInfoEpisode = {
+                    title: `Watch`,
+                    link: `?watch=${url}&engine=2`
+                };
+                data.episodes.push(tempData);
+            }
+
+            return data;
+
+        } else {
+            throw Error("Could not get the seasons.");
+        }
+
+    },
+
+    "getLinkFromStream": async function getLinkFromStream(url: string) {
+        try {
+            var option = {
+                'headers': {
+                    'x-requested-with': 'XMLHttpRequest',
+                }
+            };
+
+            let host = (new URL(url)).origin;
+            let linkSplit = url.split("/");
+            let link = linkSplit[linkSplit.length - 1];
+            link = link.split("?")[0];
+
+            let sourceJSON = JSON.parse(await MakeCusReqFmovies(`${host}/ajax/embed-4/getSources?id=${link}&_token=3&_number=${6}`, option));
+            return (sourceJSON);
+
+        } catch (err) {
+            throw err;
+        }
+    },
+    'getLinkFromUrl': async function (url: string): Promise<extensionVidSource> {
+
+        let self = this;
+        if (!url.includes("-online-")) {
+            url = url.replace("-full-", "-online-");
+        }
+
+        url = url.split("&engine")[0];
+
+        const data: extensionVidSource = {
+            sources: [],
+            name: "",
+            nameWSeason: "",
+            episode: "",
+            status: 400,
+            message: "",
+            next : null,
+            prev : null
+        };
+
+        let showIdSplit = url.split("-");
+        let showId = showIdSplit[showIdSplit.length - 1].split(".")[0];
+
+
+        try {
+            const option = {
+                'headers': {
+                    'referer': 'https://fmovies.ps/',
+                    'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36 Edg/98.0.1108.43",
+                }
+            };
+
+            let split = url.split("-");
+            split = split[split.length - 1].split(".");
+
+            let isShow  = split.length == 1;
+            let server : string;
+            let ep : string;
+
+
+            let responseAPI : string;
+            if (isShow) {
+                ep = split[0];
+                responseAPI = await MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/movie/episodes/${ep}`, option);
+            } else {
+                ep = split[1];
+                responseAPI = await MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/v2/episode/servers/${ep}`, option)
+            }
+
+
+
+            if (isShow) {
+                var getLink2 = responseAPI;
+                var dom = document.createElement("div");
+                dom.innerHTML = DOMPurify.sanitize(getLink2);
+
+                let tempDOM = dom.getElementsByClassName("nav-link btn btn-sm btn-secondary");
+
+                for (var i = 0; i < tempDOM.length; i++) {
+                    if (tempDOM[i].getAttribute("title").toLowerCase().indexOf("vidcloud") > -1) {
+                        server = tempDOM[i].getAttribute("data-linkid");
+                        break;
+                    }
+
+                }
+
+                dom.remove();
+
+
+            } else {
+                var getLink2 = responseAPI;
+                var dom = document.createElement("div");
+                dom.innerHTML = DOMPurify.sanitize(getLink2);
+                let tempDOM = dom.getElementsByClassName("nav-link btn btn-sm btn-secondary");
+
+                for (var i = 0; i < tempDOM.length; i++) {
+                    if (tempDOM[i].getAttribute("title").toLowerCase().indexOf("vidcloud") > -1) {
+                        server = tempDOM[i].getAttribute("data-id");
+                        break;
+                    }
+                }
+
+                dom.remove();
+            }
+
+            let seasonLinkPromises = [
+                MakeFetch(`https://${fmoviesBaseURL}/watch-${url.split(".")[0]}.${server}`),
+                MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/get_link/${server}`, option)
+            ];
+
+            let seasonLinkData = await Promise.all(seasonLinkPromises);
+
+            let getSeason = seasonLinkData[0];
+
+            let tempGetDom = document.createElement("div");
+            tempGetDom.innerHTML = DOMPurify.sanitize(getSeason);
+            let currentSeason = tempGetDom.querySelector(".detail_page-watch").getAttribute("data-season");
+            tempGetDom.remove();
+
+
+            let getLink = seasonLinkData[1];
+
+            let title = JSON.parse(getLink).title;
+            let link = JSON.parse(getLink).link;
+
+            let promises = [self.getLinkFromStream(link)];
+            let seasonNotEmpty = false;
+            if (currentSeason != "") {
+                seasonNotEmpty = true;
+                promises.push(MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/season/episodes/${currentSeason}`));
+            }
+
+            let parallelReqs = await Promise.all(promises);
+
+            if (seasonNotEmpty) {
+                let r = parallelReqs[1];
+                let temp = document.createElement("div");
+                temp.innerHTML = DOMPurify.sanitize(r);
+                let tempDOM = temp.getElementsByClassName("nav-link btn btn-sm btn-secondary eps-item");
+                for (var i = 0; i < tempDOM.length; i++) {
+                    if (ep == tempDOM[i].getAttribute("data-id")) {
+                        if (i != 0) {
+                            data.prev = url.split(".")[0] + "." + tempDOM[i - 1].getAttribute("data-id") + "&engine=2";
+                        }
+
+                        if (i != (tempDOM.length - 1)) {
+                            data.next = url.split(".")[0] + "." + tempDOM[i + 1].getAttribute("data-id") + "&engine=2";
+                        }
+                    }
+
+                }
+                temp.remove();
+            }
+
+            let sourceJSON = parallelReqs[0];
+            let encryptedURL = sourceJSON.sources;
+            let decryptKey : string;
+
+            if (typeof encryptedURL == "string") {
+                try {
+                    decryptKey = await extractKey(4, null, true);
+                    sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+
+                } catch (err) {
+                    if (err.message == "Malformed UTF-8 data") {
+                        decryptKey = await extractKey(4);
+                        try {
+                            sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                        } catch (err) {
+
+                        }
+                    }
+                }
+            }
+
+
+
+
+            data.status = 200;
+            data.message = "done";
+
+            if (title == "") {
+                data.episode = (1).toString();
+            } else {
+                data.episode = parseFloat(title.split(" ")[1]).toString();
+            }
+
+            data.name = url.split("/watch-")[1].split("-online")[0] + "-" + showId + "-";
+            data.nameWSeason = url.split("/watch-")[1].split("-online")[0] + "-" + currentSeason;
+
+            data.sources = [{
+                "url": sourceJSON.sources[0].file,
+                "name": "hls",
+                "type": "HLS",
+            }];
+
+            data.subtitles = sourceJSON.tracks;
+            return (data);
+
+
+
+        } catch (err) {
+            console.error(err);
+            throw (new Error("Couldn't get the link"));
+        }
+    },
+
+    "discover": async function (): Promise<Array<extensionDiscoverData>> {
+        let temp = document.createElement("div");
+        temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://fmovies.app/tv-show`, {}));
+        let data = [];
+        for (const elem of temp.querySelectorAll(".flw-item")) {
+            let image = elem.querySelector("img").getAttribute("data-src");
+            let tempAnchor = elem.querySelector(".film-name");
+            let name = (tempAnchor as HTMLElement).innerText.trim();
+            let link = tempAnchor.querySelector("a").getAttribute("href");
+
+            try {
+                link = (new URL(link)).pathname;
+            } catch (err) {
+
+            }
+
+            data.push({
+                image,
+                name,
+                link
+            });
+        }
+
+        return data;
+    }
+
+};

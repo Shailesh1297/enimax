@@ -14,6 +14,10 @@ function returnExtensionList() {
     return extensionList;
 }
 
+function returnExtensionDisabled() {
+    return extensionDisabled;
+}
+
 function returnExtensionNames() {
     return extensionNames;
 }

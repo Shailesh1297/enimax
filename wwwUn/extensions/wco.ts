@@ -178,7 +178,9 @@ var wco : extension = {
             nameWSeason : "",
             episode : "",
             status : 400,
-            message: ""
+            message: "",
+            next : null,
+            prev : null,
         };
 
         try {
@@ -210,7 +212,14 @@ var wco : extension = {
             
 
             for (let npi = 0; npi < nextPrev.length; npi++) {
-                data[nextPrev[npi].children[0].getAttribute("rel")] = (nextPrev[npi].children[0].getAttribute("href").replace(baseURL, "")) + "&engine=0";
+                try{
+                    let tempData = nextPrev[npi].children[0].getAttribute("rel").trim().toLowerCase();
+                    if(tempData == "next" || tempData == "prev"){
+                        data[tempData] = (nextPrev[npi].children[0].getAttribute("href").replace(baseURL, "")) + "&engine=0";
+                    }
+                }catch(err){
+
+                }
             }
 
             let tempReg = /<script>var.+?document\.write\(decodeURIComponent\(escape.+?<\/script>/gis;

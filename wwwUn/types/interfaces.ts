@@ -101,6 +101,7 @@ interface cordovaWindow extends Window{
 	XMLHttpRequest : any,
     returnExtensionNames : Function,
     returnDownloadQueue : Function,
+    returnExtensionDisabled : Function,
     listDir : Function,
     removeDirectory : Function
 }
@@ -130,12 +131,11 @@ interface modifiedString  extends String{
 
 interface extension{
     baseURL : string,
-    searchApi: (query: any) => Promise<unknown>;
-    getAnimeInfo: (url: any) => Promise<{}>;
-    getLinkFromUrl: (url: any) => Promise<{}>;
-    config? : { [key: string]: string },
-    discover?: () => Promise<any[]>;
-    getDiscoverLink? : Function
+    searchApi: (query: string) => Promise<extensionSearch>;
+    getAnimeInfo: (url: string) => Promise<extensionInfo>;
+    getLinkFromUrl: (url: any) => Promise<extensionVidSource>;
+    discover?: () => Promise<Array<extensionDiscoverData>>;
+    [key: string]: any;
 }
 
 interface extensionSearchData{
@@ -160,6 +160,9 @@ interface extensionInfo{
 interface extensionInfoEpisode{
     link : string,
     title : string,
+    id? : string,
+    thumbnail? : string,
+    description? : string
 }
 
 interface extensionVidSource{
@@ -168,7 +171,10 @@ interface extensionVidSource{
     nameWSeason : string,
     episode : string,
     status : number,
-    message: string
+    message: string,
+    next : string | null,
+    prev : string | null,
+    subtitles? : Array<videoSubtitle>
 }
 
 interface extensionDiscoverData{

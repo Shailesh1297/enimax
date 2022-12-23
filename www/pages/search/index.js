@@ -2,11 +2,16 @@
 const extensionNames = window.parent.returnExtensionNames();
 // @ts-ignore
 const extensionList = window.parent.returnExtensionList();
+// @ts-ignore
+const extensionDisabled = window.parent.returnExtensionDisabled();
 let sourcesNames = extensionNames;
 // @ts-ignore
 let pullTabArray = [];
 pullTabArray.push(new pullToRefresh(document.getElementById("mainConSearch")));
 for (var i = 0; i < extensionList.length; i++) {
+    if (extensionDisabled[i]) {
+        continue;
+    }
     let atr = {
         "value": i.toString(),
     };

@@ -138,6 +138,7 @@ if (config && config.chrome) {
         });
     };
 }
+//# sourceMappingURL=index.js.map
 var wco = {
     "baseURL": "https://www.wcoforever.net",
     'searchApi': function (query) {
@@ -275,7 +276,9 @@ var wco = {
             nameWSeason: "",
             episode: "",
             status: 400,
-            message: ""
+            message: "",
+            next: null,
+            prev: null,
         };
         try {
             let reqOption = {
@@ -298,7 +301,14 @@ var wco = {
             }
             let nextPrev = dom.getElementsByClassName("prev-next");
             for (let npi = 0; npi < nextPrev.length; npi++) {
-                data[nextPrev[npi].children[0].getAttribute("rel")] = (nextPrev[npi].children[0].getAttribute("href").replace(baseURL, "")) + "&engine=0";
+                try {
+                    let tempData = nextPrev[npi].children[0].getAttribute("rel").trim().toLowerCase();
+                    if (tempData == "next" || tempData == "prev") {
+                        data[tempData] = (nextPrev[npi].children[0].getAttribute("href").replace(baseURL, "")) + "&engine=0";
+                    }
+                }
+                catch (err) {
+                }
             }
             let tempReg = /<script>var.+?document\.write\(decodeURIComponent\(escape.+?<\/script>/gis;
             let tempRegOut = tempReg.exec(pageHTML)[0];
@@ -311,7 +321,7 @@ var wco = {
             });
             mainVidLink = mainVidLink.split("src=\"")[1].split("\" ")[0];
             wcoRef = mainVidLink;
-            reqOption.headers.referer = mainVidLink;
+            reqOption.headers["referer"] = mainVidLink;
             let domain;
             try {
                 domain = new URL(mainVidLink).origin;
@@ -328,32 +338,32 @@ var wco = {
             }
             let vidLink = domain + videoHTML.split("$.getJSON(\"")[1].split("\"")[0];
             try {
-                let animeUrl = (vidLink.split("v=cizgi").join('v=')).split('&embed=cizgi').join('&embed=anime');
-                let req4;
+                let vidLink2 = (vidLink.split("v=cizgi").join('v=')).split('&embed=cizgi').join('&embed=anime');
+                let vidLink2HTML;
                 if (config.chrome) {
-                    req4 = await MakeFetch(animeUrl, {});
+                    vidLink2HTML = await MakeFetch(vidLink2, {});
                 }
                 else {
-                    req4 = await MakeCusReqFmovies(animeUrl, reqOption);
+                    vidLink2HTML = await MakeCusReqFmovies(vidLink2, reqOption);
                 }
-                req4 = JSON.parse(req4);
-                if (req4.hd != "") {
+                let vidLink2Data = JSON.parse(vidLink2HTML);
+                if (vidLink2Data.hd != "") {
                     sources.push({
-                        "url": req4.cdn + "/getvid?evid=" + req4.hd,
+                        "url": vidLink2Data.cdn + "/getvid?evid=" + vidLink2Data.hd,
                         "name": "HD#2",
                         "type": "mp4"
                     });
                 }
-                if (req4.enc != "") {
+                if (vidLink2Data.enc != "") {
                     sources.push({
-                        "url": req4.cdn + "/getvid?evid=" + req4.enc,
+                        "url": vidLink2Data.cdn + "/getvid?evid=" + vidLink2Data.enc,
                         "name": "SD#2",
                         "type": "mp4"
                     });
                 }
-                if (req4.fhd != "") {
+                if (vidLink2Data.fhd != "") {
                     sources.push({
-                        "url": req4.cdn + "/getvid?evid=" + req4.fhd,
+                        "url": vidLink2Data.cdn + "/getvid?evid=" + vidLink2Data.fhd,
                         "name": "FHD#2",
                         "type": "mp4"
                     });
@@ -362,31 +372,31 @@ var wco = {
             catch (err) {
                 console.error(err);
             }
-            let req3;
+            let vidLinkHTML;
             if (config.chrome) {
-                req3 = await MakeFetch(vidLink, {});
+                vidLinkHTML = await MakeFetch(vidLink, {});
             }
             else {
-                req3 = await MakeCusReqFmovies(vidLink, reqOption);
+                vidLinkHTML = await MakeCusReqFmovies(vidLink, reqOption);
             }
-            req3 = JSON.parse(req3);
-            if (req3.enc != "") {
+            let vidLinkData = JSON.parse(vidLinkHTML);
+            if (vidLinkData.enc != "") {
                 sources.unshift({
-                    "url": req3.cdn + "/getvid?evid=" + req3.enc,
+                    "url": vidLinkData.cdn + "/getvid?evid=" + vidLinkData.enc,
                     "name": "SD",
                     "type": "mp4",
                 });
             }
-            if (req3.hd != "") {
+            if (vidLinkData.hd != "") {
                 sources.unshift({
-                    "url": req3.cdn + "/getvid?evid=" + req3.hd,
+                    "url": vidLinkData.cdn + "/getvid?evid=" + vidLinkData.hd,
                     "name": "HD",
                     "type": "mp4"
                 });
             }
-            if (req3.fhd != "") {
+            if (vidLinkData.fhd != "") {
                 sources.unshift({
-                    "url": req3.cdn + "/getvid?evid=" + req3.fhd,
+                    "url": vidLinkData.cdn + "/getvid?evid=" + vidLinkData.fhd,
                     "name": "FHD",
                     "type": "mp4"
                 });
@@ -408,11 +418,11 @@ var wco = {
         }
     },
     "discover": async function () {
+        let baseURL = this.baseURL;
         let temp = document.createElement("div");
-        temp.innerHTML = DOMPurify.sanitize(await MakeFetch("https://wcoforever.net", {}));
+        temp.innerHTML = DOMPurify.sanitize(await MakeFetch(baseURL, {}));
         let data = [];
-        let promises = [];
-        for (elem of temp.querySelectorAll(".items")[1].querySelectorAll("li")) {
+        for (let elem of temp.querySelectorAll(".items")[1].querySelectorAll("li")) {
             let image = "https:" + elem.querySelector("img").getAttribute("src");
             let tempAnchor = elem.querySelectorAll("a")[1];
             let name = tempAnchor.innerText;
@@ -430,10 +440,11 @@ var wco = {
         return data;
     },
     "getDiscoverLink": async function (mainLink) {
+        let baseURL = this.baseURL;
         try {
             let temp = document.createElement("div");
-            temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://wcoforever.net${mainLink}`, {}));
-            mainLink = temp.querySelector('[rel="category tag"]').getAttribute("href").replace("https://www.wcoforever.net", "");
+            temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`${baseURL}${mainLink}`, {}));
+            mainLink = temp.querySelector('[rel="category tag"]').getAttribute("href").replace(baseURL, "");
             return mainLink;
         }
         catch (err) {
@@ -441,575 +452,325 @@ var wco = {
         }
     }
 };
+//# sourceMappingURL=wco.js.map
+// RIP
 var animixplay = {
     'searchApi': function (query) {
-        return (new Promise(function (resolve, reject) {
-            fetch("https://v1.ic5qwh28vwloyjo28qtg.workers.dev/", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams({
-                    'q2': query,
-                    'origin': 1,
-                    'root': 'animixplay.to',
-                    'd': 'gogoanime.gg'
-                })
-            }).then(response => response.json())
-                .then(response => {
-                let temp = document.createElement("div");
-                temp.innerHTML = DOMPurify.sanitize(response.result);
-                let li = temp.querySelectorAll("li");
-                let data = [];
-                for (var i = 0; i < li.length; i++) {
-                    data.push({
-                        "image": li[i].getElementsByTagName("img")[0].getAttribute("src"),
-                        "name": li[i].getElementsByTagName("a")[0].getAttribute("title"),
-                        "link": li[i].getElementsByTagName("a")[0].getAttribute("href") + "&engine=1",
-                    });
-                }
-                temp.remove();
-                resolve({
-                    "status": 200,
-                    "data": data
-                });
-            }).catch(function (err) {
-                reject(err);
-            });
-        }));
+        alert("Animixplay has been shut down.");
     },
     'getAnimeInfo': function (url) {
-        return (new Promise(function (resolve, reject) {
-            url = url.split("&engine");
-            if (url.length == 2) {
-                url = url[0];
-            }
-            let ogURL = url;
-            url = "https://animixplay.to/" + url;
-            let settled = "allSettled" in Promise;
-            fetch(url).then(response => response.text()).then(async function (response) {
-                let temp = document.createElement("div");
-                temp.innerHTML = DOMPurify.sanitize(response);
-                let data = {};
-                data.name = url.split("/")[url.split("/").length - 1].split("-").join(" ");
-                data.image = "";
-                data.description = "";
-                let temp2 = document.createElement("div");
-                let malId = null;
-                try {
-                    malId = parseInt(response.split("malid = '")[1]);
-                    let response2 = await MakeFetch(`https://myanimelist.net/anime/${malId}`, {});
-                    temp2.innerHTML = DOMPurify.sanitize(response2, { ALLOWED_ATTR: ['itemprop'] });
-                    data.image = temp2.querySelector('[itemprop="image"]').src;
-                    if (data.image == null || data.image == undefined || data.image.trim() == "") {
-                        data.image = temp2.querySelector('[itemprop="image"]').getAttribute('data-image');
-                        if (data.image == null || data.image == undefined || data.image.trim() == "") {
-                            data.image = temp2.querySelector('[itemprop="image"]').getAttribute('data-src');
-                        }
-                    }
-                    data.description = temp2.querySelector('[itemprop="description"]').innerText;
-                }
-                catch (err) {
-                    console.error(err);
-                }
-                finally {
-                    temp2.remove();
-                }
-                let thumbnails = {};
-                if (malId !== null) {
-                    try {
-                        let thumbnailsTemp = JSON.parse(await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malId}`, {})).episodes;
-                        for (let i = 0; i < thumbnailsTemp.length; i++) {
-                            thumbnails[thumbnailsTemp[i].number] = thumbnailsTemp[i];
-                        }
-                    }
-                    catch (err) {
-                    }
-                }
-                let animeEps = [];
-                let animeDOM = JSON.parse(temp.querySelector("#epslistplace").innerHTML);
-                let animeName;
-                let count = 0;
-                for (value in animeDOM) {
-                    if (value == "eptotal" || typeof animeDOM[value] != "string") {
-                        continue;
-                    }
-                    try {
-                        let l = animeDOM[value].split("id=")[1].split("&")[0];
-                        let epNum = parseFloat(value) + 1;
-                        let tempEp = {
-                            "link": "?watch=" + ogURL + "/ep" + value + "&engine=1",
-                            "title": `Episode ${isNaN(epNum) ? 0.1 : epNum}`,
-                        };
-                        try {
-                            let epIndex = parseFloat(value) + 1;
-                            if (epIndex in thumbnails) {
-                                tempEp.thumbnail = thumbnails[epIndex].image;
-                                tempEp.title = "Episode " + epIndex + " - " + thumbnails[epIndex].title;
-                                tempEp.description = thumbnails[epIndex].description;
-                            }
-                        }
-                        catch (err) {
-                        }
-                        animeEps.push(tempEp);
-                    }
-                    catch (err) {
-                        console.error(err);
-                    }
-                    count++;
-                }
-                animeName = url.split("/")[url.split("/").length - 1] + "-";
-                data.episodes = animeEps;
-                data.mainName = animeName;
-                temp.remove();
-                resolve(data);
-            }).catch(function (err) {
-                console.error(err);
-                reject(err);
-            });
-        }));
+        alert("Animixplay has been shut down.");
     },
     'getLinkFromUrl': function (url) {
-        return (new Promise(async function (resolve, reject) {
-            url = url.split("&engine");
-            url = url[0];
-            let nextUrl = "https://animixplay.to/" + url;
-            let data = {};
-            let response = await MakeFetch(nextUrl, {});
-            let temp = document.createElement("div");
-            temp.innerHTML = DOMPurify.sanitize(response);
-            let animeDOM = JSON.parse(temp.querySelector("#epslistplace").innerHTML);
-            temp.remove();
-            let episode = parseFloat(url.split("ep")[1]);
-            if ((episode - 1).toString() in animeDOM) {
-                data.prev = (url.split("ep")[0] + "ep" + (episode - 1)) + "&engine=1";
-            }
-            if ((episode + 1).toString() in animeDOM) {
-                data.next = (url.split("ep")[0] + "ep" + (episode + 1)) + "&engine=1";
-            }
-            if (episode == -1) {
-                data.episode = 0.1;
-            }
-            else {
-                data.episode = episode + 1;
-            }
-            if (isNaN(data.episode)) {
-                data.episode = 0.1;
-            }
-            data.nameWSeason = url.split("/")[1].split("-").join("-") + "-";
-            data.name = (url.split("/")[1].split("-").join("-")) + "-";
-            let l = animeDOM[isNaN(episode) ? url.substringAfter("ep") : episode.toString()].split("id=")[1].split("&")[0];
-            function padding(string, len) {
-                let length = len - string.length;
-                for (var i = 0; i < length; i++) {
-                    string += "=";
-                }
-                return string;
-            }
-            function idToLink(id) {
-                let start = padding(id, 8);
-                start = start + "LTXs3GrU8we9O";
-                start = btoa(start);
-                let end = start.substring(0, 10) + String.fromCharCode(start.charCodeAt(10) - 1) + "\n";
-                let endRes = start + btoa(end);
-                return endRes;
-            }
-            let link = idToLink(l);
-            data.sources = [];
-            if (config.chrome) {
-                let reqTimeout = setTimeout(function () {
-                    chrome.webRequest.onHeadersReceived.removeListener(callbackReq);
-                    reject("Timeout");
-                }, 3000);
-                function callbackReq(details) {
-                    clearTimeout(reqTimeout);
-                    let res = details.url;
-                    res = atob(res.split("#")[1]);
-                    data.sources.push({
-                        "url": res,
-                        "name": "HlS",
-                        "type": "hls"
-                    });
-                    data.status = 200;
-                    data.message = "done";
-                    chrome.webRequest.onHeadersReceived.removeListener(callbackReq);
-                    resolve(data);
-                }
-                chrome.webRequest.onHeadersReceived.addListener(callbackReq, { urls: ["https://plyr.link/*"] });
-                MakeFetch(`https://animixplay.to/api/live${link}`, {
-                    method: 'GET'
-                });
-            }
-            else {
-                cordova.plugin.http.sendRequest(`https://animixplay.to/api/live${link}`, {
-                    method: 'GET'
-                }, function (response) {
-                    let res = response.url;
-                    res = atob(res.split("#")[1]);
-                    data.sources.push({
-                        "url": res,
-                        "name": "HlS",
-                        "type": "hls"
-                    });
-                    data.status = 200;
-                    data.message = "done";
-                    resolve(data);
-                }, function (response) {
-                    console.error(response);
-                    reject("err 4583");
-                });
-            }
-        }));
-    },
-    "discover": async function () {
-        let temp = document.createElement("div");
-        temp.innerHTML = DOMPurify.sanitize(await MakeFetch("https://animixplay.to/?tab=popular", {}));
-        let data = [];
-        for (elem of temp.querySelector("#resultplace").querySelectorAll("li")) {
-            let image = elem.querySelector("img").getAttribute("src");
-            let tempAnchor = elem.querySelector("a");
-            let name = tempAnchor.getAttribute("title");
-            let link = tempAnchor.getAttribute("href");
-            data.push({
-                image,
-                name,
-                link
-            });
-        }
-        return data;
+        alert("Animixplay has been shut down.");
     }
 };
+//# sourceMappingURL=animixplay.js.map
 var fmovies = {
-    'searchApi': function (query) {
+    "baseURL": fmoviesBaseURL,
+    "searchApi": async function (query) {
         query = decodeURIComponent(query);
-        return (new Promise(function (resolve, reject) {
-            fetch(`https://${fmoviesBaseURL}/search/${query.replace(" ", "-")}`, {}).then(response => response.text())
-                .then(response => {
-                let tempDOM = document.createElement("div");
-                tempDOM.innerHTML = DOMPurify.sanitize(response);
-                let data = [];
-                var section = tempDOM.querySelectorAll(".flw-item");
-                for (var i = 0; i < section.length; i++) {
-                    let current = section[i];
-                    let dataCur = {};
-                    let poster = current.querySelector(".film-poster");
-                    let detail = current.querySelector(".film-detail");
-                    let temlLink = poster.querySelector("a").getAttribute("href");
-                    if (temlLink.includes("http")) {
-                        temlLink = new URL(temlLink);
-                        temlLink = temlLink.pathname;
-                    }
-                    dataCur.image = poster.querySelector("img").getAttribute("data-src");
-                    dataCur.link = temlLink + "&engine=2";
-                    dataCur.name = detail.querySelector(".film-name").innerText.trim();
-                    data.push(dataCur);
-                }
-                tempDOM.remove();
-                resolve({
-                    "status": 200,
-                    "data": data
-                });
-            }).catch(function (err) {
-                reject(err);
-            });
-        }));
-    },
-    'getAnimeInfo': function (url) {
-        async function getSeason(x, showURL) {
-            try {
-                let r = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/tv/seasons/${x}`);
-                let temp = document.createElement("div");
-                temp.innerHTML = DOMPurify.sanitize(r);
-                let tempDOM = temp.getElementsByClassName("dropdown-item ss-item");
-                let data = {};
-                for (var i = 0; i < tempDOM.length; i++) {
-                    data[tempDOM[i].innerText] = tempDOM[i].getAttribute("data-id");
-                }
-                r = await MakeFetch(`https://${fmoviesBaseURL}/${showURL}`);
-                let temp2 = document.createElement("div");
-                temp2.innerHTML = DOMPurify.sanitize(r);
-                let data2 = {};
-                data2.name = temp2.querySelector(".movie_information").querySelector(".heading-name").innerText;
-                data2.img = temp2.querySelector(".movie_information").querySelector(".film-poster-img").src;
-                data2.des = temp2.querySelector(".m_i-d-content").querySelector(".description").innerText;
-                temp.remove();
-                temp2.remove();
-                return { "status": 200, "data": { "seasons": data, "meta": data2 } };
+        let response = await MakeFetch(`https://${fmoviesBaseURL}/search/${query.replace(" ", "-")}`, {});
+        let tempDOM = document.createElement("div");
+        tempDOM.innerHTML = DOMPurify.sanitize(response);
+        let data = [];
+        let section = tempDOM.querySelectorAll(".flw-item");
+        for (var i = 0; i < section.length; i++) {
+            let current = section[i];
+            let dataCur = {
+                "image": "",
+                "link": "",
+                "name": "",
+            };
+            let poster = current.querySelector(".film-poster");
+            let detail = current.querySelector(".film-detail");
+            let temlLink = poster.querySelector("a").getAttribute("href");
+            if (temlLink.includes("http")) {
+                temlLink = (new URL(temlLink)).pathname;
             }
-            catch (error) {
-                return { "status": 400, "data": error.toString() };
-            }
+            dataCur.image = poster.querySelector("img").getAttribute("data-src");
+            dataCur.link = temlLink + "&engine=2";
+            dataCur.name = detail.querySelector(".film-name").innerText.trim();
+            data.push(dataCur);
         }
-        async function getEpisode(x) {
-            try {
-                let r = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/season/episodes/${x}`);
-                let temp = document.createElement("div");
-                temp.innerHTML = DOMPurify.sanitize(r);
-                let tempDOM = temp.getElementsByClassName("nav-link btn btn-sm btn-secondary eps-item");
-                let data = [];
-                for (var i = 0; i < tempDOM.length; i++) {
-                    let dataT = {};
-                    dataT.title = tempDOM[i].getAttribute("title");
-                    dataT.id = tempDOM[i].getAttribute("data-id");
-                    data.push(dataT);
-                }
-                temp.remove();
-                return { "status": 200, "data": data };
-            }
-            catch (error) {
-                return { "status": 400, "data": error.toString() };
-            }
-        }
-        return (new Promise(function (resolve, reject) {
-            url = url.split("&engine");
-            if (url.length == 2) {
-                url = url[0];
-            }
-            let data = {};
-            let showId = url.split("-");
-            showId = showId[showId.length - 1].split(".")[0];
-            getSeason(showId, url).then(async function (response) {
-                if (response.status == 200) {
-                    data.name = response.data.meta.name;
-                    data.image = response.data.meta.img;
-                    data.description = response.data.meta.des;
-                    data.mainName = url.split("/watch-")[1].split("-online")[0] + "-" + showId + "-";
-                    data.episodes = [];
-                    let allAwaits = [];
-                    let seasonNames = [];
-                    for (season in response.data.seasons) {
-                        check = 1;
-                        seasonNames.push(season);
-                        let seasonData = getEpisode(response.data.seasons[season]);
-                        allAwaits.push(seasonData);
-                    }
-                    Promise.all(allAwaits).then((values) => {
-                        for (let key = 0; key < values.length; key++) {
-                            let seasonData = values[key];
-                            for (let i = 0; i < seasonData.data.length; i++) {
-                                let tempData = {};
-                                tempData.title = `${seasonNames[key]} | ${seasonData.data[i].title}`;
-                                tempData.link = `?watch=${url}.${seasonData.data[i].id}&engine=2`;
-                                data.episodes.push(tempData);
-                            }
-                        }
-                        if (Object.keys(response.data.seasons).length === 0) {
-                            let tempData = {};
-                            tempData.title = `Watch`;
-                            tempData.link = `?watch=${url}&engine=2`;
-                            data.episodes.push(tempData);
-                        }
-                        resolve(data);
-                    });
-                }
-                else {
-                    reject(response.data);
-                }
-            }).catch(function (err) {
-                reject(err);
-            });
-        }));
+        tempDOM.remove();
+        return {
+            "status": 200,
+            "data": data
+        };
     },
-    'getLinkFromUrl': function (url) {
+    "getSeason": async function getSeason(showID, showURL) {
+        try {
+            let seasonHTML = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/tv/seasons/${showID}`);
+            let tempSeasonDIV = document.createElement("div");
+            tempSeasonDIV.innerHTML = DOMPurify.sanitize(seasonHTML);
+            let tempDOM = tempSeasonDIV.getElementsByClassName("dropdown-item ss-item");
+            let seasonInfo = {};
+            for (var i = 0; i < tempDOM.length; i++) {
+                seasonInfo[tempDOM[i].innerText] = tempDOM[i].getAttribute("data-id");
+            }
+            let showMetaData = await MakeFetch(`https://${fmoviesBaseURL}/${showURL}`);
+            let tempMetaDataDIV = document.createElement("div");
+            tempMetaDataDIV.innerHTML = DOMPurify.sanitize(showMetaData);
+            let metaData = {
+                "name": tempMetaDataDIV.querySelector(".movie_information").querySelector(".heading-name").innerText,
+                "image": tempMetaDataDIV.querySelector(".movie_information").querySelector(".film-poster-img").src,
+                "des": tempMetaDataDIV.querySelector(".m_i-d-content").querySelector(".description").innerText,
+            };
+            tempSeasonDIV.remove();
+            tempMetaDataDIV.remove();
+            return { "status": 200, "data": { "seasons": seasonInfo, "meta": metaData } };
+        }
+        catch (error) {
+            return { "status": 400, "data": error.toString() };
+        }
+    },
+    "getEpisode": async function getEpisode(seasonID) {
+        try {
+            let r = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/season/episodes/${seasonID}`);
+            let temp = document.createElement("div");
+            temp.innerHTML = DOMPurify.sanitize(r);
+            let tempDOM = temp.getElementsByClassName("nav-link btn btn-sm btn-secondary eps-item");
+            let data = [];
+            for (var i = 0; i < tempDOM.length; i++) {
+                let episodeData = {
+                    title: tempDOM[i].getAttribute("title"),
+                    id: tempDOM[i].getAttribute("data-id"),
+                };
+                data.push(episodeData);
+            }
+            temp.remove();
+            return { "status": 200, "data": data };
+        }
+        catch (error) {
+            return { "status": 400, "data": error.toString() };
+        }
+    },
+    'getAnimeInfo': async function (url) {
+        let self = this;
+        let urlSplit = url.split("&engine");
+        if (urlSplit.length >= 2) {
+            url = urlSplit[0];
+        }
+        let data = {
+            "name": "",
+            "image": "",
+            "description": "",
+            "episodes": [],
+            "mainName": ""
+        };
+        let showIdSplit = url.split("-");
+        let showId = showIdSplit[showIdSplit.length - 1].split(".")[0];
+        let response = await self.getSeason(showId, url);
+        if (response.status == 200) {
+            data.name = response.data.meta.name;
+            data.image = response.data.meta.image;
+            data.description = response.data.meta.des;
+            data.mainName = url.split("/watch-")[1].split("-online")[0] + "-" + showId + "-";
+            data.episodes = [];
+            let allAwaits = [];
+            let seasonNames = [];
+            for (let season in response.data.seasons) {
+                seasonNames.push(season);
+                allAwaits.push(self.getEpisode(response.data.seasons[season]));
+            }
+            let values = await Promise.all(allAwaits);
+            for (let key = 0; key < values.length; key++) {
+                let seasonData = values[key];
+                for (let i = 0; i < seasonData.data.length; i++) {
+                    let tempData = {
+                        title: `${seasonNames[key]} | ${seasonData.data[i].title}`,
+                        link: `?watch=${url}.${seasonData.data[i].id}&engine=2`,
+                    };
+                    data.episodes.push(tempData);
+                }
+            }
+            if (Object.keys(response.data.seasons).length === 0) {
+                let tempData = {
+                    title: `Watch`,
+                    link: `?watch=${url}&engine=2`
+                };
+                data.episodes.push(tempData);
+            }
+            return data;
+        }
+        else {
+            throw Error("Could not get the seasons.");
+        }
+    },
+    "getLinkFromStream": async function getLinkFromStream(url) {
+        try {
+            var option = {
+                'headers': {
+                    'x-requested-with': 'XMLHttpRequest',
+                }
+            };
+            let host = (new URL(url)).origin;
+            let linkSplit = url.split("/");
+            let link = linkSplit[linkSplit.length - 1];
+            link = link.split("?")[0];
+            let sourceJSON = JSON.parse(await MakeCusReqFmovies(`${host}/ajax/embed-4/getSources?id=${link}&_token=3&_number=${6}`, option));
+            return (sourceJSON);
+        }
+        catch (err) {
+            throw err;
+        }
+    },
+    'getLinkFromUrl': async function (url) {
+        let self = this;
         if (!url.includes("-online-")) {
             url = url.replace("-full-", "-online-");
         }
-        return (new Promise(async function (resolve, reject) {
-            let start = performance.now();
-            url = url.split("&engine");
-            url = url[0];
-            let data = {};
-            let showId = url.split("-");
-            showId = showId[showId.length - 1].split(".")[0];
-            async function getLinkFromStream(urlS, token) {
-                return new Promise(async function (resolve, reject) {
-                    try {
-                        var option = {
-                            'headers': {
-                                'referer': 'https://fmovies.ps/',
-                                'Host': 'streamrapid.ru',
-                                'user-agent': localStorage.getItem("userAgent")
-                            }
-                        };
-                        var option23 = {
-                            'headers': {
-                                'x-requested-with': 'XMLHttpRequest',
-                            }
-                        };
-                        let host = (new URL(urlS)).origin;
-                        var link = urlS.split("/");
-                        link = link[link.length - 1];
-                        link = link.split("?")[0];
-                        var second = await MakeCusReqFmovies(`${host}/ajax/embed-4/getSources?id=${link}&_token=3&_number=${6}`, option23);
-                        let jsonq = JSON.parse(second);
-                        resolve(jsonq);
-                    }
-                    catch (err) {
-                        console.error(err);
-                        reject(err);
-                    }
-                });
+        url = url.split("&engine")[0];
+        const data = {
+            sources: [],
+            name: "",
+            nameWSeason: "",
+            episode: "",
+            status: 400,
+            message: "",
+            next: null,
+            prev: null
+        };
+        let showIdSplit = url.split("-");
+        let showId = showIdSplit[showIdSplit.length - 1].split(".")[0];
+        try {
+            const option = {
+                'headers': {
+                    'referer': 'https://fmovies.ps/',
+                    'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36 Edg/98.0.1108.43",
+                }
+            };
+            let split = url.split("-");
+            split = split[split.length - 1].split(".");
+            let isShow = split.length == 1;
+            let server;
+            let ep;
+            let responseAPI;
+            if (isShow) {
+                ep = split[0];
+                responseAPI = await MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/movie/episodes/${ep}`, option);
             }
-            // ##########################
-            try {
-                let start = performance.now();
-                var option = {
-                    'headers': {
-                        'referer': 'https://fmovies.ps/',
-                        'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36 Edg/98.0.1108.43",
+            else {
+                ep = split[1];
+                responseAPI = await MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/v2/episode/servers/${ep}`, option);
+            }
+            if (isShow) {
+                var getLink2 = responseAPI;
+                var dom = document.createElement("div");
+                dom.innerHTML = DOMPurify.sanitize(getLink2);
+                let tempDOM = dom.getElementsByClassName("nav-link btn btn-sm btn-secondary");
+                for (var i = 0; i < tempDOM.length; i++) {
+                    if (tempDOM[i].getAttribute("title").toLowerCase().indexOf("vidcloud") > -1) {
+                        server = tempDOM[i].getAttribute("data-linkid");
+                        break;
                     }
-                };
-                var option9 = {
-                    'headers': {
-                        'referer': 'https://fmovies.app/',
-                        'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36 Edg/98.0.1108.43",
-                    }
-                };
-                var split = url.split("-");
-                var split = split[split.length - 1].split(".");
-                var server;
-                var server2;
-                let ep;
-                // let tokenStream =  getTokenFromUrl("https://streamrapid.ru/js/player/","6LcmoUQcAAAAANdFmpVMNp8fLPptGk2uVSnY0TyZ");
-                let promise2;
-                if (split.length == 1) {
-                    ep = split[0];
-                    promise2 = MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/movie/episodes/${ep}`, option);
                 }
-                else {
-                    ep = split[1];
-                    promise2 = MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/v2/episode/servers/${ep}`, option);
+                dom.remove();
+            }
+            else {
+                var getLink2 = responseAPI;
+                var dom = document.createElement("div");
+                dom.innerHTML = DOMPurify.sanitize(getLink2);
+                let tempDOM = dom.getElementsByClassName("nav-link btn btn-sm btn-secondary");
+                for (var i = 0; i < tempDOM.length; i++) {
+                    if (tempDOM[i].getAttribute("title").toLowerCase().indexOf("vidcloud") > -1) {
+                        server = tempDOM[i].getAttribute("data-id");
+                        break;
+                    }
                 }
-                Promise.all([promise2]).then(async (tokens) => {
-                    if (split.length == 1) {
-                        var getLink2 = tokens[0];
-                        var dom = document.createElement("div");
-                        dom.innerHTML = DOMPurify.sanitize(getLink2);
-                        let tempDOM = dom.getElementsByClassName("nav-link btn btn-sm btn-secondary");
-                        for (var i = 0; i < tempDOM.length; i++) {
-                            if (tempDOM[i].getAttribute("title").toLowerCase().indexOf("vidcloud") > -1) {
-                                server = tempDOM[i].getAttribute("data-linkid");
-                            }
-                            else if (tempDOM[i].getAttribute("title").toLowerCase().indexOf("mixdrop") > -1) {
-                                server2 = tempDOM[i].getAttribute("data-linkid");
-                            }
+                dom.remove();
+            }
+            let seasonLinkPromises = [
+                MakeFetch(`https://${fmoviesBaseURL}/watch-${url.split(".")[0]}.${server}`),
+                MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/get_link/${server}`, option)
+            ];
+            let seasonLinkData = await Promise.all(seasonLinkPromises);
+            let getSeason = seasonLinkData[0];
+            let tempGetDom = document.createElement("div");
+            tempGetDom.innerHTML = DOMPurify.sanitize(getSeason);
+            let currentSeason = tempGetDom.querySelector(".detail_page-watch").getAttribute("data-season");
+            tempGetDom.remove();
+            let getLink = seasonLinkData[1];
+            let title = JSON.parse(getLink).title;
+            let link = JSON.parse(getLink).link;
+            let promises = [self.getLinkFromStream(link)];
+            let seasonNotEmpty = false;
+            if (currentSeason != "") {
+                seasonNotEmpty = true;
+                promises.push(MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/season/episodes/${currentSeason}`));
+            }
+            let parallelReqs = await Promise.all(promises);
+            if (seasonNotEmpty) {
+                let r = parallelReqs[1];
+                let temp = document.createElement("div");
+                temp.innerHTML = DOMPurify.sanitize(r);
+                let tempDOM = temp.getElementsByClassName("nav-link btn btn-sm btn-secondary eps-item");
+                for (var i = 0; i < tempDOM.length; i++) {
+                    if (ep == tempDOM[i].getAttribute("data-id")) {
+                        if (i != 0) {
+                            data.prev = url.split(".")[0] + "." + tempDOM[i - 1].getAttribute("data-id") + "&engine=2";
                         }
-                        dom.remove();
-                    }
-                    else {
-                        var getLink2 = tokens[0];
-                        var dom = document.createElement("div");
-                        dom.innerHTML = DOMPurify.sanitize(getLink2);
-                        let tempDOM = dom.getElementsByClassName("nav-link btn btn-sm btn-secondary");
-                        for (var i = 0; i < tempDOM.length; i++) {
-                            if (tempDOM[i].getAttribute("title").toLowerCase().indexOf("vidcloud") > -1) {
-                                server = tempDOM[i].getAttribute("data-id");
-                            }
-                            else if (tempDOM[i].getAttribute("title").toLowerCase().indexOf("mixdrop") > -1) {
-                                server2 = tempDOM[i].getAttribute("data-id");
-                            }
+                        if (i != (tempDOM.length - 1)) {
+                            data.next = url.split(".")[0] + "." + tempDOM[i + 1].getAttribute("data-id") + "&engine=2";
                         }
-                        dom.remove();
                     }
-                    let seasonLinkPromises = [
-                        MakeFetch(`https://${fmoviesBaseURL}/watch-${url.split(".")[0]}.${server}`),
-                        MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/get_link/${server}`, option)
-                    ];
-                    let seasonLinkData = await Promise.all(seasonLinkPromises);
-                    let getSeason = seasonLinkData[0];
-                    let tempGetDom = document.createElement("div");
-                    tempGetDom.innerHTML = DOMPurify.sanitize(getSeason);
-                    currentSeason = tempGetDom.querySelector(".detail_page-watch").getAttribute("data-season");
-                    tempGetDom.remove();
-                    let getLink = seasonLinkData[1];
-                    var title_get = JSON.parse(getLink).title;
-                    var link = JSON.parse(getLink).link;
-                    let promises = [getLinkFromStream(link)];
-                    let seasonNotEmpty = false;
-                    if (currentSeason != "") {
-                        seasonNotEmpty = true;
-                        promises.push(MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/season/episodes/${currentSeason}`));
-                    }
-                    let parallelReqs = await Promise.all(promises);
-                    if (seasonNotEmpty) {
-                        let r = parallelReqs[1];
-                        let temp = document.createElement("div");
-                        temp.innerHTML = DOMPurify.sanitize(r);
-                        let tempDOM = temp.getElementsByClassName("nav-link btn btn-sm btn-secondary eps-item");
-                        for (var i = 0; i < tempDOM.length; i++) {
-                            if (ep == tempDOM[i].getAttribute("data-id")) {
-                                if (i != 0) {
-                                    data.prev = url.split(".")[0] + "." + tempDOM[i - 1].getAttribute("data-id") + "&engine=2";
-                                }
-                                if (i != (tempDOM.length - 1)) {
-                                    data.next = url.split(".")[0] + "." + tempDOM[i + 1].getAttribute("data-id") + "&engine=2";
-                                }
-                            }
-                        }
-                        temp.remove();
-                    }
-                    let sourceJSON = parallelReqs[0];
-                    let encryptedURL = sourceJSON.sources;
-                    let decryptKey;
-                    if (typeof encryptedURL == "string") {
+                }
+                temp.remove();
+            }
+            let sourceJSON = parallelReqs[0];
+            let encryptedURL = sourceJSON.sources;
+            let decryptKey;
+            if (typeof encryptedURL == "string") {
+                try {
+                    decryptKey = await extractKey(4, null, true);
+                    sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                }
+                catch (err) {
+                    if (err.message == "Malformed UTF-8 data") {
+                        decryptKey = await extractKey(4);
                         try {
-                            decryptKey = await extractKey(4, null, true);
                             sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
                         }
                         catch (err) {
-                            if (err.message == "Malformed UTF-8 data") {
-                                decryptKey = await extractKey(4);
-                                try {
-                                    sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
-                                }
-                                catch (err) {
-                                }
-                            }
                         }
                     }
-                    data.status = 200;
-                    data.message = "done";
-                    if (title_get == "") {
-                        data.episode = 1;
-                    }
-                    else {
-                        data.episode = parseFloat(title_get.split(" ")[1]);
-                    }
-                    data.name = url.split("/watch-")[1].split("-online")[0] + "-" + showId + "-";
-                    data.nameWSeason = url.split("/watch-")[1].split("-online")[0] + "-" + currentSeason;
-                    data.sources = [{
-                            "url": sourceJSON.sources[0].file,
-                            "name": "hls",
-                            "type": "hls",
-                        }];
-                    data.subtitles = sourceJSON.tracks;
-                    // alert(performance.now() - start);
-                    resolve(data);
-                }).catch(function (err) {
-                    console.error(err);
-                    reject({ "status": 400, "message": "Couldn't get the link" });
-                });
+                }
             }
-            catch (err) {
-                console.error(err);
-                reject({ "status": 400, "message": "Couldn't get the link" });
+            data.status = 200;
+            data.message = "done";
+            if (title == "") {
+                data.episode = (1).toString();
             }
-            // ##########################
-        }));
+            else {
+                data.episode = parseFloat(title.split(" ")[1]).toString();
+            }
+            data.name = url.split("/watch-")[1].split("-online")[0] + "-" + showId + "-";
+            data.nameWSeason = url.split("/watch-")[1].split("-online")[0] + "-" + currentSeason;
+            data.sources = [{
+                    "url": sourceJSON.sources[0].file,
+                    "name": "hls",
+                    "type": "HLS",
+                }];
+            data.subtitles = sourceJSON.tracks;
+            return (data);
+        }
+        catch (err) {
+            console.error(err);
+            throw (new Error("Couldn't get the link"));
+        }
     },
     "discover": async function () {
         let temp = document.createElement("div");
         temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://fmovies.app/tv-show`, {}));
         let data = [];
-        for (elem of temp.querySelectorAll(".flw-item")) {
+        for (const elem of temp.querySelectorAll(".flw-item")) {
             let image = elem.querySelector("img").getAttribute("data-src");
             let tempAnchor = elem.querySelector(".film-name");
             let name = tempAnchor.innerText.trim();
             let link = tempAnchor.querySelector("a").getAttribute("href");
             try {
-                let path = new URL(link);
-                path = path.pathname;
-                link = path;
+                link = (new URL(link)).pathname;
             }
             catch (err) {
             }
@@ -1022,63 +783,65 @@ var fmovies = {
         return data;
     }
 };
+//# sourceMappingURL=fmovies.js.map
 var zoro = {
-    'searchApi': function (query) {
-        return (new Promise(function (resolve, reject) {
-            fetch(`https://zoro.to/search?keyword=${query}`).then(res => res.text()).then(function (a) {
-                let dom = document.createElement("div");
-                let orDom = dom;
-                dom.innerHTML = DOMPurify.sanitize(a);
-                dom = dom.querySelectorAll('.flw-item');
-                let data = [];
-                for (var i = 0; i < dom.length; i++) {
-                    let con = dom[i];
-                    let src = con.querySelector("img").getAttribute("data-src");
-                    let aTag = con.querySelector("a");
-                    let animeName = aTag.getAttribute("title");
-                    let animeId = aTag.getAttribute("data-id");
-                    let animeHref = aTag.getAttribute("href").split("?")[0] + "&engine=3";
-                    data.push({ "name": animeName, "id": animeId, "image": src, "link": animeHref });
-                }
-                orDom.remove();
-                resolve({ data, "status": 200 });
-            }).catch(function (x) {
-                console.error(x);
-                reject(x);
-            });
-        }));
+    "baseURL": "https://zoro.to",
+    "searchApi": async function (query) {
+        let searchHTML = await MakeFetch(`https://zoro.to/search?keyword=${query}`, {});
+        let dom = document.createElement("div");
+        let orDom = dom;
+        dom.innerHTML = DOMPurify.sanitize(searchHTML);
+        let itemsDOM = dom.querySelectorAll('.flw-item');
+        let data = [];
+        for (var i = 0; i < itemsDOM.length; i++) {
+            let con = itemsDOM[i];
+            let src = con.querySelector("img").getAttribute("data-src");
+            let aTag = con.querySelector("a");
+            let animeName = aTag.getAttribute("title");
+            let animeId = aTag.getAttribute("data-id");
+            let animeHref = aTag.getAttribute("href").split("?")[0] + "&engine=3";
+            data.push({ "name": animeName, "id": animeId, "image": src, "link": animeHref });
+        }
+        orDom.remove();
+        return ({ data, "status": 200 });
     },
     'getAnimeInfo': async function (url) {
         url = url.split("&engine")[0];
-        let id = url.replace("?watch=/", "").split("-");
-        id = id[id.length - 1].split("?")[0];
-        let response = {};
-        let _res = ((await MakeFetch(`https://zoro.to/${url}`, {})));
+        let idSplit = url.replace("?watch=/", "").split("-");
+        let id = idSplit[idSplit.length - 1].split("?")[0];
+        let response = {
+            "name": "",
+            "image": "",
+            "description": "",
+            "episodes": [],
+            "mainName": ""
+        };
+        let animeHTML = await MakeFetch(`https://zoro.to/${url}`, {});
         let malID = null;
         let settled = "allSettled" in Promise;
         try {
-            let tempID = parseInt(_res.split(`"mal_id":"`)[1]);
+            let tempID = parseInt(animeHTML.split(`"mal_id":"`)[1]);
             if (!isNaN(tempID)) {
                 malID = tempID;
             }
         }
         catch (err) {
         }
-        let _dom = document.createElement("div");
-        let ogDOM = _dom;
-        _dom.innerHTML = DOMPurify.sanitize(_res);
-        response.name = _dom.querySelector(".film-name.dynamic-name").innerText;
-        response.image = _dom.querySelector(".layout-page.layout-page-detail").querySelector("img").src;
-        response.description = _dom.querySelector(".film-description.m-hide").innerText;
+        let animeDOM = document.createElement("div");
+        let ogDOM = animeDOM;
+        animeDOM.innerHTML = DOMPurify.sanitize(animeHTML);
         let name = url;
-        name = name.replace("?watch=", "").split("&ep=")[0].split("-");
-        name.pop();
-        name = name.join("-");
+        let nameSplit = name.replace("?watch=", "").split("&ep=")[0].split("-");
+        nameSplit.pop();
+        name = nameSplit.join("-");
         response.mainName = name;
+        response.name = animeDOM.querySelector(".film-name.dynamic-name").innerText;
+        response.image = animeDOM.querySelector(".layout-page.layout-page-detail").querySelector("img").src;
+        response.description = animeDOM.querySelector(".film-description.m-hide").innerText;
         ogDOM.remove();
         let thumbnails = {};
         let promises = [];
-        let res;
+        let episodeHTML;
         let check = false;
         if (malID !== null) {
             try {
@@ -1095,12 +858,13 @@ var zoro = {
                     catch (err) {
                     }
                     if (responses[1].status === "fulfilled") {
-                        res = responses[1].value;
+                        episodeHTML = responses[1].value;
                         check = true;
                     }
                 }
                 else {
-                    thumbnailsTemp = JSON.parse(await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {})).episodes;
+                    let metaData = await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {});
+                    thumbnailsTemp = JSON.parse(metaData).episodes;
                 }
                 for (let i = 0; i < thumbnailsTemp.length; i++) {
                     thumbnails[thumbnailsTemp[i].number] = thumbnailsTemp[i];
@@ -1111,22 +875,22 @@ var zoro = {
             }
         }
         if (!check) {
-            res = (await MakeFetch(`https://zoro.to/ajax/v2/episode/list/${id}`, {}));
+            episodeHTML = await MakeFetch(`https://zoro.to/ajax/v2/episode/list/${id}`, {});
         }
-        res = JSON.parse(res).html;
+        episodeHTML = JSON.parse(episodeHTML).html;
         let dom = document.createElement("div");
         ogDOM = dom;
-        dom.innerHTML = DOMPurify.sanitize(res);
-        dom = dom.querySelectorAll('.ep-item');
+        dom.innerHTML = DOMPurify.sanitize(episodeHTML);
+        let episodeListDOM = dom.querySelectorAll('.ep-item');
         let data = [];
-        for (var i = 0; i < dom.length; i++) {
+        for (var i = 0; i < episodeListDOM.length; i++) {
             let tempEp = {
-                "link": dom[i].getAttribute("href").replace("/watch/", "?watch=").replace("?ep=", "&ep=") + "&engine=3",
-                "id": dom[i].getAttribute("data-id"),
-                "title": "Episode " + dom[i].getAttribute("data-number"),
+                "link": episodeListDOM[i].getAttribute("href").replace("/watch/", "?watch=").replace("?ep=", "&ep=") + "&engine=3",
+                "id": episodeListDOM[i].getAttribute("data-id"),
+                "title": "Episode " + episodeListDOM[i].getAttribute("data-number"),
             };
             try {
-                let epIndex = parseFloat(dom[i].getAttribute("data-number"));
+                let epIndex = parseFloat(episodeListDOM[i].getAttribute("data-number"));
                 if (epIndex in thumbnails) {
                     tempEp.thumbnail = thumbnails[epIndex].image;
                     tempEp.title = "Episode " + epIndex + " - " + thumbnails[epIndex].title;
@@ -1139,83 +903,91 @@ var zoro = {
         }
         ogDOM.remove();
         response.episodes = data;
-        response.status = 200;
         return response;
     },
-    'getLinkFromUrl': async function (url) {
-        let start = performance.now();
-        let sourceURLs = [];
-        async function getEpisodeListFromAnimeId(id, episodeId) {
-            let res = JSON.parse((await MakeFetch(`https://zoro.to/ajax/v2/episode/list/${id}`, {})));
-            res = res.html;
-            let dom = document.createElement("div");
-            ogDOM = dom;
-            dom.innerHTML = DOMPurify.sanitize(res);
-            dom = dom.querySelectorAll('.ep-item');
-            let data = [];
-            for (var i = 0; i < dom.length; i++) {
-                let temp = {
-                    "link": dom[i].getAttribute("href").replace("/watch/", "").replace("?ep=", "&ep=") + "&engine=3",
-                    "id": dom[i].getAttribute("data-id"),
-                    "title": parseFloat(dom[i].getAttribute("data-number")),
-                    "current": 0
-                };
-                if (parseFloat(dom[i].getAttribute("data-id")) == parseFloat(episodeId)) {
-                    temp.current = 1;
-                }
-                data.push(temp);
+    "getEpisodeListFromAnimeId": async function getEpisodeListFromAnimeId(showID, episodeId) {
+        let res = JSON.parse((await MakeFetch(`https://zoro.to/ajax/v2/episode/list/${showID}`, {})));
+        res = res.html;
+        let dom = document.createElement("div");
+        let ogDOM = dom;
+        dom.innerHTML = DOMPurify.sanitize(res);
+        let epItemsDOM = dom.querySelectorAll('.ep-item');
+        let data = [];
+        for (var i = 0; i < epItemsDOM.length; i++) {
+            let temp = {
+                "link": epItemsDOM[i].getAttribute("href").replace("/watch/", "").replace("?ep=", "&ep=") + "&engine=3",
+                "id": epItemsDOM[i].getAttribute("data-id"),
+                "title": parseFloat(epItemsDOM[i].getAttribute("data-number")),
+                "current": 0
+            };
+            if (parseFloat(epItemsDOM[i].getAttribute("data-id")) == parseFloat(episodeId)) {
+                temp.current = 1;
             }
-            ogDOM.remove();
-            return data;
+            data.push(temp);
         }
-        async function addSource(type, id) {
-            let sources = await MakeFetch(`https://zoro.to/ajax/v2/episode/sources?id=${id}`, {});
-            sources = JSON.parse(sources).link;
-            let urlHost = (new URL(sources)).origin;
-            let sourceId = sources.split("/");
-            sourceId = sourceId[sourceId.length - 1];
-            sourceId = sourceId.split("?")[0];
-            let sourceJSON = JSON.parse((await MakeFetch(`${urlHost}/ajax/embed-6/getSources?id=${sourceId}&sId=lihgfedcba-abcde`, {})));
-            try {
-                for (let j = 0; j < sourceJSON.tracks.length; j++) {
-                    sourceJSON.tracks[j].label += " - " + type;
-                    if (sourceJSON.tracks[j].kind == "captions") {
-                        subtitles.push(sourceJSON.tracks[j]);
-                    }
+        ogDOM.remove();
+        return data;
+    },
+    addSource: async function addSource(type, id, subtitlesArray, sourceURLs) {
+        let sources = await MakeFetch(`https://zoro.to/ajax/v2/episode/sources?id=${id}`, {});
+        sources = JSON.parse(sources).link;
+        let urlHost = (new URL(sources)).origin;
+        let sourceIdArray = sources.split("/");
+        let sourceId = sourceIdArray[sourceIdArray.length - 1];
+        sourceId = sourceId.split("?")[0];
+        let sourceJSON = JSON.parse((await MakeFetch(`${urlHost}/ajax/embed-6/getSources?id=${sourceId}&sId=lihgfedcba-abcde`, {})));
+        try {
+            for (let j = 0; j < sourceJSON.tracks.length; j++) {
+                sourceJSON.tracks[j].label += " - " + type;
+                if (sourceJSON.tracks[j].kind == "captions") {
+                    subtitlesArray.push(sourceJSON.tracks[j]);
                 }
             }
-            catch (err) {
-            }
-            try {
-                if (sourceJSON.encrypted && typeof sourceJSON.sources == "string") {
-                    let encryptedURL = sourceJSON.sources;
-                    let decryptKey, tempFile;
-                    try {
-                        decryptKey = await extractKey(6, null, true);
-                        sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
-                    }
-                    catch (err) {
-                        if (err.message == "Malformed UTF-8 data") {
-                            decryptKey = await extractKey(6);
-                            try {
-                                sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
-                            }
-                            catch (err) {
-                            }
+        }
+        catch (err) {
+        }
+        try {
+            if (sourceJSON.encrypted && typeof sourceJSON.sources == "string") {
+                let encryptedURL = sourceJSON.sources;
+                let decryptKey, tempFile;
+                try {
+                    decryptKey = await extractKey(6, null, true);
+                    sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                }
+                catch (err) {
+                    if (err.message == "Malformed UTF-8 data") {
+                        decryptKey = await extractKey(6);
+                        try {
+                            sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                        }
+                        catch (err) {
                         }
                     }
                 }
-                let tempSrc = { "url": sourceJSON.sources[0].file, "name": "HLS#" + type, "type": "hls" };
-                if ("intro" in sourceJSON && "start" in sourceJSON.intro && "end" in sourceJSON.intro) {
-                    tempSrc.skipIntro = sourceJSON.intro;
-                }
-                sourceURLs.push(tempSrc);
             }
-            catch (err) {
-                console.error(err);
+            let tempSrc = { "url": sourceJSON.sources[0].file, "name": "HLS#" + type, "type": "hls" };
+            if ("intro" in sourceJSON && "start" in sourceJSON.intro && "end" in sourceJSON.intro) {
+                tempSrc.skipIntro = sourceJSON.intro;
             }
+            sourceURLs.push(tempSrc);
         }
-        let resp = {};
+        catch (err) {
+            console.error(err);
+        }
+    },
+    'getLinkFromUrl': async function (url) {
+        const sourceURLs = [];
+        let subtitles = [];
+        const resp = {
+            sources: sourceURLs,
+            name: "",
+            nameWSeason: "",
+            episode: "",
+            status: 400,
+            message: "",
+            next: null,
+            prev: null,
+        };
         let episodeId, animeId;
         episodeId = parseFloat(url.split("&ep=")[1]).toString();
         animeId = url.replace("?watch=", "").split("-");
@@ -1225,19 +997,18 @@ var zoro = {
         let dom = document.createElement("div");
         let ogDOM = dom;
         dom.innerHTML = DOMPurify.sanitize(domIn);
-        let subtitles = [];
         let promises = [];
-        promises.push(getEpisodeListFromAnimeId(animeId, episodeId));
+        promises.push(this.getEpisodeListFromAnimeId(animeId, episodeId));
         let tempDom = dom.querySelectorAll('[data-server-id="4"]');
         let hasSource = false;
         for (var i = 0; i < tempDom.length; i++) {
             hasSource = true;
-            promises.push(addSource(tempDom[i].getAttribute("data-type"), tempDom[i].getAttribute('data-id')));
+            promises.push(this.addSource(tempDom[i].getAttribute("data-type"), tempDom[i].getAttribute('data-id'), subtitles, sourceURLs));
         }
         if (!hasSource) {
             tempDom = dom.querySelectorAll('[data-server-id="1"]');
             for (var i = 0; i < tempDom.length; i++) {
-                promises.push(addSource(tempDom[i].getAttribute("data-type"), tempDom[i].getAttribute('data-id')));
+                promises.push(this.addSource(tempDom[i].getAttribute("data-type"), tempDom[i].getAttribute('data-id'), subtitles, sourceURLs));
             }
         }
         let promRes = await Promise.all(promises);
@@ -1260,7 +1031,8 @@ var zoro = {
             }
         }
         ogDOM.remove();
-        resp = { "sources": sourceURLs, "episode": epNum };
+        resp["sources"] = sourceURLs;
+        resp["episode"] = epNum.toString();
         if (next != null) {
             resp.next = next;
         }
@@ -1268,14 +1040,13 @@ var zoro = {
             resp.prev = prev;
         }
         let name = url;
-        name = name.replace("?watch=", "").split("&ep=")[0].split("-");
-        name.pop();
-        name = name.join("-");
+        let nameSplit = name.replace("?watch=", "").split("&ep=")[0].split("-");
+        nameSplit.pop();
+        name = nameSplit.join("-");
         resp.name = name;
         resp.nameWSeason = name;
         resp.subtitles = subtitles;
         resp.status = 200;
-        // alert(performance.now() - start);
         return resp;
     },
     "config": {
@@ -1287,7 +1058,7 @@ var zoro = {
         let temp = document.createElement("div");
         temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://zoro.to/top-airing`, {}));
         let data = [];
-        for (elem of temp.querySelectorAll(".flw-item")) {
+        for (let elem of temp.querySelectorAll(".flw-item")) {
             let image = elem.querySelector("img").getAttribute("data-src");
             let tempAnchor = elem.querySelector("a");
             let name = tempAnchor.getAttribute("title");
@@ -1301,6 +1072,7 @@ var zoro = {
         return data;
     }
 };
+//# sourceMappingURL=zoro.js.map
 var twitch = {
     'searchApi': function (query) {
         const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
@@ -1500,10 +1272,11 @@ var twitch = {
         return resp;
     },
 };
+//# sourceMappingURL=twitch.js.map
+// @ts-ignore
 const extensionList = [wco, animixplay, fmovies, zoro, twitch];
+// @ts-ignore
 const extensionNames = ["WCOforever", "Animixplay", "Fmovies", "Zoro", "Twitch"];
-localStorage.setItem("version", "1.2.4");
-if (localStorage.getItem("lastUpdate") === null) {
-    localStorage.setItem("lastUpdate", "0");
-}
-//# sourceMappingURL=index.js.map
+// @ts-ignore
+const extensionDisabled = [false, true, false, false, false];
+//# sourceMappingURL=export.js.map
