@@ -1275,6 +1275,33 @@ input:checked+.slider:before {
 	background-color: #4471ef;
 }
 
+
+.sliderMenu input{
+	-webkit-appearance: none;
+	appearance: none;
+	height: 2px;
+	width: 100%;
+	background-color: #4471ef;
+	outline: none;
+	vertical-align: middle;
+}
+
+.sliderMenu input::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 20px;
+	height: 20px;
+	background-color: #eee;
+	border: 2px solid #4471ef;
+	border-radius: 50%;
+	outline: none;
+}
+
+.sliderMenu input::-webkit-slider-thumb:hover {
+	background-color: #4471ef;
+}
+
+
 .hozCon{
 	width: 100%;
 	display: flex;

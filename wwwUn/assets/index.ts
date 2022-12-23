@@ -1,52 +1,53 @@
-function createElement(x) {
-    let temp;
-    if ("element" in x) {
-        temp = document.createElement(x.element);
+function createElement(config: createElementConfig): HTMLElement {
+    let temp: HTMLElement;
+    if ("element" in config) {
+        temp = document.createElement(config.element!);
 
     } else {
         temp = document.createElement("div");
 
     }
-    let attributes = x.attributes;
 
-    for (value in attributes) {
+    let attributes = config.attributes;
+
+    for (let value in attributes) {
         temp.setAttribute(value, attributes[value]);
     }
 
 
 
-    for (value in x.style) {
+    for (let value in config.style) {
 
-        temp.style[value] = x.style[value];
+        temp.style[value] = config.style[value];
     }
 
 
-    if ("id" in x) {
-        temp.id = x.id;
+    if ("id" in config) {
+        temp.id = config.id!;
     }
 
-    if ("class" in x) {
-        temp.className = x.class;
+    if ("class" in config) {
+        temp.className = config.class!;
     }
 
-    if ("innerText" in x) {
-        temp.textContent = x.innerText;
+    if ("innerText" in config) {
+        temp.textContent = config.innerText!;
     }
 
-    if ("innerHTML" in x) {
-        temp.innerHTML = x.innerHTML;
+    if ("innerHTML" in config) {
+        temp.innerHTML = config.innerHTML!;
     }
 
-    let listeners = x.listeners;
+    let listeners = config.listeners;
 
-    for (value in listeners) {
-        temp.addEventListener(value, listeners[value]);
+    for (let value in listeners) {
+        temp.addEventListener(value, function () {
+            listeners[value].bind(this)();
+        });
     }
 
     return temp;
-
 }
-
 
 try {
     const styleEl = document.createElement('style');

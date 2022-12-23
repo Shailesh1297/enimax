@@ -4,7 +4,7 @@ class notification {
     elem: any;
     className: string;
     noti: HTMLDivElement;
-	constructor(DomElem : HTMLElement, data) {
+	constructor(DomElem : HTMLElement, data : notiConfig) {
 		this.data = data;
 		this.elem = DomElem;
 		if ("color" in data && data["color"] == "red") {

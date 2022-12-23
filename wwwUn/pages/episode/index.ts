@@ -1,4 +1,5 @@
-const extensionList = window.parent.returnExtensionList();
+// @ts-ignore
+const extensionList = (<cordovaWindow>window.parent).returnExtensionList();
 
 if (config.local || localStorage.getItem("offline") === 'true') {
     ini();
@@ -6,10 +7,10 @@ if (config.local || localStorage.getItem("offline") === 'true') {
     window.parent.postMessage({ "action": 20 }, "*");
 }
 
-let lastScrollPos;
+let lastScrollPos : number;
 let scrollDownTopDOM = document.getElementById("scrollDownTop");
 
-
+// @ts-ignore
 let pullTabArray = [];
 
 pullTabArray.push(new pullToRefresh(document.getElementById("con_11")));
@@ -21,8 +22,6 @@ scrollElem.addEventListener("scroll", function () {
             scrollDownTopDOM.className = "scrollTopDOM";
         } else {
             scrollDownTopDOM.className = "scrollBottomDOM";
-
-
         }
     }
     lastScrollPos = scrollElem.scrollTop;
@@ -32,18 +31,20 @@ scrollElem.addEventListener("scroll", function () {
 });
 
 
-function fix_title(x) {
+function fix_title(title : string) {
     try {
-        x = x.split("-");
-        temp = "";
-        for (var i = 0; i < x.length; i++) {
-            temp = temp + x[i].substring(0, 1).toUpperCase() + x[i].substring(1) + " ";
+        let titleArray = title.split("-");
+        let temp = "";
+        for (var i = 0; i < titleArray.length; i++) {
+            temp = temp + titleArray[i].substring(0, 1).toUpperCase() + titleArray[i].substring(1) + " ";
         }
         return temp;
     } catch (err) {
-        return x;
+        return title;
     }
 }
+
+
 scrollDownTopDOM.onclick = function () {
     if (scrollDownTopDOM.className == "scrollTopDOM") {
         scrollElem.scrollTop = 0;
@@ -53,50 +54,47 @@ scrollDownTopDOM.onclick = function () {
 };
 
 
-function normalise(x) {
-    x = x.replace("?watch=", "");
-    x = x.split("&engine=")[0];
-    return x;
+function normalise(url : string) {
+    url = url.replace("?watch=", "");
+    url = url.split("&engine=")[0];
+    return url;
 }
 
 window.onmessage = function (x) {
     if (parseInt(x.data.action) == 200) {
-        token = x.data.data;
         ini();
     }
 
 };
 
-let token;
 
-let name_name;
-function sendNoti(x) {
-
+function sendNoti(notiConfig: any) {
     return new notification(document.getElementById("noti_con"), {
-        "perm": x[0],
-        "color": x[1],
-        "head": x[2],
-        "notiData": x[3]
+        "perm": notiConfig[0],
+        "color": notiConfig[1],
+        "head": notiConfig[2],
+        "notiData": notiConfig[3]
     });
 }
 
 
 
 
-function checkIfExists(localURL, dList, dName) {
+function checkIfExists(localURL : string, dList : Array<string>, dName : string) : Promise<string> {
     return (new Promise(function (resolve, reject) {
         let index = dList.indexOf(dName);
         if (index > -1) {
             dList.splice(index, 1);
             let timeout = setTimeout(function () {
-                reject("timeout");
+                reject(new Error("timeout"));
             }, 1000);
-            window.parent.makeLocalRequest("GET", `${localURL}`).then(function (x) {
+
+            (<cordovaWindow>window.parent).makeLocalRequest("GET", `${localURL}`).then(function (x) {
                 clearTimeout(timeout);
                 resolve(x);
-            }).catch(function (err) {
+            }).catch(function () {
                 clearTimeout(timeout);
-                reject("notdownloaded");
+                reject(new Error("notdownloaded"));
 
             });
         } else {
@@ -108,22 +106,21 @@ function checkIfExists(localURL, dList, dName) {
 }
 
 function ini() {
-    let downloadQueue = window.parent.returnDownloadQueue();
+    let downloadQueue = (<cordovaWindow>window.parent).returnDownloadQueue();
 
-    var username, anime_data;
+    let username = "hi";
 
     if (location.search.indexOf("?watch=/") > -1 || localStorage.getItem("offline") === 'true') {
-        anime_data = {};
 
-        var main_url = location.search.replace("?watch=/", "");
+        let main_url = location.search.replace("?watch=/", "");
 
-        var currentEngine;
+        //todo
+        let currentEngine;
         let temp3 = main_url.split("&engine=");
         if (temp3.length == 1) {
             currentEngine = extensionList[0];
         } else {
-            currentEngine = parseInt(temp3[1]);
-            currentEngine = extensionList[currentEngine];
+            currentEngine = extensionList[parseInt(temp3[1])];
         }
 
 
@@ -154,7 +151,7 @@ function ini() {
             };
 
             document.getElementById("updateLink").onclick = function () {
-                window.parent.apiCall("POST", { "username": username, "action": 14, "name": data.mainName, "url": location.search }, (x) => {
+                (<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 14, "name": data.mainName, "url": location.search }, (x) => {
                     sendNoti([2, "", "Alert", "Done!"]);
 
                 });
@@ -162,7 +159,7 @@ function ini() {
 
 
             document.getElementById("updateImage").onclick = function () {
-                window.parent.apiCall("POST", { "username": username, "action": 9, "name": data.mainName, "img": data.image }, (x) => {
+                (<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 9, "name": data.mainName, "img": data.image }, (x) => {
                     sendNoti([2, "", "Alert", "Done!"]);
                 });
             };
@@ -170,7 +167,7 @@ function ini() {
             let downloadedList = [];
             if (!config.chrome) {
                 try {
-                    downloadedList = await window.parent.listDir(data.mainName);
+                    downloadedList = await (<cordovaWindow>window.parent).listDir(data.mainName);
                     let tempList = [];
                     for (let i = 0; i < downloadedList.length; i++) {
                         if (downloadedList[i].isDirectory) {
@@ -193,10 +190,9 @@ function ini() {
             document.getElementById("imageDesc").innerText = data.description.trim();
 
             document.getElementById("imageMain").style.backgroundImage = `url("${data.image}")`;
-            animeEps = data.episodes;
+            let animeEps = data.episodes;
 
             let epCon = document.getElementById("epListCon");
-            let start = performance.now();
 
             let toAdd = [];
             for (var i = 0; i < animeEps.length; i++) {
@@ -215,15 +211,16 @@ function ini() {
                 tempDiv4.setAttribute('data-title', animeEps[i].title);
 
                 tempDiv4.onclick = function () {
-                    window.parent.postMessage({ "action": 403, "data": this.getAttribute("data-url"), "anime": data, "mainUrl": main_url, "title": this.getAttribute("data-title") }, "*");
-                    tempDiv4.className = 'episodesLoading';
+                    window.parent.postMessage({ 
+                        "action": 403, 
+                        "data": (this as HTMLElement).getAttribute("data-url"), 
+                        "anime": data, 
+                        "mainUrl": main_url, 
+                        "title": (this as HTMLElement).getAttribute("data-title") 
+                    }, "*");
 
+                    (this as HTMLElement).className = 'episodesLoading';
                 };
-
-
-
-
-
 
                 let tempDiv3 = document.createElement("div");
                 tempDiv3.className = 'episodesTitle';
@@ -237,7 +234,7 @@ function ini() {
                         await checkIfExists(`/${data.mainName}/${btoa(normalise(trr))}/.downloaded`, downloadedList, btoa(normalise(trr)));
                         tempDiv4.className = 'episodesDownloaded';
                         tempDiv4.onclick = function () {
-                            window.parent.removeDirectory(`/${data.mainName}/${btoa(normalise(trr))}/`).then(function () {
+                            (<cordovaWindow>window.parent).removeDirectory(`/${data.mainName}/${btoa(normalise(trr))}/`).then(function () {
                                 if (downloaded) {
                                     tempDiv.remove();
                                 } else {
@@ -303,7 +300,7 @@ function ini() {
                         }));
                         
                         
-                        tempDiv2 = createElement({
+                        tempDiv2 = <HTMLImageElement>createElement({
                             "class" : "episodesThumbnail",
                             "element" : "img",
                             "attributes": {
@@ -427,21 +424,9 @@ function ini() {
 
             }
 
-            // alert(performance.now() - start);
-            start = performance.now();
             for(let e of toAdd){
                 epCon.append(e);
             }
-            // alert(performance.now() - start);
-            start = performance.now();
-            for(let e of toAdd){
-                epCon.append(e);
-            }
-
-            // alert(performance.now() - start);
-            start = performance.now();
-            // alert(performance.now() - start);
-            start = performance.now();
 
             if (downloaded) {
                 for (let downloadIndex = 0; downloadIndex < downloadedList.length; downloadIndex++) {
@@ -465,7 +450,7 @@ function ini() {
                     let tempDiv4 = document.createElement("div");
                     tempDiv4.className = 'episodesDownloaded';
                     tempDiv4.onclick = function () {
-                        window.parent.removeDirectory(`/${data.mainName}/${thisLink}`).then(function () {
+                        (<cordovaWindow>window.parent).removeDirectory(`/${data.mainName}/${thisLink}`).then(function () {
                             tempDiv.remove();
                         }).catch(function () {
                             alert("Error deleting the files");
@@ -502,7 +487,7 @@ function ini() {
             if (scrollToDOM && !config.chrome) {
                 document.getElementById("downloadNext").style.display = "inline-block";
                 document.getElementById("downloadNext").onclick = function () {
-                    let howmany = parseInt(prompt("How many episodes do you want to download?", 5));
+                    let howmany = parseInt(prompt("How many episodes do you want to download?", "5"));
                     if (isNaN(howmany)) {
                         alert("Not a valid number");
                     } else {
@@ -523,45 +508,55 @@ function ini() {
             document.getElementById("downloadAll").onclick = function () {
                 let allEps = document.querySelectorAll(".episodesDownload");
                 for (let index = 0; index < allEps.length; index++) {
-                    const element = allEps[index];
+                    const element = <HTMLElement>allEps[index];
                     element.click();
                 }
 
             };
-            let formation = {};
-            formation.method = "POST";
 
 
             if (!("image" in data) || data.image == undefined || data.image == null || data.image == "") {
                 data.image = "https://raw.githubusercontent.com/enimax-anime/enimax/main/www/assets/images/placeholder.jpg";
             }
 
-            window.parent.apiCall("POST", { "username": username, "action": 5, "name": data.mainName, "img": data.image, "url": location.search }, (x) => { });
-            window.parent.apiCall("POST", { "username": username, "action": 2, "name": data.mainName, "fallbackDuration" : true}, (epData) => {
+            (<cordovaWindow> window.parent).apiCall("POST", { 
+                "username": username, 
+                "action": 5, 
+                "name": data.mainName, 
+                "img": data.image, 
+                "url": location.search 
+            }, () => {});
+
+            (<cordovaWindow> window.parent).apiCall("POST", { 
+                "username": username, 
+                "action": 2, 
+                "name": data.mainName, 
+                "fallbackDuration" : true
+            }, (epData) => {
                 let episodes = {};
                 for(let ep of epData.data){
                     console.log(epData);
                     if(epData.dexie){
                         if(ep.comp != 0 && ep.ep != 0){
-                            let thisEp = {};
-                            thisEp.duration = ep.comp;
-                            thisEp.curtime = ep.cur_time;
+                            let thisEp = {
+                                duration : ep.comp,
+                                curtime : ep.cur_time
+                            };
                             episodes[ep.main_link] = thisEp;
                         }
                     }else{
                         if(ep.duration != 0 && ep.ep != 0){
-                            let thisEp = {};
-                            thisEp.duration = ep.duration;
-                            thisEp.curtime = ep.curtime;
+                            let thisEp = {
+                                duration : ep.duration,
+                                curtime : ep.curtime,
+                            };
                             episodes[ep.name] = thisEp;
                         }
                     }
                 }
 
-                console.log(episodes);
 
-
-                for(let elem of document.getElementsByClassName("episodesCon")){
+                for(const elem of document.getElementsByClassName("episodesCon")){
                     let dataURL = elem.getAttribute("data-url");
                     if(dataURL in episodes){
                         try{
@@ -598,7 +593,7 @@ function ini() {
 
 
         if (localStorage.getItem("offline") === 'true') {
-            window.parent.makeLocalRequest("GET", `/${main_url.split("&downloaded")[0]}/info.json`).then(function (data) {
+            (<cordovaWindow> window.parent).makeLocalRequest("GET", `/${main_url.split("&downloaded")[0]}/info.json`).then(function (data) {
                 let temp = JSON.parse(data);
                 temp.data.episodes = temp.episodes;
                 processEpisodeData(temp.data, true, main_url);
@@ -618,15 +613,7 @@ function ini() {
                 alert(err);
             });
         }
-
-
-
-
-
     }
 }
-
-
-
 
 applyTheme();

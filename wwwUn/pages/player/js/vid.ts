@@ -205,7 +205,7 @@ class vid {
 		});
 
 		this.bar_con1.addEventListener("mousemove", function (event) {
-			self.showTimestamp.bind(this)(event);
+			self.showTimestamp.bind(self)(event);
 
 		});
 
@@ -554,7 +554,6 @@ class vid {
 				let temp3 = 100 * (temp / this.vid.duration);
 				this.seeker.innerText = this.timeToString(temp);
 				this.seeker.style.opacity = "0";
-
 				this.seeker.style.left = temp3 + "%";
 			}
 		} else {
@@ -638,7 +637,6 @@ class vid {
 			} else if (this.check != 100 && this.check != 99 && (this.iniY - coords.screenY) > 50) {
 				this.check = 100;
 				this.canSeekNow = false;
-
                 const event = new Event("videoOpenSettings");
                 event["translate"] = 0;
                 window.dispatchEvent(event);

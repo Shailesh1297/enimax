@@ -1,110 +1,91 @@
+// @ts-ignore
 const extensionNames = window.parent.returnExtensionNames();
+// @ts-ignore
 const extensionList = window.parent.returnExtensionList();
-
 let sourcesNames = extensionNames;
+// @ts-ignore
 let pullTabArray = [];
-
 pullTabArray.push(new pullToRefresh(document.getElementById("mainConSearch")));
-
 for (var i = 0; i < extensionList.length; i++) {
     let atr = {
-        "value": i,
+        "value": i.toString(),
     };
-
     if (i == parseInt(localStorage.getItem("currentEngine")) || (isNaN(parseInt(localStorage.getItem("currentEngine"))) && i == 0)) {
-        atr.selected = "";
+        atr["selected"] = "";
     }
     let tempDiv = createElement({
         "element": "option",
         "attributes": atr,
         "innerHTML": sourcesNames[i]
     });
-
     document.getElementById("sources").append(tempDiv);
 }
-
+let searchInput = document.querySelector('.searchInput');
+let searchBox = document.querySelector('.searchBox');
+let searchButton = document.querySelector('.searchButton');
+let searchClose = document.getElementById('s_c');
 document.getElementById("sources").onchange = function () {
-    localStorage.setItem("currentEngine", document.getElementById("sources").value);
-
+    localStorage.setItem("currentEngine", this.value);
 };
-
-document.getElementById("searchBox").onclick = function () {
+searchBox.onclick = function () {
     openSearch();
-}
-
-document.getElementById("s_c").onclick = function (event) {
+};
+searchClose.onclick = function (event) {
     close_search(event);
-
-}
-
-
-document.getElementById("search_x").onkeydown = function (event) {
+};
+searchInput.onkeydown = function (event) {
     if (event.keyCode == 13) {
         search();
     }
-
-}
-
-
-
-
-
+};
 function openSearch() {
-    document.getElementsByClassName('searchInput')[0].style.width = 'calc(100% - 90px)';
-    document.getElementsByClassName('searchBox')[0].style.width = 'calc(100% - 40px)';
-    document.getElementById('s_c').style.display = 'flex';
-    document.getElementsByClassName('searchInput')[0].style.paddingLeft = '40px';
-    document.getElementsByClassName('searchButton')[0].onclick = function () { search(); }
+    searchInput.style.width = 'calc(100% - 90px)';
+    searchBox.style.width = 'calc(100% - 40px)';
+    searchClose.style.display = 'flex';
+    searchInput.style.paddingLeft = '40px';
+    searchButton.onclick = function () { search(); };
 }
 function close_search(event) {
-    document.getElementById('s_c').style.display = 'none';
-    document.getElementsByClassName('searchInput')[0].style.width = '0';
-    document.getElementsByClassName('searchBox')[0].style.width = '40px';
-    document.getElementsByClassName('searchInput')[0].style.paddingLeft = '0';
-    document.getElementsByClassName('searchButton')[0].onclick = function () { };
+    searchClose.style.display = 'none';
+    searchInput.style.width = '0';
+    searchInput.style.paddingLeft = '0';
+    searchBox.style.width = '40px';
+    searchButton.onclick = function () { };
     event.stopPropagation();
 }
-
-
-
 document.getElementById("searchForm").onsubmit = function (event) {
     event.preventDefault();
     search();
 };
-
 function search() {
     document.getElementById("mainConSearch").innerHTML = "<div style='margin:auto;'>Loading...</div>";
-
     let currentEngine;
     if (localStorage.getItem("currentEngine") == null) {
-        localStorage.setItem("currentEngine", 0);
+        localStorage.setItem("currentEngine", "0");
         currentEngine = extensionList[0];
-    } else {
+    }
+    else {
         currentEngine = parseInt(localStorage.getItem("currentEngine"));
         if (currentEngine == 0) {
             currentEngine = extensionList[0];
-        } else {
+        }
+        else {
             currentEngine = extensionList[currentEngine];
         }
     }
-    if (document.getElementById('search_x').value === "devmode") {
+    if (searchInput.value === "devmode") {
         localStorage.setItem("devmode", "true");
     }
-    currentEngine.searchApi(document.getElementById('search_x').value).then(function (x) {
-
+    currentEngine.searchApi(searchInput.value).then(function (x) {
         let main_div = x.data;
-
         if (main_div.length == 0) {
             document.getElementById("mainConSearch").innerHTML = "<div style='margin:auto;'>No results :(</div>";
-        } else {
+        }
+        else {
             document.getElementById("mainConSearch").innerHTML = "";
         }
-
         for (var i = 0; i < main_div.length; i++) {
             let tempDiv1 = createElement({ "class": "s_card" });
-
-
-
             let tempDiv2 = createElement({ "class": "s_card_bg" });
             let tempDiv3 = createElement({ "class": "s_card_title" });
             let tempDiv4 = createElement({ "class": "s_card_title_main", "innerText": main_div[i].name });
@@ -116,34 +97,22 @@ function search() {
                 "listeners": {
                     "click": function () {
                         window.parent.postMessage({ "action": 500, data: this.getAttribute("data-href") }, "*");
-
                     }
                 }
             });
             let tempDiv6 = createElement({ "class": "s_card_img_search", "style": { "backgroundImage": `url("${main_div[i].image}")` } });
-
-
-
             tempDiv3.append(tempDiv4);
             tempDiv2.append(tempDiv3);
             tempDiv2.append(tempDiv5);
             tempDiv1.append(tempDiv6);
             tempDiv1.append(tempDiv2);
-
-
             document.getElementById("mainConSearch").append(tempDiv1);
-
         }
-
-
-    }).catch(function (x) {
-        console.error(x);
+    }).catch(function (error) {
+        console.error(error);
         document.getElementById("mainConSearch").innerHTML = "Error";
-        sendNoti([0, null, "Message", x.data]);
-
+        sendNoti([0, null, "Message", error.data]);
     });
-
-
 }
-
 applyTheme();
+//# sourceMappingURL=index.js.map

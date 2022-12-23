@@ -69,6 +69,7 @@
     ]
   },
   "dependencies": {
+    "@types/dompurify": "^2.4.0",
     "cordova": "^11.0.0"
   }
 }

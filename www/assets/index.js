@@ -1,53 +1,38 @@
-function createElement(x) {
+function createElement(config) {
     let temp;
-    if ("element" in x) {
-        temp = document.createElement(x.element);
-
-    } else {
-        temp = document.createElement("div");
-
+    if ("element" in config) {
+        temp = document.createElement(config.element);
     }
-    let attributes = x.attributes;
-
-    for (value in attributes) {
+    else {
+        temp = document.createElement("div");
+    }
+    let attributes = config.attributes;
+    for (let value in attributes) {
         temp.setAttribute(value, attributes[value]);
     }
-
-
-
-    for (value in x.style) {
-
-        temp.style[value] = x.style[value];
+    for (let value in config.style) {
+        temp.style[value] = config.style[value];
     }
-
-
-    if ("id" in x) {
-        temp.id = x.id;
+    if ("id" in config) {
+        temp.id = config.id;
     }
-
-    if ("class" in x) {
-        temp.className = x.class;
+    if ("class" in config) {
+        temp.className = config.class;
     }
-
-    if ("innerText" in x) {
-        temp.textContent = x.innerText;
+    if ("innerText" in config) {
+        temp.textContent = config.innerText;
     }
-
-    if ("innerHTML" in x) {
-        temp.innerHTML = x.innerHTML;
+    if ("innerHTML" in config) {
+        temp.innerHTML = config.innerHTML;
     }
-
-    let listeners = x.listeners;
-
-    for (value in listeners) {
-        temp.addEventListener(value, listeners[value]);
+    let listeners = config.listeners;
+    for (let value in listeners) {
+        temp.addEventListener(value, function () {
+            listeners[value].bind(this)();
+        });
     }
-
     return temp;
-
 }
-
-
 try {
     const styleEl = document.createElement('style');
     document.head.appendChild(styleEl);
@@ -58,31 +43,27 @@ try {
             outline-color: ${(localStorage.getItem("outlineColor"))} !important;
         }`, 0);
     }
-} catch (err) {
-
 }
-
+catch (err) {
+}
 function applyTheme() {
     let themeColorL = localStorage.getItem("themecolor");
     if (themeColorL) {
         document.documentElement.style.setProperty('--theme-color', themeColorL);
-    } else {
-        document.documentElement.style.setProperty('--theme-color', "#4b4bc2");
-
     }
-
+    else {
+        document.documentElement.style.setProperty('--theme-color', "#4b4bc2");
+    }
 }
-
 function changeTheme() {
     let promptT = prompt("Enter the theme color", "#4b4bc2");
     if (promptT.trim() != "" && promptT != null && promptT != undefined) {
         localStorage.setItem("themecolor", promptT);
-        applyTheme()
-    } else {
-
+        applyTheme();
+    }
+    else {
     }
 }
-
 const backgroundGradients = [
     "linear-gradient(to bottom, #0f2027, #203a43, #2c5364)",
     "linear-gradient(to bottom, #c31432, #240b36)",
@@ -93,3 +74,4 @@ const backgroundGradients = [
     "linear-gradient(to bottom, #ec008c, #fc6767)",
     "linear-gradient(to bottom, #ffd89b, #19547b)"
 ];
+//# sourceMappingURL=index.js.map

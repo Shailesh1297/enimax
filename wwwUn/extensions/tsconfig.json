@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outDir": "../www",
+        "outFile": "../www/extensions",
         "target": "ES2017",
         "module": "commonjs",
         "lib": [
@@ -11,6 +11,7 @@
         ],
         "sourceMap": true
     },
+    
     "exclude": [
         "node_modules",
         "plugins",

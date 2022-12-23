@@ -6,7 +6,7 @@ test/
 /platforms/
 /www/
 build.json
-
+copyConfig.sh
 Makefile
 
 enimax-chrome-extension/

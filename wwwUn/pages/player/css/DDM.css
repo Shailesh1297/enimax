@@ -17,6 +17,14 @@
     z-index: 10;
 }
 
+.inputItem .menuItemText{
+    width: 100%;
+}
+
+.inputItem input{
+   margin: auto;
+}
+
 .menuHeading,
 .menuItem {
     top: 0;
