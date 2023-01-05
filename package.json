@@ -13,6 +13,8 @@
   "author": "Apache Cordova Team",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/hls.js": "^1.0.0",
+    "@types/node": "^18.11.17",
     "cordova-android": "^9.0.0",
     "cordova-plugin-advanced-http": "^3.3.1",
     "cordova-plugin-android-tv": "github:frontyard/cordova-plugin-android-tv",
@@ -71,6 +73,7 @@
   "dependencies": {
     "@types/crypto-js": "^4.1.1",
     "@types/dompurify": "^2.4.0",
-    "cordova": "^11.0.0"
+    "cordova": "^11.0.0",
+    "dexie": "^3.2.2"
   }
 }

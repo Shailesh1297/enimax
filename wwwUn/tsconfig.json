@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "outDir": "../www",
+        "noImplicitAny": true,
         "target": "ES2017",
         "module": "commonjs",
         "lib": [
@@ -9,7 +10,6 @@
             "dom",
             "DOM.Iterable"
         ],
-        "sourceMap": true
     },
     "exclude": [
         "node_modules",

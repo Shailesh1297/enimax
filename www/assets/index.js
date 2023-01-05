@@ -74,4 +74,3 @@ const backgroundGradients = [
     "linear-gradient(to bottom, #ec008c, #fc6767)",
     "linear-gradient(to bottom, #ffd89b, #19547b)"
 ];
-//# sourceMappingURL=index.js.map

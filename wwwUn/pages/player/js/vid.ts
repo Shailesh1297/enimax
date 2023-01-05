@@ -59,7 +59,7 @@ class vid {
     objectPositionTemp: any;
     clickTimeout: any;
     config: any;
-	constructor(config) {
+	constructor(config : EnimaxConfig) {
 
         this.config = config;
 		this.overlay = document.querySelector("#seek_overlay");
@@ -428,8 +428,11 @@ class vid {
 		this.objectFitTemp = this.objectFitArray[settings[0]];
 		this.objectPositionTemp = this.objectPositionArray[settings[1]];
 
-        let fillEvent = new Event("videoChangedFillMode");
-        fillEvent["fillMode"] = fillMode;
+        let fillEvent : videoChangedFillModeEvent = new CustomEvent("videoChangedFillMode", {
+			detail : {
+				"fillMode" : fillMode.toString()
+			}
+		});
         window.dispatchEvent(fillEvent);
 	}
 
@@ -453,16 +456,22 @@ class vid {
 
 			if (coords[0] > window.innerWidth / 2) {
                 
-                const doubleTapEvent = new Event("videoDoubleTap");
-                doubleTapEvent["DTType"] = "plus";
+                const doubleTapEvent : videoDoubleTapEvent = new CustomEvent("videoDoubleTap", {
+					detail : {
+						"DTType" : "plus"
+					}
+				});
                 window.dispatchEvent(doubleTapEvent);
 				this.updateTime();
 
 
 			} else {
 
-                const doubleTapEvent = new Event("videoDoubleTap");
-                doubleTapEvent["DTType"] = "minus";
+				const doubleTapEvent : videoDoubleTapEvent = new CustomEvent("videoDoubleTap", {
+					detail : {
+						"DTType" : "minus"
+					}
+				});
                 window.dispatchEvent(doubleTapEvent);
 				this.updateTime();
 			}
@@ -637,14 +646,20 @@ class vid {
 			} else if (this.check != 100 && this.check != 99 && (this.iniY - coords.screenY) > 50) {
 				this.check = 100;
 				this.canSeekNow = false;
-                const event = new Event("videoOpenSettings");
-                event["translate"] = 0;
+                const event : videoOpenSettingsEvent = new CustomEvent("videoOpenSettings", {
+					detail : {
+						translate : 0
+					}
+				});
                 window.dispatchEvent(event);
 				clearTimeout(this.seekTimeout);
 			} else if (this.check == 100) {
 
-                const event = new Event("videoOpenSettings");
-                event["translate"] = this.iniY - coords.screenY;
+				const event : videoOpenSettingsEvent = new CustomEvent("videoOpenSettings", {
+					detail : {
+						translate : this.iniY - coords.screenY
+					}
+				});
                 window.dispatchEvent(event);
 
 				this.downTown = this.iniY - coords.screenY;
@@ -721,8 +736,12 @@ class vid {
 
 		if (this.check == 100) {
 			if (this.downTown > 130) {
-                const event = new Event("videoOpenSettings");
-                event["translate"] = -1;
+
+				const event : videoOpenSettingsEvent = new CustomEvent("videoOpenSettings", {
+					detail : {
+						translate : -1
+					}
+				});
                 window.dispatchEvent(event);
 			} else {
                 window.dispatchEvent(new Event("videoCloseSettings"));

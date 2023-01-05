@@ -492,4 +492,3 @@ function ini() {
     }
 }
 applyTheme();
-//# sourceMappingURL=index.js.map

@@ -1,4 +1,5 @@
 let showLastEpDB;
+// @ts-ignore
 showLastEpDB = new Dexie("updateLib");
 showLastEpDB.version(1.0).stores({
     lastestEp: "++id, name, latest"
@@ -7,21 +8,26 @@ showLastEpDB.version(1.0).stores({
 window.parent.postMessage({ "action": 1, data: "any" }, "*");
 
 if (config.chrome) {
-    let chromeDOM = document.getElementsByClassName("notChrome");
+    let chromeDOM = document.getElementsByClassName("notChrome") as HTMLCollectionOf<HTMLElement>;
     for (let i = 0; i < chromeDOM.length; i++) {
         chromeDOM[i].style.display = "none";
     }
 }
 
-let downloadedFolders = {};
-let pullTabArray = [];
-let flaggedShow = [];
-let errDOM = document.getElementById("errorCon");
+let rooms2;
+let downloadedFolders : any= {};
+// @ts-ignore
+let pullTabArray : Array<pullToRefresh> = [];
+let flaggedShow : Array<flaggedShows> = [];
+
+let errDOM : HTMLElement = document.getElementById("errorCon");
 let firstLoad = true;
+
+
 async function populateDownloadedArray() {
     try {
         downloadedFolders = {};
-        let temp = await window.parent.listDir("");
+        let temp = await (<cordovaWindow>window.parent).listDir("");
         for (let i = 0; i < temp.length; i++) {
             if (temp[i].isDirectory) {
                 downloadedFolders[temp[i].name] = true;
@@ -32,9 +38,9 @@ async function populateDownloadedArray() {
     }
 }
 
-async function testIt(idx = -1) {
-    let extensionList = window.parent.returnExtensionList();
-    let extensionNames = window.parent.returnExtensionNames();
+async function testIt(idx = -1) : Promise<void> {
+    let extensionList = (<cordovaWindow>window.parent).returnExtensionList();
+    let extensionNames = (<cordovaWindow>window.parent).returnExtensionNames();
     let searchQuery = "odd";
     let errored = false;
     for (let i = 0; i < extensionList.length; i++) {
@@ -79,15 +85,17 @@ async function testIt(idx = -1) {
         alert("Everything seems to be working fine");
     }
 }
-async function testKey() {
+
+
+async function testKey() : Promise<void> {
     try {
-        alert(await window.parent.extractKey(4));
+        alert(await (<cordovaWindow>window.parent).extractKey(4));
     } catch (err) {
         alert("Fmovies failed");
     }
 
     try {
-        alert(await window.parent.extractKey(6));
+        alert(await (<cordovaWindow>window.parent).extractKey(6));
     } catch (err) {
         alert("zoro failed");
     }
@@ -102,7 +110,7 @@ async function testKey() {
 
         for (let link of links) {
             try {
-                alert(await window.parent.extractKey(4, "http://10.0.0.203/dump/e4/" + link));
+                alert(await (<cordovaWindow>window.parent).extractKey(4, "http://10.0.0.203/dump/e4/" + link));
             } catch (err) {
                 console.error(err);
                 alert(link + "failed");
@@ -118,31 +126,13 @@ async function testKey() {
 
     return;
 
-    try {
-
-        let links = ["main-2022-10-04-08-16-37.js", "main-2022-10-04-18-30-02.js", "main-2022-10-05-05-00-03.js", "main-2022-10-05-15-30-03.js", "main-2022-10-04-08-30-03.js", "main-2022-10-04-19-00-02.js", "main-2022-10-05-05-30-02.js", "main-2022-10-05-16-00-03.js", "main-2022-10-04-09-00-03.js", "main-2022-10-04-19-30-03.js", "main-2022-10-05-06-00-03.js", "main-2022-10-05-16-30-03.js", "main-2022-10-04-09-30-02.js", "main-2022-10-04-20-00-03.js", "main-2022-10-05-06-30-03.js", "main-2022-10-05-17-00-03.js", "main-2022-10-04-10-00-03.js", "main-2022-10-04-20-30-03.js", "main-2022-10-05-07-00-03.js", "main-2022-10-05-17-30-03.js", "main-2022-10-04-10-30-03.js", "main-2022-10-04-21-00-03.js", "main-2022-10-05-07-30-03.js", "main-2022-10-05-18-00-03.js", "main-2022-10-04-11-00-03.js", "main-2022-10-04-21-30-03.js", "main-2022-10-05-08-00-03.js", "main-2022-10-05-18-30-02.js", "main-2022-10-04-11-30-03.js", "main-2022-10-04-22-00-03.js", "main-2022-10-05-08-30-03.js", "main-2022-10-05-19-00-03.js", "main-2022-10-04-12-00-03.js", "main-2022-10-04-22-30-02.js", "main-2022-10-05-09-00-02.js", "main-2022-10-05-19-30-03.js", "main-2022-10-04-12-30-03.js", "main-2022-10-04-23-00-02.js", "main-2022-10-05-09-30-02.js", "main-2022-10-05-20-00-03.js", "main-2022-10-04-13-00-03.js", "main-2022-10-04-23-30-02.js", "main-2022-10-05-10-00-03.js", "main-2022-10-05-20-30-03.js", "main-2022-10-04-13-30-03.js", "main-2022-10-05-00-00-02.js", "main-2022-10-05-10-30-03.js", "main-2022-10-05-21-00-03.js", "main-2022-10-04-14-00-03.js", "main-2022-10-05-00-30-03.js", "main-2022-10-05-11-00-04.js", "main-2022-10-05-21-30-03.js", "main-2022-10-04-14-30-02.js", "main-2022-10-05-01-00-03.js", "main-2022-10-05-11-30-04.js", "main-2022-10-05-22-00-03.js", "main-2022-10-04-15-00-02.js", "main-2022-10-05-01-30-03.js", "main-2022-10-05-12-00-02.js", "main-2022-10-07-22-23-12.js", "main-2022-10-04-15-30-02.js", "main-2022-10-05-02-00-02.js", "main-2022-10-05-12-30-02.js", "main-2022-10-07-22-23-39.js", "main-2022-10-04-16-00-02.js", "main-2022-10-05-02-30-02.js", "main-2022-10-05-13-00-02.js", "main-2022-10-07-23-17-34.js", "main-2022-10-04-16-30-03.js", "main-2022-10-05-03-00-03.js", "main-2022-10-05-13-30-03.js", "main-2022-10-07-23-30-03.js", "main-2022-10-04-17-00-03.js", "main-2022-10-05-03-30-03.js", "main-2022-10-05-14-00-03.js", "main-2022-10-08-00-00-03.js", "main-2022-10-04-17-30-03.js", "main-2022-10-05-04-00-02.js", "main-2022-10-05-14-30-02.js", "main-2022-10-04-18-00-02.js", "main-2022-10-05-04-30-03.js", "main-2022-10-05-15-00-02.js"];
-        for (let link of links) {
-            try {
-                alert(await window.parent.extractKey(4, "http://10.0.0.203/dump/e6/" + link));
-
-            } catch (err) {
-                alert(link + "failed");
-            }
-
-        }
-
-
-    } catch (err) {
-        console.error(err);
-        alert("zoro failed");
-    }
 }
 if (localStorage.getItem("devmode") === "true") {
     document.getElementById("testExtensions").style.display = "block";
-    for (elem of document.getElementsByClassName("testExt")) {
-        elem.style.display = "block";
-        elem.onclick = function () {
-            testIt(parseInt(this.getAttribute("data-exId")));
+    for (let elem of document.getElementsByClassName("testExt")) {
+        (elem as HTMLElement).style.display = "block";
+        (elem  as HTMLElement).onclick = function () {
+            testIt(parseInt((this as HTMLElement).getAttribute("data-exId")));
         }
     }
     document.getElementById("testKey").style.display = "block";
@@ -165,7 +155,7 @@ function resetOfflineQual() {
     while (true) {
         let choice = parseInt(prompt(`What quality do you want the downloaded videos to be of? \n1. 360 \n2. 480\n3. 720 \n4. 1080`));
         if (!isNaN(choice) && choice >= 1 && choice <= 4) {
-            localStorage.setItem("offlineQual", qual[choice - 1]);
+            localStorage.setItem("offlineQual", qual[choice - 1].toString());
             break;
         } else {
             alert("Enter a number between 1 and 4");
@@ -173,12 +163,12 @@ function resetOfflineQual() {
     }
 }
 
-function readImage(file) {
+function readImage(file : File) : Promise<ArrayBuffer>{
     return (new Promise((resolve, reject) => {
 
         const reader = new FileReader();
         reader.addEventListener('load', (event) => {
-            resolve(event.target.result);
+            resolve(event.target.result as ArrayBuffer);
         });
 
         reader.addEventListener('error', (event) => {
@@ -190,16 +180,12 @@ function readImage(file) {
 
 
 
-function importDataSQL() {
-
-}
-
 function exportDataSQL() {
     var options = {
-        files: [window.parent.cordova.file.applicationStorageDirectory + "databases/data4.db"],
+        files: [(<cordovaWindow>window.parent).cordova.file.applicationStorageDirectory + "databases/data4.db"],
     };
 
-    window.parent.plugins.socialsharing.shareWithOptions(options, (x) => console.log(x), (x) => {
+    (<cordovaWindow>window.parent).plugins.socialsharing.shareWithOptions(options, () => {}, () => {
         alert("Something went wrong");
     });
 
@@ -215,9 +201,9 @@ document.getElementById("importFile").onchange = async function (event) {
         let confirmation = prompt("Are you sure you want to import this file? Your current data will be replaced by the imported file. Type \"YES\" to continue.");
 
         if (confirmation == "YES") {
-            const fileList = event.target.files;
+            const fileList = (event.target as HTMLInputElement).files;
             let result = await readImage(fileList[0]);
-            window.parent.saveAsImport(result);
+            (<cordovaWindow>window.parent).saveAsImport(result);
         } else {
             alert("Aborting");
         }
@@ -226,17 +212,14 @@ document.getElementById("importFile").onchange = async function (event) {
     } catch (err) {
         alert("Error reading the file.");
     }
-
-
-
 }
 
 
 document.getElementById("getImage").onchange = async function (event) {
     try {
-        const fileList = event.target.files;
+        const fileList = (event.target as HTMLInputElement).files;
         let result = await readImage(fileList[0]);
-        window.parent.saveImage(result);
+        (<cordovaWindow>window.parent).saveImage(result);
     } catch (err) {
         alert("Error reading the file.");
     }
@@ -247,26 +230,9 @@ document.getElementById("exportData").onclick = function () {
     exportDataSQL();
 }
 
-// document.getElementById("exportData").onclick = function () {
-//     importDataSQL();
-// }
-
 document.getElementById("accessability").onclick = function () {
     document.getElementById("accessabilityCon").style.display = "flex";
 }
-
-
-
-document.getElementById("restoreData").onclick = function () {
-    let res = prompt("Are you sure you want to do this? Doing this multiple time may result in duplication of your local data. Type \"YES\" to proceed.")
-
-    if (res === "YES") {
-        window.parent.dexieToSQLite();
-    } else {
-        alert("Aborting");
-    }
-}
-
 
 document.getElementById("queueButton").setAttribute("data-paused", (localStorage.getItem("downloadPaused") === 'true').toString());
 
@@ -278,7 +244,7 @@ if (document.getElementById("queueButton").getAttribute("data-paused") === 'true
 }
 
 document.getElementById("queueButton").onclick = function () {
-    let downloadQueue = window.parent.returnDownloadQueue();
+    let downloadQueue = (<cordovaWindow>window.parent).returnDownloadQueue();
     if (document.getElementById("queueButton").getAttribute("data-paused") === 'true') {
         let bool = downloadQueue.playIt(downloadQueue);
         if (bool) {
@@ -297,18 +263,18 @@ document.getElementById("queueButton").onclick = function () {
 };
 
 document.getElementById("activeRemove").onclick = function () {
-    let downloadQueue = window.parent.returnDownloadQueue();
+    let downloadQueue = (<cordovaWindow>window.parent).returnDownloadQueue();
     downloadQueue.removeActive(downloadQueue);
 }
 
 
 document.getElementById("doneRemove").onclick = function () {
-    let downloadQueue = window.parent.returnDownloadQueue();
+    let downloadQueue = (<cordovaWindow>window.parent).returnDownloadQueue();
     downloadQueue.removeDone(downloadQueue, true);
 }
 
 document.getElementById("errorRemove").onclick = function () {
-    let downloadQueue = window.parent.returnDownloadQueue();
+    let downloadQueue = (<cordovaWindow>window.parent).returnDownloadQueue();
     downloadQueue.removeDone(downloadQueue, false);
 }
 
@@ -317,7 +283,8 @@ if (config.chrome) {
     document.getElementById("restoreData").style.display = "none";
 }
 
-function addQueue(queue, queueDOM, downloadQueue, isDone) {
+// todo
+function addQueue(queue : Array<queueElement>, queueDOM : HTMLElement, downloadQueue : downloadQueue, isDone : boolean) {
 
 
     if (!isDone && queue.length == 0) {
@@ -358,10 +325,10 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
         temp4.onclick = function () {
             if (isDone) {
-                downloadQueue.removeFromDoneQueue(this.getAttribute("data-url"), downloadQueue);
+                downloadQueue.removeFromDoneQueue((this as HTMLElement).getAttribute("data-url"), downloadQueue);
 
             } else {
-                downloadQueue.removeFromQueue(this.getAttribute("data-url"), downloadQueue);
+                downloadQueue.removeFromQueue((this as HTMLElement).getAttribute("data-url"), downloadQueue);
 
             }
 
@@ -376,7 +343,7 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
             });
 
             temp6.onclick = function () {
-                downloadQueue.retryFromDoneQueue(this.getAttribute("data-url"), downloadQueue);
+                downloadQueue.retryFromDoneQueue((this as HTMLElement).getAttribute("data-url"), downloadQueue);
             }
 
             temp4Con.append(temp6);
@@ -386,6 +353,8 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
         try {
             let temp = downloadQueue.queue[0].downloadInstance;
+
+            //todo
             downloadPercent = temp.downloaded / temp.total;
             downloadPercent = Math.floor(downloadPercent * 10000) / 100;
         } catch (err) {
@@ -444,7 +413,7 @@ function addQueue(queue, queueDOM, downloadQueue, isDone) {
 
 
 function reloadQueue(mode = 0) {
-    let downloadQueue = window.parent.returnDownloadQueue();
+    let downloadQueue = (<cordovaWindow>window.parent).returnDownloadQueue();
     if (downloadQueue.pause) {
         document.getElementById("queueButton").className = "queuePlay";
         document.getElementById("queueButton").setAttribute("data-paused", "true");
@@ -507,7 +476,7 @@ if (localStorage.getItem("offline") === 'true') {
 }
 
 document.getElementById("resetSource").onclick = function () {
-    const extensionNames = window.parent.returnExtensionNames();
+    const extensionNames = (<cordovaWindow>window.parent).returnExtensionNames();
     let message = `What extension's source do you want to reset?\n`;
     for (let i = 0; i < extensionNames.length; i++) {
         message += `${i}. ${extensionNames[i]}\n`;
@@ -526,7 +495,7 @@ document.getElementById("resetSource").onclick = function () {
 let offlineDOM = document.getElementById("offline");
 
 offlineDOM.onchange = function () {
-    let val = offlineDOM.checked.toString();
+    let val = (offlineDOM as HTMLInputElement).checked.toString();
 
     if (val == "false") {
         localStorage.setItem("offline", "false");
@@ -543,14 +512,13 @@ offlineDOM.onchange = function () {
 
 
 
-document.getElementById("offline").checked = (localStorage.getItem("offline") === 'true');
 
 
 async function logout() {
     try {
         sendNoti([2, "", "Alert", "Trying to log you out..."]);
 
-        await window.parent.makeRequest("POST", `${config.remote}/logout`, {});
+        await (<cordovaWindow>window.parent).makeRequest("POST", `${config.remote}/logout`, {});
         window.parent.postMessage({ "action": 500, data: "pages/homepage/index.html" }, "*");
 
     } catch (err) {
@@ -597,7 +565,7 @@ document.getElementById("logout").addEventListener("click", function () {
 
 
 
-let tempCloseDom = document.getElementsByClassName("closeDom");
+let tempCloseDom = document.getElementsByClassName("closeDom") as HTMLCollectionOf<HTMLElement>;
 
 for (let i = 0; i < tempCloseDom.length; i++) {
     tempCloseDom[i].onclick = function () {
@@ -620,67 +588,67 @@ document.getElementById("addRoom").onclick = function () {
 };
 
 document.getElementById("saveRoom").onclick = function () {
-    ini_api.change_order(this);
+    ini_api.change_order();
 };
 
 
 document.getElementById("outlineColor").onchange = function () {
-    localStorage.setItem("outlineColor", this.value);
+    localStorage.setItem("outlineColor", (this as HTMLInputElement).value);
 }
 
 
 document.getElementById("outlineWidth").oninput = function () {
-    localStorage.setItem("outlineWidth", this.value);
+    localStorage.setItem("outlineWidth", (this as HTMLInputElement).value);
 }
 
 document.getElementById("backgroundBlur").oninput = function () {
-    localStorage.setItem("backgroundBlur", this.value);
-    window.parent.updateBackgroundBlur();
+    localStorage.setItem("backgroundBlur", (this as HTMLInputElement).value);
+    (<cordovaWindow>window.parent).updateBackgroundBlur();
 }
 
 document.getElementById("fmoviesBase").oninput = function () {
-    localStorage.setItem("fmoviesBaseURL", this.value);
-    window.parent.setFmoviesBase();
+    localStorage.setItem("fmoviesBaseURL", (this as HTMLInputElement).value);
+    (<cordovaWindow>window.parent).setFmoviesBase();
 }
 
 document.getElementById("themeColor").onchange = function () {
-    localStorage.setItem("themecolor", this.value);
+    localStorage.setItem("themecolor", (this as HTMLInputElement).value);
     applyTheme();
 }
 
 document.getElementById("downloadTimeout").oninput = function () {
-    localStorage.setItem("downloadTimeout", this.value);
+    localStorage.setItem("downloadTimeout", (this as HTMLInputElement).value);
 }
 
 document.getElementById("scrollBool").onchange = function () {
-    localStorage.setItem("scrollBool", this.checked.toString());
+    localStorage.setItem("scrollBool", (this as HTMLInputElement).checked.toString());
 }
 
 document.getElementById("discoverHide").onchange = function () {
-    localStorage.setItem("discoverHide", this.checked.toString());
+    localStorage.setItem("discoverHide", (this as HTMLInputElement).checked.toString());
     location.reload();
 }
 
 document.getElementById("autoPause").onchange = function () {
-    localStorage.setItem("autoPause", this.checked.toString());
+    localStorage.setItem("autoPause", (this as HTMLInputElement).checked.toString());
 }
 
 
 document.getElementById("hideNotification").onchange = function () {
-    localStorage.setItem("hideNotification", this.checked.toString());
+    localStorage.setItem("hideNotification", (this as HTMLInputElement).checked.toString());
 }
 
 document.getElementById("fancyHome").onchange = function () {
-    localStorage.setItem("fancyHome", this.checked.toString());
+    localStorage.setItem("fancyHome", (this as HTMLInputElement).checked.toString());
     location.reload();
 }
 
 document.getElementById("alwaysDown").onchange = function () {
-    localStorage.setItem("alwaysDown", this.checked.toString());
+    localStorage.setItem("alwaysDown", (this as HTMLInputElement).checked.toString());
 }
 
 
-function switchOption(value) {
+function switchOption(value : string) {
     if (value === "true") {
         document.getElementById("themeMainCon").style.display = "none";
         document.getElementById("imageInput").style.display = "table-row";
@@ -693,29 +661,30 @@ function switchOption(value) {
 }
 
 document.getElementById("useImageBack").onchange = function () {
-    localStorage.setItem("useImageBack", this.checked.toString());
-    switchOption(this.checked.toString());
-    window.parent.updateImage();
+    localStorage.setItem("useImageBack", (this as HTMLInputElement).checked.toString());
+    switchOption((this as HTMLInputElement).checked.toString());
+    (<cordovaWindow>window.parent).updateImage();
 }
 
-document.getElementById("rangeCon").ontouchmove = function (event) {
+document.getElementById("rangeCon").addEventListener("touchmove", function (event : TouchEvent) {
     event.stopPropagation();
-}
+});
 
 
-document.getElementById("outlineColor").value = localStorage.getItem("outlineColor");
-document.getElementById("outlineWidth").value = localStorage.getItem("outlineWidth");
-document.getElementById("backgroundBlur").value = localStorage.getItem("backgroundBlur");
-document.getElementById("fmoviesBase").value = localStorage.getItem("fmoviesBaseURL");
-document.getElementById("themeColor").value = localStorage.getItem("themecolor");
-document.getElementById("downloadTimeout").value = localStorage.getItem("downloadTimeout");
-document.getElementById("scrollBool").checked = localStorage.getItem("scrollBool") !== "false";
-document.getElementById("discoverHide").checked = localStorage.getItem("discoverHide") === "true";
-document.getElementById("autoPause").checked = localStorage.getItem("autoPause") === "true";
-document.getElementById("hideNotification").checked = localStorage.getItem("hideNotification") === "true";
-document.getElementById("fancyHome").checked = localStorage.getItem("fancyHome") === "true";
-document.getElementById("alwaysDown").checked = localStorage.getItem("alwaysDown") === "true";
-document.getElementById("useImageBack").checked = localStorage.getItem("useImageBack") === "true";
+(document.getElementById("outlineColor") as HTMLInputElement).value = localStorage.getItem("outlineColor");
+(document.getElementById("outlineWidth") as HTMLInputElement).value = localStorage.getItem("outlineWidth");
+(document.getElementById("backgroundBlur") as HTMLInputElement).value = localStorage.getItem("backgroundBlur");
+(document.getElementById("fmoviesBase") as HTMLInputElement).value = localStorage.getItem("fmoviesBaseURL");
+(document.getElementById("themeColor") as HTMLInputElement).value = localStorage.getItem("themecolor");
+(document.getElementById("downloadTimeout") as HTMLInputElement).value = localStorage.getItem("downloadTimeout");
+(document.getElementById("scrollBool") as HTMLInputElement).checked = localStorage.getItem("scrollBool") !== "false";
+(document.getElementById("discoverHide") as HTMLInputElement).checked = localStorage.getItem("discoverHide") === "true";
+(document.getElementById("autoPause") as HTMLInputElement).checked = localStorage.getItem("autoPause") === "true";
+(document.getElementById("hideNotification") as HTMLInputElement).checked = localStorage.getItem("hideNotification") === "true";
+(document.getElementById("fancyHome") as HTMLInputElement).checked = localStorage.getItem("fancyHome") === "true";
+(document.getElementById("alwaysDown") as HTMLInputElement).checked = localStorage.getItem("alwaysDown") === "true";
+(document.getElementById("useImageBack") as HTMLInputElement).checked = localStorage.getItem("useImageBack") === "true";
+(document.getElementById("offline") as HTMLInputElement).checked = (localStorage.getItem("offline") === 'true');
 
 
 
@@ -758,13 +727,9 @@ function toggleMenu() {
     }
 }
 
-var timeout;
 document.getElementById("menuIcon").addEventListener("click", function () {
     toggleMenu();
-
-
 });
-
 
 
 window.onmessage = function (x) {
@@ -801,9 +766,9 @@ window.onmessage = function (x) {
 };
 
 
-var rooms;
+var rooms : Array<string | number>;
 var token;
-var rooms_order;
+var rooms_order : Array<number>;
 var selectedShow = null;
 var permNoti = null;
 var check_sort = 0;
@@ -811,10 +776,10 @@ var yy;
 var saveCheck = 0;
 var last_order;
 
-function toFormData(x) {
-    var form = new FormData();
-    for (value in x) {
-        form.append(value, x[value]);
+function toFormData(formObject : { [key: string]: string } ) {
+    const form = new FormData();
+    for (const value in formObject) {
+        form.append(value, formObject[value]);
     }
     return form;
 }
@@ -853,6 +818,37 @@ function watched_card(y) {
 
 }
 
+function makeRoomElem(roomID, roomName, add = false){
+    let className = "room_card_delete";
+
+    if(add){
+        className = "draggable_room add_to_room";
+    }
+
+    let tempDiv = createElement({ "class": "room_card_con", "attributes": { "data-roomid": roomID }, "listeners": {} });
+    let tempDiv2 = createElement({ "class": "room_card", "attributes": {}, "listeners": {} });
+    let tempDiv3 = createElement({ "class": "room_text", "attributes": {}, "listeners": {}, "innerText": roomName });
+    let tempDiv4 = createElement({
+        "class": className, "attributes": { "data-roomid": roomID }, "listeners": {
+            "click": function () {
+                if(add){
+                    ini_api.change_state(this);
+                }else{
+                    ini_api.delete_room(this);
+                }
+            }
+        }
+    });
+    
+    tempDiv2.append(tempDiv3);
+    tempDiv2.append(tempDiv4);
+    if(!add){
+        tempDiv2.append(createElement({ "class": "draggable_room", "attributes": {}, "listeners": {} }));
+    }
+    tempDiv.append(tempDiv2);
+    return tempDiv;
+}
+
 
 function updateRoomDis() {
 
@@ -860,184 +856,46 @@ function updateRoomDis() {
     document.getElementById("room_dis_child").innerHTML = "";
 
     for (var i = 0; i < rooms_order.length; i++) {
-
-        let yye = rooms2.indexOf(rooms_order[i]);
-        if (yye > -1) {
-
-            let tempDiv = createElement({ "class": "room_card_con", "attributes": { "data-roomid": rooms2[yye + 0] }, "listeners": {} });
-
-            let tempDiv2 = createElement({ "class": "room_card", "attributes": {}, "listeners": {} });
-
-
-            let tempDiv3 = createElement({ "class": "room_text", "attributes": {}, "listeners": {}, "innerText": rooms2[yye - 1] });
-
-            let tempDiv4 = createElement({
-                "class": "room_card_delete", "attributes": { "data-roomid": rooms2[yye] }, "listeners": {
-                    "click": function () {
-                        ini_api.delete_room(this);
-                    }
-                }
-            });
-
-            let tempDiv5 = createElement({ "class": "draggable_room", "attributes": {}, "listeners": {} });
-
-
-            tempDiv2.append(tempDiv3);
-            tempDiv2.append(tempDiv4);
-            tempDiv2.append(tempDiv5);
-
-            tempDiv.append(tempDiv2);
-
-            document.getElementById("room_dis_child").append(tempDiv);
-
-
-
-            rooms2.splice(yye - 1, 2);
+        let roomIndex = rooms2.indexOf(rooms_order[i]);
+        let roomID = rooms2[roomIndex + 0];
+        let roomName = rooms2[roomIndex - 1];
+        if (roomIndex > -1) {
+            document.getElementById("room_dis_child").append(makeRoomElem(roomID, roomName));
+            rooms2.splice(roomIndex - 1, 2);
         }
-
-
-
     }
-
 
     for (var i = 0; i < rooms2.length; i += 2) {
-
-
-        let tempDiv = createElement({ "class": "room_card_con", "attributes": { "data-roomid": rooms2[i + 1] }, "listeners": {} });
-
-        let tempDiv2 = createElement({ "class": "room_card", "attributes": {}, "listeners": {} });
-
-
-        let tempDiv3 = createElement({ "class": "room_text", "attributes": {}, "listeners": {}, "innerText": rooms2[i] });
-
-        let tempDiv4 = createElement({
-            "class": "room_card_delete", "attributes": { "data-roomid": rooms2[i + 1] }, "listeners": {
-                "click": function () {
-                    ini_api.delete_room(this);
-                }
-            }
-        });
-
-        let tempDiv5 = createElement({ "class": "draggable_room", "attributes": {}, "listeners": {} });
-
-
-        tempDiv2.append(tempDiv3);
-        tempDiv2.append(tempDiv4);
-        tempDiv2.append(tempDiv5);
-
-        tempDiv.append(tempDiv2);
-
-        document.getElementById("room_dis_child").append(tempDiv);
-
-
-
+        let roomID = rooms2[i + 1];
+        let roomName = rooms2[i];
+        document.getElementById("room_dis_child").append(makeRoomElem(roomID, roomName));
     }
-
-    // let menuPaddingElem = document.createElement("div");
-    // menuPaddingElem.className = "menuPadding";
-    // document.getElementById("room_dis_child").append(menuPaddingElem);
 }
 
 
 function updateRoomAdd() {
-
     rooms2 = rooms.slice(0);
-    document.getElementById("room_add_child").innerHTML = `<div class="room_card_con" roomId="0">
+    document.getElementById("room_add_child").innerHTML = "";
 
-    <div class="room_card"><div class="room_text">Recently Watched</div><div class="draggable_room add_to_room"  id="add_to_room" data-roomId="0"></div></div>
-
-    </div>`;
-
-    document.getElementById("room_add_child").innerHTML += `<div class="room_card_con" roomId="-1">
-
-    <div class="room_card"><div class="room_text">Ongoing</div><div class="draggable_room add_to_room"  id="add_to_ongoing" data-roomId="-1"></div></div>
-
-    </div>`;
-
-    document.getElementById("add_to_room").onclick = function () {
-        ini_api.change_state(this);
-    };
-
-    document.getElementById("add_to_ongoing").onclick = function () {
-        ini_api.change_state(this);
-    };
-
+    document.getElementById("room_add_child").append(makeRoomElem(0, "Recently Watched", true));
+    document.getElementById("room_add_child").append(makeRoomElem(-1, "Ongoing", true));
 
     for (var i = 0; i < rooms_order.length; i++) {
-
-        let yye = rooms2.indexOf(rooms_order[i]);
-        if (yye > -1) {
-
-
-            let tempDiv = createElement({ "class": "room_card_con", "attributes": { "data-roomid": rooms2[yye + 0] }, "listeners": {} });
-
-            let tempDiv2 = createElement({ "class": "room_card", "attributes": {}, "listeners": {} });
-
-
-            let tempDiv3 = createElement({ "class": "room_text", "attributes": {}, "listeners": {}, "innerText": rooms2[yye - 1] });
-
-
-            let tempDiv4 = createElement({
-                "class": "draggable_room add_to_room", "attributes": { "data-roomid": rooms2[yye + 0] }, "listeners": {
-                    "click": function () {
-                        ini_api.change_state(this);
-                    }
-                }
-            });
-
-
-            tempDiv2.append(tempDiv3);
-            tempDiv2.append(tempDiv4);
-
-            tempDiv.append(tempDiv2);
-
-            document.getElementById("room_add_child").append(tempDiv);
-
-
-
-            rooms2.splice(yye - 1, 2);
+        let roomIndex = rooms2.indexOf(rooms_order[i]);
+        let roomID = rooms2[roomIndex + 0];
+        let roomName = rooms2[roomIndex - 1];
+        if (roomIndex > -1) {
+            document.getElementById("room_add_child").append(makeRoomElem(roomID, roomName, true));
+            rooms2.splice(roomIndex - 1, 2);
         }
-
-
-
     }
 
 
     for (var i = 0; i < rooms2.length; i += 2) {
-
-
-        let tempDiv = createElement({ "class": "room_card_con", "attributes": { "data-roomid": rooms2[i + 1] }, "listeners": {} });
-
-        let tempDiv2 = createElement({ "class": "room_card", "attributes": {}, "listeners": {} });
-
-
-        let tempDiv3 = createElement({ "class": "room_text", "attributes": {}, "listeners": {}, "innerText": rooms2[i] });
-
-
-        let tempDiv4 = createElement({
-            "class": "draggable_room add_to_room", "attributes": { "data-roomid": rooms2[i + 1] }, "listeners": {
-                "click": function () {
-                    ini_api.change_state(this);
-                }
-            }
-        });
-
-
-        tempDiv2.append(tempDiv3);
-        tempDiv2.append(tempDiv4);
-
-        tempDiv.append(tempDiv2);
-
-        document.getElementById("room_add_child").append(tempDiv);
-
-
-
-
+        let roomID = rooms2[i + 1];
+        let roomName = rooms2[i];
+        document.getElementById("room_add_child").append(makeRoomElem(roomID, roomName, true));
     }
-
-
-
-
 }
 if (isSnapSupported) {
     let scrollLastIndex;
@@ -1058,14 +916,14 @@ if (isSnapSupported) {
                 }
             }
 
-            let activeCatDOM = document.querySelector(".categories.activeCat");
-            let temp = document.getElementById("catActiveMain");
+            let activeCatDOM = document.querySelector(".categories.activeCat") as HTMLElement;
+            let temp = document.getElementById("catActiveMain") as HTMLElement;
             window.requestAnimationFrame(function () {
                 window.requestAnimationFrame(function () {
                     if (temp && activeCatDOM) {
-                        temp.style.left = activeCatDOM.offsetLeft;
-                        temp.style.height = activeCatDOM.offsetHeight;
-                        temp.style.width = activeCatDOM.offsetWidth;
+                        temp.style.left = activeCatDOM.offsetLeft.toString();
+                        temp.style.height = activeCatDOM.offsetHeight.toString();
+                        temp.style.width = activeCatDOM.offsetWidth.toString();
                     }
                 });
             });
@@ -1097,7 +955,7 @@ function makeDiscoverCard(data, engine, engineName) {
                 if (data.getLink === true) {
                     sendNoti([0, "", "Alert", "Redirecting. Wait a moment..."]);
 
-                    let extensionList = window.parent.returnExtensionList();
+                    let extensionList = (<cordovaWindow>window.parent).returnExtensionList();
 
                     try {
                         let episodeLink = await extensionList[engine].getDiscoverLink(curLink);
@@ -1129,8 +987,8 @@ function makeDiscoverCard(data, engine, engineName) {
     return tempDiv1;
 }
 async function populateDiscover() {
-    let extensionList = window.parent.returnExtensionList();
-    let extensionNames = window.parent.returnExtensionNames();
+    let extensionList = (<cordovaWindow>window.parent).returnExtensionList();
+    let extensionNames = (<cordovaWindow>window.parent).returnExtensionNames();
     let disCon = document.getElementById("discoverCon");
     let parents = [];
     let exTitle = [];
@@ -1165,7 +1023,7 @@ async function populateDiscover() {
             extensionList[engine]["discover"]().then(function (data) {
                 let parentDiscover = parents[engine];
                 let titleDiscover = exTitle[engine];
-                for (card of data) {
+                for (const card of data) {
                     if (card.link === null) {
                         continue;
                     }
@@ -1232,18 +1090,18 @@ function addCustomRoom() {
                     }
 
 
-                    let activeCatDOM = document.querySelector(".categories.activeCat");
+                    let activeCatDOM = document.querySelector(".categories.activeCat") as HTMLElement;
                     let temp = document.getElementById("catActiveMain");
                     window.requestAnimationFrame(function () {
                         window.requestAnimationFrame(function () {
                             if (temp && activeCatDOM) {
-                                temp.style.left = activeCatDOM.offsetLeft;
-                                temp.style.height = activeCatDOM.offsetHeight;
-                                temp.style.width = activeCatDOM.offsetWidth;
+                                temp.style.left = activeCatDOM.offsetLeft.toString();
+                                temp.style.height = activeCatDOM.offsetHeight.toString();
+                                temp.style.width = activeCatDOM.offsetWidth.toString();
                             }
 
                             if (isSnapSupported) {
-                                let tempCatData = document.getElementsByClassName("categoriesDataMain");
+                                let tempCatData = document.getElementsByClassName("categoriesDataMain") as HTMLCollectionOf<HTMLElement>;
                                 for (let i = 0; i < tempCatData.length; i++) {
                                     if (tempCatData[i].id == thisDataId) {
                                         tempCatData[i].classList.add("active");
@@ -1365,14 +1223,14 @@ function addCustomRoom() {
 
 
         document.querySelector(".categories.activeCat").scrollIntoView();
-        let activeCatDOM = document.querySelector(".categories.activeCat");
-        let temp = document.getElementById("catActiveMain");
+        let activeCatDOM = document.querySelector(".categories.activeCat") as HTMLElement;
+        let temp = document.getElementById("catActiveMain") as HTMLElement;
         window.requestAnimationFrame(function () {
             if (temp && activeCatDOM) {
                 activeCatDOM.click();
-                temp.style.left = activeCatDOM.offsetLeft;
-                temp.style.height = activeCatDOM.offsetHeight;
-                temp.style.width = activeCatDOM.offsetWidth;
+                temp.style.left = activeCatDOM.offsetLeft.toString();
+                temp.style.height = activeCatDOM.offsetHeight.toString();
+                temp.style.width = activeCatDOM.offsetWidth.toString();
             }
         });
     } catch (err) {
@@ -1386,46 +1244,27 @@ function addCustomRoom() {
 }
 
 function getUserInfo() {
-
     ini_api.get_userinfo();
-
-
 }
 
 
 
 
-
-function close_search() {
-    document.getElementsByClassName('searchInput')[0].style.width = '0px';
-    document.getElementById('s_c').style.display = 'none';
-    document.getElementsByClassName('searchInput')[0].style.paddingLeft = '0px';
-    document.getElementsByClassName('searchButton')[0].onclick = function () { };
-    event.stopPropagation();
-}
-function fix_title(x) {
+function fix_title(title : string) {
     try {
-        x = x.split("-");
-        temp = "";
-        for (var i = 0; i < x.length; i++) {
-            temp = temp + x[i].substring(0, 1).toUpperCase() + x[i].substring(1) + " ";
+        let titleArray = title.split("-");
+        let temp = "";
+        for (var i = 0; i < titleArray.length; i++) {
+            temp = temp + titleArray[i].substring(0, 1).toUpperCase() + titleArray[i].substring(1) + " ";
         }
         return temp;
     } catch (err) {
-        return x;
+        return title;
     }
 }
 
-function img_url(x) {
-    try {
-
-        x = x.replace("file:", "https:");
-
-    }
-    catch (err) {
-
-    }
-    return x;
+function img_url(url : string) {
+    return url.replace("file:", "https:");
 }
 
 function sendNoti(x) {
@@ -1442,22 +1281,10 @@ function sendNoti(x) {
 
 
 if (true) {
-    var a = document.getElementsByClassName("card_con");
-    for (var i = 0; i < a.length; i++) {
-
+    var a = document.getElementsByClassName("card_con") as HTMLCollectionOf<HTMLElement>;
+    for (let i = 0; i < a.length; i++) {
         a[i].style.display = "block";
     }
-
-    var a = document.getElementsByClassName("title_a");
-    for (var i = 0; i < a.length; i++) {
-
-        a[i].style.display = "inline-table";
-    }
-
-
-
-
-
 
 
     function hide_dom(x) {
@@ -1483,19 +1310,14 @@ if (true) {
 
 
 
-    function getCurrentOrder() {
-
+    function getCurrentOrder() : string {
         let elems = document.getElementById("room_dis_child").getElementsByClassName("room_card_con");
-
         let room_temp = [];
 
         for (var i = 0; i < elems.length; i++) {
             room_temp.push(parseInt(elems[i].getAttribute("data-roomid")));
         }
-        room_temp = room_temp.join(',');
-
-        return room_temp;
-
+        return room_temp.join(',');
     }
 
 
@@ -1519,15 +1341,15 @@ if (true) {
 
     var api = {
         add_room: () => {
-            let data_in = document.getElementById("pass_f").value;
+            let data_in = (document.getElementById("pass_f") as HTMLInputElement).value;
             document.getElementById("room_con").style.display = 'none';
-            window.parent.apiCall("POST", { "action": 10, "username": username, "room": data_in }, getUserInfo);
+            (<cordovaWindow>window.parent).apiCall("POST", { "action": 10, "username": username, "room": data_in }, getUserInfo);
         },
 
         delete_room: (domelem) => {
             if (confirm("Are you sure you want to delete this card?")) {
                 let room_id = domelem.getAttribute("data-roomid");
-                window.parent.apiCall("POST", { "username": username, "action": 12, "id": room_id }, getUserInfo);
+                (<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 12, "id": room_id }, getUserInfo);
 
 
             }
@@ -1538,13 +1360,13 @@ if (true) {
         change_order: () => {
 
             let room_temp = getCurrentOrder();
-            window.parent.apiCall("POST", { "action": 13, "username": username, "order": room_temp }, getUserInfo);
+            (<cordovaWindow>window.parent).apiCall("POST", { "action": 13, "username": username, "order": room_temp }, getUserInfo);
 
         },
 
         change_state: (domelem) => {
             let state = domelem.getAttribute("data-roomid");
-            window.parent.apiCall("POST", { "username": username, "action": 7, "name": selectedShow, "state": state }, getUserInfo);
+            (<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 7, "name": selectedShow, "state": state }, getUserInfo);
 
         },
 
@@ -1558,7 +1380,7 @@ if (true) {
                 img_url_prompt = img_url_prompt;
 
 
-                window.parent.apiCall("POST", { "username": username, "action": 9, "name": name, "img": img_url_prompt }, getUserInfo, [domelem, img_url_prompt]);
+                (<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 9, "name": name, "img": img_url_prompt }, getUserInfo, [domelem, img_url_prompt]);
 
 
 
@@ -1568,7 +1390,7 @@ if (true) {
 
             if (main_url_prompt != "" && main_url_prompt != null && main_url_prompt != undefined) {
 
-                window.parent.apiCall("POST", { "username": username, "action": 14, "name": name, "url": main_url_prompt }, change_url_callback, [domelem]);
+                (<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 14, "name": name, "url": main_url_prompt }, change_url_callback, [domelem]);
 
 
 
@@ -1585,7 +1407,7 @@ if (true) {
 
 
             if (confirm("Are you sure you want to delete this show from your watched list?")) {
-                window.parent.apiCall("POST", { "username": username, "action": 6, "name": x }, delete_card_callback, [domelem]);
+                (<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 6, "name": x }, delete_card_callback, [domelem]);
 
 
 
@@ -1597,7 +1419,7 @@ if (true) {
         get_userinfo: () => {
             permNoti = sendNoti([0, null, "Message", "Syncing with the server..."]);
 
-            window.parent.apiCall("POST", { "username": username, "action": 4 }, get_userinfo_callback, []);
+            (<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 4 }, get_userinfo_callback, []);
 
 
         }
@@ -1624,11 +1446,11 @@ if (true) {
     }
 
     async function updateNewEpCached() {
-        for (dom of document.getElementById("room_-1").querySelectorAll(".s_card")) {
-            dom.style.border = "none";
+        for (const dom of document.getElementById("room_-1").querySelectorAll(".s_card")) {
+            (dom as HTMLElement).style.border = "none";
         }
         let updateLibNoti = sendNoti([0, null, "Message", "Fetching cached data..."]);
-        for (show of flaggedShow) {
+        for (const show of flaggedShow) {
             try {
                 let lastestEp = await showLastEpDB.lastestEp.where({ "name": show.name }).toArray();
                 if (lastestEp.length != 0) {
@@ -1654,13 +1476,13 @@ if (true) {
     async function updateNewEp() {
         let updateLibNoti = sendNoti([0, null, "Message", "Updating Libary"]);
         let updatedShow = [];
-        let extensionList = window.parent.returnExtensionList();
+        let extensionList = (<cordovaWindow>window.parent).returnExtensionList();
         let promises = [];
         let promiseShowData = [];
         let allSettled = "allSettled" in Promise;
         // let allSettled = false;
 
-        for (show of flaggedShow) {
+        for (let show of flaggedShow) {
             let showURL = show.showURL;
             showURL = showURL.replace("?watch=/", "");
             let currentEp = show.currentEp;
@@ -1743,7 +1565,7 @@ if (true) {
     }
 
 
-    async function get_userinfo_callback(x, y, z) {
+    async function get_userinfo_callback(response) {
         flaggedShow = [];
 
         document.getElementById("room_dis_child").innerHTML = "";
@@ -1753,7 +1575,7 @@ if (true) {
         if (offlineMode) {
             await populateDownloadedArray();
         }
-        let a = x.data;
+        let a = response.data;
 
         rooms = a[1].slice(0);
         let data = a[0];
@@ -1776,7 +1598,7 @@ if (true) {
         updateRoomDis();
         updateRoomAdd();
         addCustomRoom();
-        let extensionNames = window.parent.returnExtensionNames();
+        let extensionNames = (<cordovaWindow>window.parent).returnExtensionNames();
 
         if (!offlineMode) {
             let updateLibCon = createElement({
@@ -1873,8 +1695,8 @@ if (true) {
             }
 
             tempDiv3.onclick = function () {
-                localStorage.setItem("currentLink", this.getAttribute("data-current"));
-                window.parent.postMessage({ "action": 500, data: "pages/episode/index.html" + this.getAttribute("data-href") }, "*");
+                localStorage.setItem("currentLink", (this as HTMLElement).getAttribute("data-current"));
+                window.parent.postMessage({ "action": 500, data: "pages/episode/index.html" + (this as HTMLElement).getAttribute("data-href") }, "*");
 
             };
 
@@ -2023,7 +1845,7 @@ if (true) {
                     "listeners": {
                         "click": async function () {
                             try {
-                                await window.parent.removeDirectory(`${showname}`);
+                                await (<cordovaWindow>window.parent).removeDirectory(`${showname}`);
                                 tempDiv.remove();
                             } catch (err) {
                                 alert("Could not delete the files. You have to manually delete it by going to the show's page.");
@@ -2033,8 +1855,7 @@ if (true) {
                 });
 
                 tempDiv3.onclick = function () {
-                    window.parent.postMessage({ "action": 500, data: "pages/episode/index.html" + this.getAttribute("data-href") }, "*");
-
+                    window.parent.postMessage({ "action": 500, data: "pages/episode/index.html" + (this as HTMLElement).getAttribute("data-href") }, "*");
                 };
 
 
@@ -2053,7 +1874,7 @@ if (true) {
             }
         }
 
-        let catMainDOM = document.getElementsByClassName("categoriesDataMain");
+        let catMainDOM = document.getElementsByClassName("categoriesDataMain") as HTMLCollectionOf<HTMLElement>;
         for (var i = 0; i < catMainDOM.length; i++) {
             pullTabArray.push(new pullToRefresh(catMainDOM[i]));
             if (catMainDOM[i].id == "discoverCon") {
@@ -2068,7 +1889,7 @@ if (true) {
         }
 
         if (isNaN(parseInt(localStorage.getItem("lastupdatelib")))) {
-            localStorage.setItem("lastupdatelib", 0);
+            localStorage.setItem("lastupdatelib", "0");
         }
 
         let curTime = (new Date()).getTime() / 1000;
@@ -2091,6 +1912,8 @@ if (true) {
     else {
         window.parent.postMessage({ "action": 20, data: "" }, "*");
     }
+
+    // @ts-ignore
     new Sortable(document.getElementById("room_dis_child"), {
         animation: 150,
         handle: '.draggable_room',
@@ -2109,10 +1932,10 @@ if (true) {
 
     fetch(verURL).then((x) => x.json())
         .then(function (x) {
-            let curTime = parseInt((new Date()).getTime() / 1000);
+            let curTime = Math.floor((new Date()).getTime() / 1000);
             let lastUpdate = parseInt(localStorage.getItem("lastUpdate"));
 
-            let bool;
+            let bool : boolean;
             if (isNaN(lastUpdate)) {
                 bool = true;
             } else {
@@ -2121,7 +1944,7 @@ if (true) {
 
             if (x.version != localStorage.getItem("version") && bool) {
                 sendNoti([0, "", "New update!", x.message]);
-                localStorage.setItem("lastUpdate", curTime);
+                localStorage.setItem("lastUpdate", curTime.toString());
             }
         });
 
@@ -2134,15 +1957,15 @@ if (true) {
 function changeEngine() {
     let val = localStorage.getItem("currentEngine");
     if (val == null || val == "1") {
-        localStorage.setItem("currentEngine", 0);
+        localStorage.setItem("currentEngine", "0");
 
     } else {
-        localStorage.setItem("currentEngine", 1);
+        localStorage.setItem("currentEngine", '1');
 
     }
 }
 
-for (element of document.getElementsByClassName("menuItem")) {
+for (let element of document.getElementsByClassName("menuItem")) {
     element.addEventListener("click", toggleMenu);
 }
 
@@ -2152,10 +1975,10 @@ switchOption(localStorage.getItem("useImageBack"));
 
 let bgGradientIndex = parseInt(localStorage.getItem("themegradient"));
 
-function selectTheme(index) {
+function selectTheme(index : number) {
     window.parent.postMessage({ "action": "updateGrad", data: index }, "*");
     let themeCount = 0;
-    for (themeElem of document.getElementsByClassName("themesContainer")) {
+    for (let themeElem of document.getElementsByClassName("themesContainer")) {
         if (themeCount == index) {
             themeElem.classList.add("selected");
         } else {
@@ -2171,7 +1994,7 @@ document.getElementById("toggleMenuOpen").addEventListener("click", toggleMenu);
 
 let themeCount = 0;
 
-for (themeElem of document.getElementsByClassName("themesContainer")) {
+for (let themeElem of (document.getElementsByClassName("themesContainer") as HTMLCollectionOf<HTMLElement>)) {
     let curCount = themeCount;
     if (bgGradientIndex == curCount) {
         themeElem.classList.add("selected");
@@ -2185,9 +2008,9 @@ for (themeElem of document.getElementsByClassName("themesContainer")) {
     themeCount++;
 }
 
-document.getElementById("opSlider").value = isNaN(parseFloat(localStorage.getItem("bgOpacity"))) ? 0.6 : parseFloat(localStorage.getItem("bgOpacity"));
+(document.getElementById("opSlider") as HTMLInputElement).value = isNaN(parseFloat(localStorage.getItem("bgOpacity"))) ? "0.6" : parseFloat(localStorage.getItem("bgOpacity")).toString();
 
 document.getElementById("opSlider").oninput = function () {
-    let elem = document.getElementById("opSlider");
+    let elem = document.getElementById("opSlider") as HTMLInputElement;
     window.parent.postMessage({ "action": "updateOpacity", data: elem.value }, "*");
 };

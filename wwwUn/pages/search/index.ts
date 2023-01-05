@@ -8,7 +8,7 @@ const extensionDisabled = (<cordovaWindow>window.parent).returnExtensionDisabled
 let sourcesNames = extensionNames;
 
 // @ts-ignore
-let pullTabArray = [];
+let pullTabArray : Array<pullToRefresh> = [];
 
 pullTabArray.push(new pullToRefresh(document.getElementById("mainConSearch")));
 
@@ -16,7 +16,7 @@ for (var i = 0; i < extensionList.length; i++) {
     if(extensionDisabled[i]){
         continue;
     }
-    let atr = {
+    let atr : any = {
         "value": i.toString(),
     };
 

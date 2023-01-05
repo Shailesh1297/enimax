@@ -113,6 +113,7 @@ class Scene {
 
     delete() {
         this.deleteItems();
+        this.DDMinstance.deleteSceneFromHistory(this.data.id);
         delete this.DDMinstance.scenes[this.data.id];
         this.data = undefined;
         this.DDMinstance = undefined;
@@ -131,7 +132,6 @@ class Scene {
         if (this.data.id in this.DDMinstance.selectedValues) this.DDMinstance.selectedValues[this.data.id] = "";
 
         this.DDMinstance.updateSelectVals(this.data.id);
-        this.DDMinstance.deleteSceneFromHistory(this.data.id);
 
         for (const item of this.data.items) this.DDMinstance.deleteItem(item);
 
@@ -143,10 +143,13 @@ class dropDownMenu {
     scenes : { [key: string]: Scene } ;
     menuCon: HTMLElement;
     history: Array<string>;
-    selections: {};
-    toggles: {};
-    selectedValues: {};
-    selectedValuesDOM: {};
+    selections: {[key : string] : Selectables};
+    toggles: {[key : string] : Toggle};
+    selectedValues: {[key : string] : string};
+    selectedValuesDOM: {[key : string] : {
+            "elements" : Array<HTMLElement>
+        }
+    };
     constructor(scenes: Array<menuSceneConfig>, menuCon: HTMLElement) {
         this.scenes = {};
         this.menuCon = menuCon;
@@ -199,7 +202,8 @@ class dropDownMenu {
      * Opens the menu
      */
     openMenu() {
-        this.menuCon.style.display = "block";
+        this.menuCon.style.pointerEvents = "auto";
+        this.menuCon.style.opacity = "1";
     }
 
 
@@ -207,7 +211,8 @@ class dropDownMenu {
      * Closes the menu
      */
     closeMenu() {
-        this.menuCon.style.display = "none";
+        this.menuCon.style.pointerEvents = "none";
+        this.menuCon.style.opacity = "0";
     }
 
 
@@ -344,7 +349,7 @@ class dropDownMenu {
             }
 
 
-            let attributes = {
+            let attributes : any = {
                 "type": type
             };
 
@@ -383,7 +388,9 @@ class dropDownMenu {
             item.valueDOM = valueDOM;
 
             if (item.open) {
-                if (!this.selectedValuesDOM[item.open]) this.selectedValuesDOM[item.open] = {};
+                if (!this.selectedValuesDOM[item.open]) this.selectedValuesDOM[item.open] = {
+                    "elements" : []
+                };
 
                 const sValue = this.selectedValuesDOM[item.open];
 
@@ -512,7 +519,7 @@ class dropDownMenu {
      * @param {string} id the id of the toggle 
      * @returns {Toggle | null}
      */
-    getToggle(id: string): Scene | null {
+    getToggle(id: string): Toggle | null {
         if (id in this.toggles) return this.toggles[id];
         return null;
     }

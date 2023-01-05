@@ -120,4 +120,3 @@ function search() {
     });
 }
 applyTheme();
-//# sourceMappingURL=index.js.map

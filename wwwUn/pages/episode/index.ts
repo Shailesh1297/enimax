@@ -124,7 +124,7 @@ function ini() {
         }
 
 
-        async function processEpisodeData(data, downloaded, main_url) {
+        async function processEpisodeData(data : extensionInfo, downloaded, main_url) {
 
             let currentLink = '';
             if (localStorage.getItem("currentLink")) {

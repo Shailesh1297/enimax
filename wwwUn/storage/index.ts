@@ -239,7 +239,7 @@ function toFormData(x) {
 }
 
 
-function makeRequest(method, url, form, timeout) {
+function makeRequest(method, url, form, timeout) : Promise<{[key : string] : string}> {
     return new Promise(function (resolve, reject) {
         let formation = {};
         formation.method = method

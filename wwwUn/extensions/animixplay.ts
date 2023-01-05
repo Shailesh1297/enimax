@@ -1,5 +1,5 @@
 // RIP
-var animixplay = {
+var animixplay : extension = {
     'searchApi': function (query) {
        alert("Animixplay has been shut down.");
     },

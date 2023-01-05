@@ -53,4 +53,3 @@ class notification {
         this.noti = newElem;
     }
 }
-//# sourceMappingURL=noti.js.map

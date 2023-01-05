@@ -11,4 +11,3 @@ localStorage.setItem("version", "1.2.4");
 if (localStorage.getItem("lastUpdate") === null) {
     localStorage.setItem("lastUpdate", "0");
 }
-//# sourceMappingURL=config.js.map

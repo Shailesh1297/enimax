@@ -1,4 +1,4 @@
-var config = {
+var config : EnimaxConfig = {
     "local": localStorage.getItem("local") === "true",
     "remote": localStorage.getItem("remote"),
     "remoteWOport": localStorage.getItem("remoteWOport"),

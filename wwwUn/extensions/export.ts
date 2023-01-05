@@ -1,5 +1,4 @@
-// @ts-ignore
-const extensionList = [wco, animixplay, fmovies, zoro, twitch];
+const extensionList : Array<extension> = [wco, animixplay, fmovies, zoro, twitch];
 
 // @ts-ignore
 const extensionNames = ["WCOforever", "Animixplay", "Fmovies", "Zoro", "Twitch"];

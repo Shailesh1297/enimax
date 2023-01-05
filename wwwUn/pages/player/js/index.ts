@@ -4,7 +4,7 @@ var CustomXMLHttpRequest = XMLHttpRequest;
 var username = "hi";
 // @ts-ignore
 const extensionList = (<cordovaWindow>window.parent).returnExtensionList();
-let hls;
+let hls : any;
 let doubleTapTime = isNaN(parseInt(localStorage.getItem("doubleTapTime"))) ? 5 : parseInt(localStorage.getItem("doubleTapTime"));
 let skipButTime = isNaN(parseInt(localStorage.getItem("skipButTime"))) ? 30 : parseInt(localStorage.getItem("skipButTime"));
 let currentVidData: videoData;
@@ -12,7 +12,7 @@ let skipIntroInfo: skipData = {
 	start: 0,
 	end: 0
 };
-let curTrack = undefined;
+let curTrack : undefined | TextTrack= undefined;
 let marginApplied = false;
 let updateCurrentTime : number, 
 	getEpCheck : number, 
@@ -522,12 +522,12 @@ function getEpIni() {
 		let rootDir = decodeURIComponent(location.search.replace("?watch=", "").split("&")[0]);
 
 		// Getting the meta data
-		(<cordovaWindow>window.parent).makeLocalRequest("GET", `${rootDir}/viddata.json`).then(function (viddata) {
-			viddata = JSON.parse(viddata).data;
+		(<cordovaWindow>window.parent).makeLocalRequest("GET", `${rootDir}/viddata.json`).then(function (vidString) {
+			let viddata = JSON.parse(vidString).data;
 
 			currentVidData = viddata;
 
-			if ("next" in currentVidData) {
+			if ("next" in currentVidData && currentVidData.next) {
 				let tempData = currentVidData.next.split("&");
 				tempData.pop();
 				let temp = tempData.join("&");
@@ -545,7 +545,7 @@ function getEpIni() {
 				}
 			}
 
-			if ("prev" in currentVidData) {
+			if ("prev" in currentVidData && currentVidData.prev) {
 				let tempData = currentVidData.prev.split("&");
 				tempData.pop();
 				let temp = tempData.join("&");
@@ -555,7 +555,7 @@ function getEpIni() {
 						currentVidData.prev = encodeURIComponent(`/${rootDir.split("/")[1]}/${btoa(temp)}`);
 						document.getElementById("prev_ep").style.display = "table-cell";
 
-					}).catch((x) => console.error(x));
+					}).catch((error : Error) => console.error(error));
 				} catch (err) {
 
 				}
@@ -577,7 +577,7 @@ function getEpIni() {
 
 			engine = currentVidData.engine;
 			getEp();
-		}).catch(function (err) {
+		}).catch(function (err : Error) {
 			alert(err);
 		});
 
@@ -586,7 +586,7 @@ function getEpIni() {
 	}
 }
 
-function changeEp(nextOrPrev : number, msg = null) {
+function changeEp(nextOrPrev : number, msg : null | string = null) {
 
 	// Discarding all text tracks
 	for (var i = 0; i < vidInstance.vid.textTracks.length; i++) {
@@ -666,9 +666,8 @@ async function update(shouldCheck : number) {
 
 	updateCheck = 1;
 
-	(<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 1, "time": currentTime, "ep": currentVidData.episode, "name": currentVidData.nameWSeason, "nameUm": currentVidData.name, "prog": currentDuration }, () => { }, [], true).then(function (response) {
+	(<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 1, "time": currentTime, "ep": currentVidData.episode, "name": currentVidData.nameWSeason, "nameUm": currentVidData.name, "prog": currentDuration }, () => { }, [], true).then(function (response : any) {
 		try {
-
 			if (response.status == 200) {
 				lastUpdate = currentTime;
 
@@ -680,7 +679,7 @@ async function update(shouldCheck : number) {
 
 		}
 
-	}).catch(function (error) {
+	}).catch(function (error : Error) {
 		console.error(error);
 
 	}).finally(function () {
@@ -711,7 +710,7 @@ function chooseQualHls(x: string, type: string, elem: HTMLElement): void {
 }
 
 
-function loadSubs() {
+function loadSubs(sourceName : string) {
 	let vidDom = document.getElementById("v").children;
 
 
@@ -729,7 +728,7 @@ function loadSubs() {
 		let selectFunc = function () {
 			let value = this.getAttribute("value");
 			if (value == "off") {
-				localStorage.setItem(`${engine}-subtitle`, "off");
+				localStorage.setItem(`${engine}-${sourceName}-subtitle`, "off");
 				curTrack = undefined;
 				document.getElementById("fastFor").style.display = "none";
 
@@ -741,7 +740,7 @@ function loadSubs() {
 					curTrack = vidInstance.vid.textTracks[i];
 					setSubtitleMargin(curTrack);
 					document.getElementById("fastFor").style.display = "block";
-					localStorage.setItem(`${engine}-subtitle`, vidInstance.vid.textTracks[i].label);
+					localStorage.setItem(`${engine}-${sourceName}-subtitle`, vidInstance.vid.textTracks[i].label);
 				} else {
 					vidInstance.vid.textTracks[i].mode = "hidden";
 
@@ -791,9 +790,9 @@ function loadSubs() {
 
 		let check = true;
 		for (var i = 0; i < vidInstance.vid.textTracks.length; i++) {
-			if (vidInstance.vid.textTracks[i].label == localStorage.getItem(`${engine}-subtitle`) && check) {
+			if (vidInstance.vid.textTracks[i].label == localStorage.getItem(`${engine}-${sourceName}-subtitle`) && check) {
 				console.log("e");
-				let subDOM = DMenu.selections[`subtitle-${i}`];
+				let subDOM : Selectables = DMenu.selections[`subtitle-${i}`];
 				console.log(subDOM);
 
 				if (subDOM) {
@@ -823,10 +822,10 @@ function loadSubs() {
 function chooseQual(config : sourceConfig) {
 	let skipTo = 0;
 	let defURL : string = "";
+	let selectedSourceName : string;
 
-
-	loadSubs();
 	if (config.clicked) {
+		selectedSourceName = config.name;
 		skipTo = vidInstance.vid.currentTime;
 		if (config.element.getAttribute("data-intro") === "true") {
 			skipIntroInfo.start = parseInt(config.element.getAttribute("data-start"));
@@ -844,7 +843,7 @@ function chooseQual(config : sourceConfig) {
 
 		let sName = localStorage.getItem(`${engine}-sourceName`);
 		let qCon = DMenu.getScene("source").element.querySelectorAll(".menuItem");
-
+		selectedSourceName = sName;
 		for (let i = 0; i < qCon.length; i++) {
 			if (sName == qCon[i].getAttribute("data-name")) {
 				defURL = currentVidData.sources[i].url;
@@ -867,6 +866,7 @@ function chooseQual(config : sourceConfig) {
 		}
 	}
 
+	loadSubs(selectedSourceName);
 
 	if (hls) {
 		hls.destroy();
@@ -993,7 +993,7 @@ async function getEp(x = 0) {
 		}, true);
 		for (var i = 0; i < currentVidData.sources.length; i++) {
 
-			let curAttributes = {
+			let curAttributes : SourceDOMAttributes = {
 				"data-url": currentVidData.sources[i].url,
 				"data-type": currentVidData.sources[i].type,
 				"data-name": currentVidData.sources[i].name,
@@ -1014,13 +1014,14 @@ async function getEp(x = 0) {
 				{
 					"text": currentVidData.sources[i].name,
 					"highlightable": true,
-					"attributes": curAttributes,
+					"attributes": curAttributes as unknown as { [key: string]: string; },
 					"id": `source-${currentVidData.sources[i].name}`,
 					"callback": function () {
 						localStorage.setItem(`${engine}-sourceName`, this.getAttribute("data-name"));
 						chooseQual(<sourceConfig>{
 							url: this.getAttribute("data-url"), 
 							type: this.getAttribute("data-type"), 
+							name : this.getAttribute("data-name"),
 							element: this,
 							clicked : true,
 						});
@@ -1089,7 +1090,8 @@ async function getEp(x = 0) {
 function openSettingsSemi(translateY: number) {
 	let settingCon = document.querySelector<HTMLElement>(".menuCon");
 	settingCon.style.display = "block";
-
+	settingCon.style.pointerEvents = "auto";
+	settingCon.style.opacity = "1";
 	if (translateY == -1) {
 		settingCon.style.transform = "translateY(0px)";
 	} else if (translateY == 0) {
@@ -1108,13 +1110,16 @@ function closeSettings() {
 		window.requestAnimationFrame(function () {
 			settingCon.style.transform = "translateY(100%)";
 			settingCon.style.opacity = "0";
+			settingCon.style.pointerEvents = "none";
 			setTimeout(function () {
-				settingCon.style.opacity = "1";
-				settingCon.style.display = "none";
 				settingCon.style.transitionDuration = "0s";
 			}, 200);
 		});
 	});
+}
+
+function isLocked() : boolean{
+	return vidInstance.locked;
 }
 
 
@@ -1183,8 +1188,8 @@ window.onmessage = async function (message: MessageEvent) {
 					res = confirm("Want to open the downloaded version?");
 				}
 				if (res) {
-					let viddata = (await (<cordovaWindow>window.parent).makeLocalRequest("GET", `${rootDir}/viddata.json`));
-					viddata = JSON.parse(viddata).data;
+					let vidString = (await (<cordovaWindow>window.parent).makeLocalRequest("GET", `${rootDir}/viddata.json`));
+					let viddata : videoData = JSON.parse(vidString).data;
 					currentVidData.sources = [{
 						"name": viddata.sources[0].name,
 						"type": viddata.sources[0].type,
@@ -1322,11 +1327,11 @@ window.addEventListener("videoEnded", () => {
 
 
 window.addEventListener("videoChangedFillMode", (event: videoChangedFillModeEvent) => {
-	DMenu.selections[`fMode${event.fillMode}`].select();
+	DMenu.selections[`fMode${event.detail.fillMode}`].select();
 });
 
 window.addEventListener("videoOpenSettings", (event: videoOpenSettingsEvent) => {
-	openSettingsSemi(event.translate);
+	openSettingsSemi(event.detail.translate);
 });
 
 
@@ -1336,7 +1341,7 @@ window.addEventListener("videoCloseSettings", (event) => {
 
 
 window.addEventListener("videoDoubleTap", (event: videoDoubleTapEvent) => {
-	let type = event.DTType;
+	let type = event.detail.DTType;
 
 	if (type == "plus") {
 		vidInstance.vid.currentTime += doubleTapTime;
@@ -1369,7 +1374,6 @@ if (engineTemp.length == 1) {
 
 
 DMenu.open("initial");
-DMenu.closeMenu();
 
 if (config.chrome) {
 	document.getElementById("fullscreenToggle").style.display = "block";

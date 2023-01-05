@@ -271,7 +271,6 @@ class settingsPull {
 		let translate = -(-x + self.iniX);
 		if(translate > 0){
 
-			console.log(`translateY(${-(-x + self.iniX)}px)`, self.settingCon.style.transform);
 			self.settingCon.style.transform = `translateY(${-(-x + self.iniX)}px)`;
 			self.lastX = -x + self.iniX;
 		}
@@ -284,8 +283,6 @@ class settingsPull {
 		// 	self.dom.style.opacity = "1";
 		// 	self.dom.style.transform = `translateX(0px)`;
 		// }
-
-		console.log(self.shouldStart);
 
 		if (self.shouldStart === false) {
 			self.settingCon.style.transform = `translateY(0)`;
