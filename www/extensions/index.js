@@ -1992,7 +1992,7 @@ var twitch = {
 const extensionList = [wco, animixplay, fmovies, zoro, twitch];
 const extensionNames = ["WCOforever", "Animixplay", "Fmovies", "Zoro", "Twitch"];
 
-localStorage.setItem("version", "1.2.4");
+localStorage.setItem("version", "1.2.5");
 if (localStorage.getItem("lastUpdate") === null) {
     localStorage.setItem("lastUpdate", "0");
 }
