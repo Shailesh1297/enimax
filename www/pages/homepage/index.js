@@ -490,7 +490,9 @@ document.getElementById("themes").onclick = function () {
 
 if (!config.chrome) {
     document.getElementById("offlineCon").style.display = "block";
-
+    document.getElementById("openZoro").addEventListener("click", function () {
+        window.parent.getWebviewHTML();
+    });
     if (config.local) {
         document.getElementById("exportData").style.display = "block";
         document.getElementById("importData").style.display = "block";
