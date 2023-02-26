@@ -287,6 +287,7 @@ var fmovies: extension = {
         const data: extensionVidSource = {
             sources: [],
             name: "",
+            title: "",
             nameWSeason: "",
             episode: "",
             status: 400,
@@ -450,6 +451,17 @@ var fmovies: extension = {
                 "name": "HLS",
                 "type": "hls",
             }];
+
+
+            try{
+                title = title.split(":");
+                title.shift();
+                title = title.join(":").trim();
+            }catch(err){
+
+            }
+
+            data.title = title;
 
             data.subtitles = sourceJSON.tracks;
             return (data);

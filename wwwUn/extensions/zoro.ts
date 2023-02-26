@@ -1,7 +1,7 @@
 var zoro : extension = {
     "baseURL" : "https://zoro.to",
     "searchApi": async function (query : string) : Promise<extensionSearch> {
-        let searchHTML = await MakeFetch(`https://zoro.to/search?keyword=${query}`, {});
+        let searchHTML = await MakeFetchZoro(`https://zoro.to/search?keyword=${query}`, {});
         let dom = document.createElement("div");
         let orDom = dom;
         dom.innerHTML = DOMPurify.sanitize(searchHTML);
@@ -23,12 +23,12 @@ var zoro : extension = {
     },
 
 
-    'getAnimeInfo': async function (url) : Promise<extensionInfo> {
+    'getAnimeInfo': async function (url, idToFind = null) : Promise<extensionInfo> {
         url = url.split("&engine")[0];
         let idSplit = url.replace("?watch=/", "").split("-");
         let id = idSplit[idSplit.length - 1].split("?")[0];
 
-        let response : extensionInfo= {
+        let response : extensionInfo = {
             "name" : "",
             "image" : "",
             "description" : "",
@@ -37,7 +37,7 @@ var zoro : extension = {
         };
 
 
-        let animeHTML = await MakeFetch(`https://zoro.to/${url}`, {});
+        let animeHTML = await MakeFetchZoro(`https://zoro.to/${url}`, {});
         let malID = null;
         let settled = "allSettled" in Promise;
         try{
@@ -77,7 +77,7 @@ var zoro : extension = {
 
                 if(settled){
                     promises.push(MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}));
-                    promises.push(MakeFetch(`https://zoro.to/ajax/v2/episode/list/${id}`, {}));
+                    promises.push(MakeFetchZoro(`https://zoro.to/ajax/v2/episode/list/${id}`, {}));
 
                     let responses = await Promise.allSettled(promises);
 
@@ -108,7 +108,7 @@ var zoro : extension = {
         }
         
         if(!check){
-            episodeHTML = await MakeFetch(`https://zoro.to/ajax/v2/episode/list/${id}`, {});
+            episodeHTML = await MakeFetchZoro(`https://zoro.to/ajax/v2/episode/list/${id}`, {});
         }
 
         episodeHTML = JSON.parse(episodeHTML).html;
@@ -127,6 +127,19 @@ var zoro : extension = {
                 "id": episodeListDOM[i].getAttribute("data-id"),
                 "title": "Episode " + episodeListDOM[i].getAttribute("data-number"),
             };
+
+            if(idToFind !== null && parseInt(episodeListDOM[i].getAttribute("data-id")) == idToFind){
+                try{
+                    let epIndex = parseFloat(episodeListDOM[i].getAttribute("data-number"));
+                    if(epIndex in thumbnails){
+                        response.name = thumbnails[epIndex].title;
+                    }
+                }catch(err){
+                    console.error(err);
+                }
+
+                return response;
+            }
 
             try{
                 let epIndex = parseFloat(episodeListDOM[i].getAttribute("data-number"));
@@ -149,8 +162,9 @@ var zoro : extension = {
 
     },
 
+
     "getEpisodeListFromAnimeId" : async function getEpisodeListFromAnimeId(showID : string, episodeId : string) {
-        let res = JSON.parse((await MakeFetch(`https://zoro.to/ajax/v2/episode/list/${showID}`, {})));
+        let res = JSON.parse((await MakeFetchZoro(`https://zoro.to/ajax/v2/episode/list/${showID}`, {})));
         res = res.html;
         let dom = document.createElement("div");
         let ogDOM = dom;
@@ -180,7 +194,7 @@ var zoro : extension = {
 
 
     addSource : async function addSource(type : string, id : string, subtitlesArray : Array<videoSubtitle>, sourceURLs: Array<videoSource>){
-        let sources = await MakeFetch(`https://zoro.to/ajax/v2/episode/sources?id=${id}`, {});
+        let sources = await MakeFetchZoro(`https://zoro.to/ajax/v2/episode/sources?id=${id}`, {});
         sources = JSON.parse(sources).link;
         let urlHost = (new URL(sources)).origin;
 
@@ -190,7 +204,7 @@ var zoro : extension = {
         sourceId = sourceId.split("?")[0];
 
 
-        let sourceJSON = JSON.parse((await MakeFetch(`${urlHost}/ajax/embed-6/getSources?id=${sourceId}&sId=lihgfedcba-abcde`, {})));
+        let sourceJSON = JSON.parse((await MakeFetchZoro(`${urlHost}/ajax/embed-6/getSources?id=${sourceId}&sId=lihgfedcba-abcde`, {})));
         try {
             for (let j = 0; j < sourceJSON.tracks.length; j++) {
                 sourceJSON.tracks[j].label += " - " + type;
@@ -228,6 +242,15 @@ var zoro : extension = {
             console.error(err);
         }
     },
+    'getVideoTitle' : async function (url: string) : Promise<string>{
+        let showURL = new URLSearchParams(url);
+
+        try{
+            return (await this.getAnimeInfo(showURL.get("watch"), showURL.get("ep"))).name;
+        }catch(err){
+            return "";
+        }
+    },
     'getLinkFromUrl': async function (url : string): Promise<extensionVidSource>{
         const sourceURLs : Array<videoSource> = [];
         let subtitles : Array<videoSubtitle> = [];       
@@ -250,7 +273,7 @@ var zoro : extension = {
         animeId = url.replace("?watch=", "").split("-");
         animeId = animeId[animeId.length - 1].split("&")[0];
 
-        let a = await MakeFetch(`https://zoro.to/ajax/v2/episode/servers?episodeId=${episodeId}`, {});
+        let a = await MakeFetchZoro(`https://zoro.to/ajax/v2/episode/servers?episodeId=${episodeId}`, {});
         let domIn = JSON.parse(a).html;
 
         let dom = document.createElement("div");
@@ -330,7 +353,7 @@ var zoro : extension = {
     },
     "discover": async function () :  Promise<Array<extensionDiscoverData>> {
         let temp = document.createElement("div");
-        temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://zoro.to/top-airing`, {}));
+        temp.innerHTML = DOMPurify.sanitize(await MakeFetchZoro(`https://zoro.to/top-airing`, {}));
         let data = [];
         for (let elem of temp.querySelectorAll(".flw-item")) {
             let image = elem.querySelector("img").getAttribute("data-src");

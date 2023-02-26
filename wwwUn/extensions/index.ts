@@ -159,3 +159,44 @@ if (config && config.chrome) {
         });
     }
 }
+
+function getWebviewHTML(url = "https://www.zoro.to", hidden = false){
+    return new Promise((resolve, reject) => {
+        // @ts-ignore
+        const inappRef = cordova.InAppBrowser.open(url, '_blank', hidden ? "hidden=true" : "");
+
+        inappRef.addEventListener('loadstop', () => {
+            inappRef.executeScript({
+                'code': `let resultInApp={'status':200,'data':document.body.innerText};
+                        webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify(resultInApp));`
+            });
+        });
+    
+        inappRef.addEventListener('loaderror', (err : Error) => {
+            inappRef.show();
+            reject(new Error("Error"));
+        });
+    
+        inappRef.addEventListener('message', (result : string) => {
+            resolve(result);
+        });
+
+        setTimeout(function(){
+            inappRef.close();
+            reject("Timeout");
+        }, 15000);
+    });
+}
+
+async function MakeFetchZoro(url : string, options = {}) : Promise<string> {
+    return new Promise(function (resolve, reject) {
+        fetch(url, options).then(response => response.text()).then((response) => {
+            if(response.includes("if the site connection is secure") && !config.chrome){
+                getWebviewHTML(url);
+            }
+            resolve(response);
+        }).catch(function (err) {
+            reject(err);
+        });
+    });
+}

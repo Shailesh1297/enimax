@@ -117,13 +117,14 @@ var twitch : extension = {
 
     },
 
-    'getLinkFromUrl': async function (url) {
+    'getLinkFromUrl': async function (url) : Promise<extensionVidSource> {
         url = "?watch=" + url;
         let start = performance.now();
         let params = new URLSearchParams(url);
         let name = params.get("watch");
         let ep = params.get("id");
         let isLive = (ep == "live");
+        let title = "";
 
         const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
 
@@ -200,7 +201,7 @@ var twitch : extension = {
             });
         }
 
-        let resp = {};
+        let resp : extensionVidSource = {};
 
         if (!isLive) {
             try {
@@ -213,9 +214,19 @@ var twitch : extension = {
                 if (epList.episodes[2]) {
                     resp.next = epList.episodes[2].link;
                 }
+
+                try{
+                    if(epList.episodes[1]){
+                        title = epList.episodes[1].title;
+                    }
+                }catch(err){
+                    title = "";
+                }
             } catch (err) {
 
             }
+        }else{
+            title = "Live";
         }
 
         resp.sources = [
@@ -226,11 +237,11 @@ var twitch : extension = {
             }
         ];
         resp.name = name;
-        resp.episode = 1;
+        resp.episode = "1";
         resp.nameWSeason = name + ep;
         resp.subtitles = [];
         resp.status = 200;
+        resp.title = title;
         return resp;
-
     },
 };

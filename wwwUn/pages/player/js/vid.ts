@@ -26,6 +26,8 @@ class vid {
     retry : HTMLElement;
     buffered : HTMLElement;
     epCon : HTMLElement;
+	metaData: HTMLElement;
+	titleCon: HTMLElement;
     vid: HTMLVideoElement;
     locked : boolean;
     downTown : number;
@@ -83,6 +85,8 @@ class vid {
 		this.lock2 = document.querySelector("#lock_2");
 		this.retry = document.querySelector("#retry");
 		this.buffered = document.querySelector("#buffered");
+		this.metaData = document.querySelector("#metaData");
+		this.titleCon = document.querySelector("#titleCon");
 		this.epCon = document.querySelector("#epCon");
 		this.bar = document.querySelector("#bar");
 		this.locked = false;
@@ -762,7 +766,7 @@ class vid {
 				document.getElementById('con').style.transform = `translateY(0px)`;
 				document.getElementById('popOut').style.display = "block";
 				document.getElementById('bar_con').style.display = "none";
-				document.getElementById('epCon').style.display = "none";
+				document.getElementById('pop').style.display = "none";
 
 
 			});
@@ -845,13 +849,13 @@ class vid {
 
 	close_controls() : void {
 
-
+		this.metaData.style.opacity = "0";
 		this.pop.style.opacity = "0";
 		this.popControls.style.opacity = "0";
 		this.popControls.style.pointerEvents = "none";
 		
 		this.popControls.style.transform = "translateX(100px)";
-		this.epCon.style.transform = "translateX(-100px)";
+		this.metaData.style.transform = "translateX(-100px)";
 		
 
 		this.bar_con.style.bottom = "-70px";
@@ -872,12 +876,13 @@ class vid {
 
         this.lastTime = (new Date()).getTime();
 
+		this.metaData.style.opacity = "1";
 		this.pop.style.opacity = "1";
 		this.popControls.style.opacity = "1";
 		this.popControls.style.pointerEvents = "auto";
 
 		this.popControls.style.transform = "translateX(0px)";
-		this.epCon.style.transform = "translateX(0px)";
+		this.metaData.style.transform = "translateX(0px)";
 
 		this.bar_con.style.bottom = "10px";
 		this.bar_con.style.opacity = "1";

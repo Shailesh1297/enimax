@@ -997,7 +997,12 @@ function fix_title(title) {
     }
 }
 function img_url(url) {
-    return url.replace("file:", "https:");
+    try {
+        return url.replace("file:", "https:");
+    }
+    catch (err) {
+        return url;
+    }
 }
 function sendNoti(x) {
     return new notification(document.getElementById("noti_con"), {

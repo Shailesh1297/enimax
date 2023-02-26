@@ -9,8 +9,8 @@
 	<link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
 	<link href="../../notification/noti.css" rel="stylesheet">
 	<link href="../../assets/index.css" rel="stylesheet">
-	<link href="css/DDM.css" rel="stylesheet">
-	<link href="css/index.css" rel="stylesheet">
+	<link href="./css/DDM.css" rel="stylesheet">
+	<link href="./css/index.css" rel="stylesheet">
 
 	<script src="../../assets/socket.js"></script>
 
@@ -22,8 +22,7 @@
 
 	<script type="text/javascript" src="../../assets/dexie.js"></script>
 	<script type="text/javascript" src="../../storage/index.js"></script>
-	<script type="text/javascript" src="js/DDM.js"></script>
-	<script type="text/javascript" src="js/vid.js"></script>
+	<script type="text/javascript" src="./js/DDM.js"></script>
 
 </head>
 
@@ -44,13 +43,172 @@
 				</div>
 			</div>
 
+			<div id="setting_con">
+				<div id="settingHandleCon">
+					
+				</div>
+				<div style="width: 20px;position: absolute;top: 0;display: inline-block;font-size: 20px;color: white;text-align: right;top: 10px;right: 10px;box-sizing: border-box;z-index: 5;"
+					id="closeSetting">&#10005;</div>
 
-			<video id="v" playsinline poster="../../assets/images/anime2.png"></video>
+				<div style="width:100%; box-sizing: border-box;" id="setting_con_main">
 
-			<div id="pop">
+					<div class="accessTable">
+						<div class="accessItem">
+							<div class="tableCell">
+								<div id="qualityTitle" class="settingTitle">Quality: </div>
+							</div>
+
+							<div class="tableCell">
+								<div id="hls_con" class="bottomMargin"></div>
+							</div>
+						</div>
+
+
+						<div class="accessItem">
+							<div class="tableCell">
+								<div id="sourceTitle" class="settingTitle" style="display: block !important">Source:
+								</div>
+							</div>
+
+							<div class="tableCell">
+								<div id="quality_con" class="bottomMargin"></div>
+							</div>
+						</div>
+
+
+						<div class="accessItem">
+							<div class="tableCell">
+								<div class="settingTitle" id="sourceTitle">Fill mode:</div>
+							</div>
+
+							<div class="tableCell">
+								<div id="playerFit" class="bottomMargin">
+									<div class="qual fit" data-num="0">
+										Normal
+									</div>
+									<div class="qual fit" data-num="1">
+										Stretch
+									</div>
+									<div class="qual fit" data-num="2">
+										Subtitles
+									</div>
+									<div class="qual fit" data-num="3">
+										Fill
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="accessItem">
+							<div class="tableCell">
+								<div id="subtitleTitle" class="settingTitle">Subtitles: </div>
+							</div>
+
+							<div class="tableCell">
+								<div id="sub_con" class="bottomMargin"></div>
+							</div>
+						</div>
+
+						<div class="accessItem">
+							<div class="tableCell">
+								<div class="settingTitle">Autoplay: </div>
+							</div>
+
+							<div class="tableCell">
+								<label class="switch" style="vertical-align: middle;">
+									<input type="checkbox" id="autoplay">
+									<span class="slider round"></span>
+								</label>
+							</div>
+						</div>
+
+						<div class="accessItem">
+							<div class="tableCell">
+								<div class="settingTitle">Rewatch mode: </div>
+							</div>
+
+							<div class="tableCell">
+								<label class="switch" style="vertical-align: middle;">
+									<input type="checkbox" id="rewatch">
+									<span class="slider round"></span>
+								</label>
+							</div>
+						</div>
+
+						<div class="accessItem">
+							<div class="tableCell">
+								<div class="settingTitle">Hide Skip Intro:</div>
+							</div>
+
+							<div class="tableCell">
+								<label class="switch" style="vertical-align: middle;">
+									<input type="checkbox" id="showIntroSlider">
+									<span class="slider round"></span>
+								</label>
+							</div>
+						</div>
+
+
+						<div class="accessItem">
+							<div class="tableCell">
+								<div class="settingTitle">Automatically Skip Intro: </div>
+							</div>
+
+							<div class="tableCell">
+								<label class="switch" style="vertical-align: middle;">
+									<input type="checkbox" id="autoIntroSlider">
+									<span class="slider round"></span>
+								</label>
+							</div>
+						</div>
+
+
+						<div class="accessItem">
+							<div class="tableCell">
+								<div class="settingTitle">Double tap time:</div>
+							</div>
+
+							<div class="tableCell">
+								<input type="text" class="textBox" id="doubleTime" />
+							</div>
+						</div>
+
+
+						<div class="accessItem">
+							<div class="tableCell">
+								<div class="settingTitle">Skip button time: </div>
+							</div>
+
+							<div class="tableCell">
+								<input type="text" class="textBox" id="skipTime" />
+							</div>
+						</div>
+
+						<div class="accessItem">
+							<div class="tableCell">
+								<div class="settingTitle">Subtitle Margin <br />(Tip: try negative numbers) : </div>
+							</div>
+
+							<div class="tableCell">
+								<input type="number" class="textBox" id="subMar" />
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<video id="v" playsinline poster="../../assets/images/anime2.png">
+			</video>
+
+			<div id="pop"></div>
+			<div id="metaData">
 				<div style="width: 100%;font-size: 25px;color: white;font-weight: bolder;text-align: left;	box-sizing: border-box;	margin: 15px 0px 0px 25px;"
 					id="epCon">
 					Episode <span id="ep_dis"></span>
+				</div>
+
+				<div style="overflow: hidden;width: calc(100% - 50px);font-size: 12px;color: white;font-weight: bolder;text-align: left;box-sizing: border-box;margin: 2px 0px 0px 25px;white-space: nowrap;text-overflow: ellipsis;"
+					id="titleCon">
+					
 				</div>
 			</div>
 			<div id="options">
@@ -133,7 +291,8 @@
 	</div>
 
 
-	<script type="text/javascript" src="js/index.js"></script>
+	<script type="text/javascript" src="./js/vid.js"></script>
+	<script type="text/javascript" src="./js/index.js"></script>
 
 
 </body>

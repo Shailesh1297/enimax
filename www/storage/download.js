@@ -492,9 +492,9 @@ class DownloadVid {
     }
     async startDownload(self) {
         try {
-            let x = await self.makeRequest(`${self.url}`, (x) => x.text());
+            let m3u8File = await self.makeRequest(`${self.url}`, (x) => x.text());
             let parser = new m3u8Parser.Parser();
-            parser.push(x);
+            parser.push(m3u8File);
             parser.end();
             if ("playlists" in parser.manifest) {
                 let url = parser.manifest.playlists[0].uri;
@@ -528,13 +528,13 @@ class DownloadVid {
                     url = self.baseURL + url;
                 }
                 self.baseURL = self.getBaseUrl(url);
-                x = await self.makeRequest(url, (x) => x.text());
+                m3u8File = await self.makeRequest(url, (x) => x.text());
             }
-            x = x.split("\n");
+            let x = m3u8File.split("\n");
             let localMapping = {};
             try {
-                let tempMapping = await self.readFile(self);
-                tempMapping = (JSON.parse(tempMapping)).data;
+                let tempMappingString = await self.readFile(self);
+                let tempMapping = (JSON.parse(tempMappingString)).data;
                 for (let i = 0; i < tempMapping.length; i++) {
                     let cur = tempMapping[i];
                     let tempDownloaded = cur.downloaded;

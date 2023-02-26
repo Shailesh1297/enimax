@@ -33,6 +33,9 @@ let subtitleConfig : subtitleConfig = {
 	color : localStorage.getItem("subtitle-color"),
 	lineHeight : parseInt(localStorage.getItem("subtitle-lineHeight")),
 };
+let lastFragError = -10;
+let lastFragDuration = 0;
+let fragErrorCount = 0;
 
 function applySubtitleConfig() : void{
 	let subtitleStyle = document.getElementById("subtitleStyle") as HTMLStyleElement;
@@ -319,6 +322,17 @@ let DMenu = new dropDownMenu(
 					}
 				},
 				{
+					"text": "Skip broken segments",
+					"toggle" : true,
+					"on" : localStorage.getItem("skipBroken") === "true",
+					"toggleOn" : function(){
+						localStorage.setItem("skipBroken", "true");
+					},
+					"toggleOff" : function(){
+						localStorage.setItem("skipBroken", "false");
+					}
+				},
+				{
 					"text": "Rewatch Mode",
 					"toggle": true,
 					"on": localStorage.getItem("rewatch") === "true",
@@ -509,7 +523,7 @@ function skipToNextTrack() {
 
 function backToNormal() {
 	window.parent.postMessage({ "action": 401 }, "*");
-	document.getElementById('epCon').style.display = "block";
+	document.getElementById('pop').style.display = "block";
 	document.getElementById('popOut').style.display = "none";
 	document.getElementById('bar_con').style.display = "block";
 }
@@ -878,11 +892,52 @@ function chooseQual(config : sourceConfig) {
 			//@ts-ignore
 			hls = new Hls({});
 
+			if(localStorage.getItem("skipBroken") === "true"){
+				lastFragError = -10;
+				fragErrorCount = 0;
+
+				//@ts-ignore
+				hls.on(Hls.Events.BUFFER_APPENDING, function(event, data){
+					if(localStorage.getItem("skipBroken") !== "true"){
+						return;
+					}
+					fragErrorCount = 0;
+				});
+
+				// @ts-ignore
+				hls.on(Hls.Events.ERROR, function (event, data) {
+					if(localStorage.getItem("skipBroken") !== "true"){
+						return;
+					}
+
+					console.log(data);
+					const errorFatal = data.fatal;
+					if (data.details === Hls.ErrorDetails.FRAG_LOAD_ERROR ||
+						data.details === Hls.ErrorDetails.FRAG_LOAD_TIMEOUT ||
+						data.details === Hls.ErrorDetails.FRAG_PARSING_ERROR) {
+						lastFragError = data.frag.start;
+						lastFragDuration = data.frag.duration;
+						if((errorFatal || (data.frag.start - vidInstance.vid.currentTime) < 0.3) && fragErrorCount < 10){
+							vidInstance.vid.currentTime = data.frag.start + data.frag.duration + 0.3;
+							fragErrorCount++;
+							hls.startLoad();
+						}
+					}else if(data.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR){
+						console.log(lastFragError, lastFragDuration, vidInstance.vid.currentTime);
+						if((Math.abs(lastFragError - vidInstance.vid.currentTime) < 0.3) && fragErrorCount < 10){
+							vidInstance.vid.currentTime = lastFragError + lastFragDuration + 0.3;
+							fragErrorCount++;
+							hls.startLoad();
+						}
+					}
+				});
+			}
+
 			if (!config.clicked) {
-				hls.loadSource(defURL);
+				hls.loadSource("http://10.0.0.203/q/master.m3u8");
 			}
 			else {
-				hls.loadSource(config.url);
+				hls.loadSource("http://10.0.0.203/q/master.m3u8");
 			}
 
 			hls.attachMedia(vidInstance.vid);
@@ -1172,6 +1227,24 @@ window.onmessage = async function (message: MessageEvent) {
 
 	if (message.data.action == 1) {
 		currentVidData = message.data;
+
+		
+		if("title" in currentVidData){
+			document.getElementById("titleCon").innerText = currentVidData.title as string;
+		}else{
+
+			document.getElementById("titleCon").innerText = "";
+			try{
+				extensionList[engine].getVideoTitle(window.location.search).then((title : string) => {
+					document.getElementById("titleCon").innerText = title;
+				}).catch((err : Error) => {
+					console.log(err);
+					document.getElementById("titleCon").innerText = "";
+				});
+			}catch(err){
+	
+			}
+		}
 		if (config.chrome) {
 			getEp();
 		} else {
@@ -1374,7 +1447,7 @@ if (engineTemp.length == 1) {
 
 
 DMenu.open("initial");
-
+DMenu.closeMenu();
 if (config.chrome) {
 	document.getElementById("fullscreenToggle").style.display = "block";
 }

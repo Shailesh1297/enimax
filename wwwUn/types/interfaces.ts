@@ -206,6 +206,7 @@ interface extensionVidSource {
     message: string,
     next: string | null,
     prev: string | null,
+    title?: string,
     subtitles?: Array<videoSubtitle>
 }
 

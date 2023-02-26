@@ -1263,8 +1263,12 @@ function fix_title(title : string) {
     }
 }
 
-function img_url(url : string) {
-    return url.replace("file:", "https:");
+function img_url(url : string | undefined) {
+    try{
+        return url.replace("file:", "https:");
+    }catch(err){
+        return url;
+    }
 }
 
 function sendNoti(x) {

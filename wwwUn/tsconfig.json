@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "outDir": "../www",
-        "noImplicitAny": true,
+        // "noImplicitAny": true,
         "target": "ES2017",
         "module": "commonjs",
         "lib": [
