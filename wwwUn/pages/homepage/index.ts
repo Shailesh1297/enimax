@@ -647,6 +647,13 @@ document.getElementById("alwaysDown").onchange = function () {
     localStorage.setItem("alwaysDown", (this as HTMLInputElement).checked.toString());
 }
 
+document.getElementById("9animeHelper").oninput = function () {
+    localStorage.setItem("9anime", (this as HTMLInputElement).value);
+}
+
+document.getElementById("9animeAPIKey").oninput = function () {
+    localStorage.setItem("apikey", (this as HTMLInputElement).value);
+}
 
 function switchOption(value : string) {
     if (value === "true") {
@@ -676,6 +683,8 @@ document.getElementById("rangeCon").addEventListener("touchmove", function (even
 (document.getElementById("backgroundBlur") as HTMLInputElement).value = localStorage.getItem("backgroundBlur");
 (document.getElementById("fmoviesBase") as HTMLInputElement).value = localStorage.getItem("fmoviesBaseURL");
 (document.getElementById("themeColor") as HTMLInputElement).value = localStorage.getItem("themecolor");
+(document.getElementById("9animeHelper") as HTMLInputElement).value = localStorage.getItem("9anime");
+(document.getElementById("9animeAPIKey") as HTMLInputElement).value = localStorage.getItem("apikey");
 (document.getElementById("downloadTimeout") as HTMLInputElement).value = localStorage.getItem("downloadTimeout");
 (document.getElementById("scrollBool") as HTMLInputElement).checked = localStorage.getItem("scrollBool") !== "false";
 (document.getElementById("discoverHide") as HTMLInputElement).checked = localStorage.getItem("discoverHide") === "true";

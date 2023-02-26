@@ -497,6 +497,12 @@ document.getElementById("fancyHome").onchange = function () {
 document.getElementById("alwaysDown").onchange = function () {
     localStorage.setItem("alwaysDown", this.checked.toString());
 };
+document.getElementById("9animeHelper").oninput = function () {
+    localStorage.setItem("9anime", this.value);
+};
+document.getElementById("9animeAPIKey").oninput = function () {
+    localStorage.setItem("apikey", this.value);
+};
 function switchOption(value) {
     if (value === "true") {
         document.getElementById("themeMainCon").style.display = "none";
@@ -522,6 +528,8 @@ document.getElementById("outlineWidth").value = localStorage.getItem("outlineWid
 document.getElementById("backgroundBlur").value = localStorage.getItem("backgroundBlur");
 document.getElementById("fmoviesBase").value = localStorage.getItem("fmoviesBaseURL");
 document.getElementById("themeColor").value = localStorage.getItem("themecolor");
+document.getElementById("9animeHelper").value = localStorage.getItem("9anime");
+document.getElementById("9animeAPIKey").value = localStorage.getItem("apikey");
 document.getElementById("downloadTimeout").value = localStorage.getItem("downloadTimeout");
 document.getElementById("scrollBool").checked = localStorage.getItem("scrollBool") !== "false";
 document.getElementById("discoverHide").checked = localStorage.getItem("discoverHide") === "true";

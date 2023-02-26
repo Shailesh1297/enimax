@@ -147,7 +147,7 @@ var fmovies: extension = {
                 seasonNames.push(season);
 
                 try{
-                    metaDataPromises.push(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/tv/season?id=${showId}&season=${season.split(" ")[1].trim()}`, {}, 1000));
+                    // metaDataPromises.push(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/tv/season?id=${showId}&season=${season.split(" ")[1].trim()}`, {}, 1000));
                 }catch(err){
 
                 }
@@ -231,7 +231,7 @@ var fmovies: extension = {
             if (Object.keys(response.data.seasons).length === 0) {
                 let thumbnail = null;
                 try{
-                    thumbnail = `https://image.tmdb.org/t/p/w300${JSON.parse(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/movies?id=${showId}`, {}, 1000)).backdrop_path}`;
+                    // thumbnail = `https://image.tmdb.org/t/p/w300${JSON.parse(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/movies?id=${showId}`, {}, 1000)).backdrop_path}`;
                 }catch(err){
 
                 }

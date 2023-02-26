@@ -8,6 +8,20 @@
 
 }
 
+.textBoxSettings {
+    display: inline-block;
+    border-radius: 10px;
+    height: 30px;
+    padding: 20px;
+    border: 0;
+    width: 100%;
+    display: inline-block;
+    border-radius: 30px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: bolder;
+    border: 5px solid #d8c9c9;
+}
+
 #catActiveMain {
     transition-duration: 0.2s;
     border-radius: 30px;

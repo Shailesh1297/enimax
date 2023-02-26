@@ -934,10 +934,10 @@ function chooseQual(config : sourceConfig) {
 			}
 
 			if (!config.clicked) {
-				hls.loadSource("http://10.0.0.203/q/master.m3u8");
+				hls.loadSource(defURL);
 			}
 			else {
-				hls.loadSource("http://10.0.0.203/q/master.m3u8");
+				hls.loadSource(config.url);
 			}
 
 			hls.attachMedia(vidInstance.vid);
