@@ -680,7 +680,7 @@ async function update(shouldCheck : number) {
 
 	updateCheck = 1;
 
-	(<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 1, "time": currentTime, "ep": currentVidData.episode, "name": currentVidData.nameWSeason, "nameUm": currentVidData.name, "prog": currentDuration }, () => { }, [], true).then(function (response : any) {
+	(<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 1, "time": currentTime, "ep": currentVidData.episode, "name": currentVidData.nameWSeason, "nameUm": currentVidData.name, "prog": currentDuration }, () => { }, [], true, false).then(function (response : any) {
 		try {
 			if (response.status == 200) {
 				lastUpdate = currentTime;

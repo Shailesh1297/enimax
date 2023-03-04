@@ -1,13 +1,3 @@
-#catActive {
-    position: relative;
-    line-height: 0;
-    top: 5px;
-    height: 0;
-    width: 0;
-    z-index: 0;
-
-}
-
 .textBoxSettings {
     display: inline-block;
     border-radius: 10px;
@@ -20,14 +10,6 @@
     font-family: 'Montserrat', sans-serif;
     font-weight: bolder;
     border: 5px solid #d8c9c9;
-}
-
-#catActiveMain {
-    transition-duration: 0.2s;
-    border-radius: 30px;
-    background-color: var(--theme-color) !important;
-    color: white !important;
-
 }
 
 #mainCon {
@@ -165,35 +147,6 @@ input[type="color"]::-webkit-color-swatch {
     border: 0px;
 
 
-}
-
-.snappedCustomRooms {
-    scroll-snap-type: x mandatory;
-    display: flex;
-    flex-direction: row;
-    overflow-y: hidden !important;
-    overflow-x: auto;
-    width: 100% !important;
-    height: 100% !important;
-}
-
-.snappedCategoriesDataMain {
-    min-width: 100%;
-    width: 100%;
-    display: flex !important;
-    scroll-snap-align: center;
-    max-height: 100%;
-    height: 100%;
-    overflow-y: auto;
-    scroll-snap-stop: always;
-    flex-flow: row wrap;
-    justify-content: center;
-}
-
-#custom_rooms {
-    width: 100%;
-    height: auto;
-    overflow-y: auto;
 }
 
 .queuePlay {
@@ -336,54 +289,6 @@ input[type="color"]::-webkit-color-swatch {
 
 .change .bar3 {
     transform: translate(0, -7.5px) rotate(-45deg);
-}
-
-
-
-#categoriesCon {
-    min-height: 60px;
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    margin: 10px 0 10px 0;
-}
-
-.categories {
-    height: 30px;
-    line-height: 30px;
-    font-size: 15px;
-    margin: 5px;
-    display: inline-block;
-    border-radius: 30px;
-    background-color: white;
-    border: 0px solid white;
-    color: black;
-    padding: 10px 20px 10px 20px;
-    font-family: 'Montserrat', sans-serif;
-    position: relative;
-    z-index: 10;
-    transition-duration: 0.2s;
-
-}
-
-.categories.activeCat {
-    background-color: transparent !important;
-    color: white !important;
-
-}
-
-.categoriesDataMain {
-    width: 100%;
-    display: none;
-    height: 100%;
-    flex-flow: row wrap;
-    justify-content: center;
-    /* align-items: center; */
-}
-
-.active {
-    display: flex !important;
 }
 
 #home {

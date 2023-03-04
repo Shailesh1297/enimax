@@ -227,11 +227,38 @@ var wco = {
                     data.image = "https:" + data.image;
                 }
                 data.description = temp.querySelector("#sidebar_cat").querySelectorAll("p")[0].innerText;
+                data.totalPages = 1;
+                data.pageInfo = [{
+                        "pageName": "Season 1",
+                        "pageSize": 0
+                    }];
+                let lastSeason = "1";
                 let episodesDOM = temp.querySelector("#sidebar_right3");
                 let animeEps = data.episodes;
                 let animeDOM = episodesDOM.querySelectorAll("a");
                 let animeName;
                 for (var i = animeDOM.length - 1; i >= 0; i--) {
+                    let season = lastSeason;
+                    try {
+                        let hasSeason = parseInt(animeDOM[i].innerText.toLowerCase().split("season")[1]);
+                        if (!isNaN(hasSeason)) {
+                            season = hasSeason.toString();
+                        }
+                        else {
+                            season = "1";
+                        }
+                    }
+                    catch (err) {
+                    }
+                    if (season != lastSeason) {
+                        lastSeason = season;
+                        data.totalPages++;
+                        data.pageInfo[data.totalPages - 1] = {
+                            "pageSize": 0,
+                            "pageName": `Season ${season}`
+                        };
+                    }
+                    data.pageInfo[data.totalPages - 1].pageSize++;
                     animeEps.push({
                         "link": animeDOM[i].href.replace(baseURL, "?watch=") + "&engine=0",
                         "title": animeDOM[i].innerText,
@@ -656,8 +683,14 @@ var fmovies = {
             catch (err) {
                 console.error(err);
             }
+            data.totalPages = values.length;
+            data.pageInfo = [];
             for (let key = 0; key < values.length; key++) {
                 let seasonData = values[key];
+                data.pageInfo.push({
+                    "pageName": seasonNames[key],
+                    "pageSize": seasonData.data.length
+                });
                 for (let i = 0; i < seasonData.data.length; i++) {
                     let tempData = {
                         title: `${seasonNames[key]} | ${seasonData.data[i].title}`,
@@ -692,6 +725,7 @@ var fmovies = {
                     tempData.thumbnail = thumbnail;
                 }
                 data.episodes.push(tempData);
+                data.totalPages = 1;
             }
             return data;
         }
@@ -1232,7 +1266,6 @@ var twitch = {
         response.image = "https://wallpaperaccess.com/full/4487013.jpg";
         response.description = "Twitch VOD";
         response.mainName = id;
-        response.status = 200;
         const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
         return new Promise((resolve, reject) => {
             fetch("https://gql.twitch.tv/gql", {
@@ -1249,6 +1282,11 @@ var twitch = {
                 let isLive = resData[0].data.user.stream !== null;
                 let items = resData[1].data.user.videos.edges;
                 let data = [];
+                response.totalPages = 2;
+                response.pageInfo = [{
+                        pageName: "VODs",
+                        pageSize: items.length,
+                    }];
                 if (sibling) {
                     data = [null, null, null];
                     for (let i = 0; i < items.length; i++) {
@@ -1288,10 +1326,9 @@ var twitch = {
                         "id": id,
                         "title": `${id} is Live!`,
                     });
-                    data.unshift({
-                        "link": "?watch=" + encodeURIComponent(id) + "&id=" + "live" + "&engine=4",
-                        "id": id,
-                        "title": `${id} is Live!`,
+                    response.pageInfo.push({
+                        pageName: "Live",
+                        pageSize: 1,
                     });
                 }
                 response.episodes = data;
@@ -1346,18 +1383,6 @@ var twitch = {
         }
         function getPlaylist(id, accessToken, vod) {
             return `https://usher.ttvnw.net/${vod ? 'vod' : 'api/channel/hls'}/${id}.m3u8?client_id=${clientId}&token=${accessToken.value}&sig=${accessToken.signature}&allow_source=true&allow_audio_only=true`;
-        }
-        function parsePlaylist(playlist) {
-            const parsedPlaylist = [];
-            const lines = playlist.split('\n');
-            for (let i = 4; i < lines.length; i += 3) {
-                parsedPlaylist.push({
-                    quality: lines[i - 2].split('NAME="')[1].split('"')[0],
-                    resolution: (lines[i - 1].indexOf('RESOLUTION') != -1 ? lines[i - 1].split('RESOLUTION=')[1].split(',')[0] : null),
-                    url: lines[i]
-                });
-            }
-            return parsedPlaylist;
         }
         function getStream(channel, raw) {
             return new Promise((resolve, reject) => {
@@ -1469,9 +1494,9 @@ var nineAnime = {
             let episodesHTML = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/episode/list/${nineAnimeID}?vrf=${IDVRF}`)).result;
             let episodesDOM = document.createElement("div");
             episodesDOM.innerHTML = DOMPurify.sanitize(episodesHTML);
-            let epsiodeElem = episodesDOM.querySelectorAll("li");
-            for (let i = 0; i < epsiodeElem.length; i++) {
-                let curElem = epsiodeElem[i];
+            let episodeElem = episodesDOM.querySelectorAll("li");
+            for (let i = 0; i < episodeElem.length; i++) {
+                let curElem = episodeElem[i];
                 let title = "";
                 try {
                     title = curElem.querySelector("span").innerText;
@@ -1481,7 +1506,7 @@ var nineAnime = {
                 episodes.push({
                     "link": "?watch=" + encodeURIComponent(id) + "&ep=" + curElem.querySelector("a").getAttribute("data-ids") + "&engine=5",
                     "id": curElem.querySelector("a").getAttribute("data-ids"),
-                    "title": `Epsiode ${curElem.querySelector("a").getAttribute("data-num")} - ${title}`,
+                    "title": `Episode ${curElem.querySelector("a").getAttribute("data-num")} - ${title}`,
                 });
             }
             response.episodes = episodes;
@@ -1557,15 +1582,15 @@ var nineAnime = {
         return response;
     },
     "getVRF": async function (query) {
-        const vrf = await MakeFetch(`https://${localStorage.getItem("9anime").trim()}/vrf?query=${query}&apikey=${localStorage.getItem("apikey").trim()}`);
+        const vrf = await MakeFetch(`https://${localStorage.getItem("9anime").trim()}/vrf?query=${encodeURIComponent(query)}&apikey=${localStorage.getItem("apikey").trim()}`);
         return encodeURIComponent(JSON.parse(vrf).url);
     },
     "decryptSource": async function (query) {
-        const source = await MakeFetch(`https://${localStorage.getItem("9anime").trim()}/decrypt?query=${query}&apikey=${localStorage.getItem("apikey").trim()}`);
+        const source = await MakeFetch(`https://${localStorage.getItem("9anime").trim()}/decrypt?query=${encodeURIComponent(query)}&apikey=${localStorage.getItem("apikey").trim()}`);
         return JSON.parse(source).url;
     },
     "getVidstreamLink": async function (query) {
-        const source = await MakeFetch(`https://${localStorage.getItem("9anime").trim()}/vizcloud?query=${query}&apikey=${localStorage.getItem("apikey").trim()}`);
+        const source = await MakeFetch(`https://${localStorage.getItem("9anime").trim()}/vizcloud?query=${encodeURIComponent(query)}&apikey=${localStorage.getItem("apikey").trim()}`);
         return JSON.parse(source).data.media.sources[0].file;
     }
 };

@@ -55,7 +55,7 @@ var wco : extension = {
                 let temp = document.createElement("div");
                 temp.innerHTML = DOMPurify.sanitize(response);
 
-                let data : extensionInfo= {
+                let data : extensionInfo = {
                     "name" : "",
                     "image" : "",
                     "description" : "",
@@ -71,13 +71,43 @@ var wco : extension = {
                 }
 
                 data.description = temp.querySelector("#sidebar_cat").querySelectorAll("p")[0].innerText;
+                data.totalPages = 1;
+                data.pageInfo = [{
+                    "pageName" : "Season 1",
+                    "pageSize" : 0
+                }];
 
+                let lastSeason = "1";
                 let episodesDOM = temp.querySelector("#sidebar_right3");
 
                 let animeEps = data.episodes;
                 let animeDOM = episodesDOM.querySelectorAll("a");
                 let animeName;
                 for (var i = animeDOM.length - 1; i >= 0; i--) {
+
+                    let season : string = lastSeason;
+                    try{
+                        let hasSeason = parseInt(animeDOM[i].innerText.toLowerCase().split("season")[1]);
+                        if(!isNaN(hasSeason)){
+                            season = hasSeason.toString();
+                        }else{
+                            season = "1";
+                        }
+                    }catch(err){
+
+                    }
+
+                    if(season != lastSeason){
+                        lastSeason = season;
+                        data.totalPages++;
+                        data.pageInfo[data.totalPages - 1] = {
+                            "pageSize" : 0,
+                            "pageName" : `Season ${season}`
+                        }
+                    }
+
+
+                    data.pageInfo[data.totalPages - 1].pageSize++;
                     animeEps.push({
                         "link": animeDOM[i].href.replace(baseURL, "?watch=") + "&engine=0",
                         "title": animeDOM[i].innerText,

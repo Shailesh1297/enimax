@@ -57,19 +57,19 @@ var nineAnime : extension = {
             let episodesDOM = document.createElement("div");
             episodesDOM.innerHTML = DOMPurify.sanitize(episodesHTML);
             
-            let epsiodeElem = episodesDOM.querySelectorAll("li");
-            for(let i = 0; i < epsiodeElem.length; i++){
-                let curElem = epsiodeElem[i];
+            let episodeElem = episodesDOM.querySelectorAll("li");
+            for(let i = 0; i < episodeElem.length; i++){
+                let curElem = episodeElem[i];
                 let title = "";
                 try{
                     title = curElem.querySelector("span").innerText;
                 }catch(err){
 
                 }
-                episodes.push( {
+                episodes.push({
                     "link": "?watch=" + encodeURIComponent(id) + "&ep=" + curElem.querySelector("a").getAttribute("data-ids") + "&engine=5",
                     "id": curElem.querySelector("a").getAttribute("data-ids"),
-                    "title": `Epsiode ${curElem.querySelector("a").getAttribute("data-num")} - ${title}`,
+                    "title": `Episode ${curElem.querySelector("a").getAttribute("data-num")} - ${title}`,
                 });
             }
 
@@ -155,15 +155,15 @@ var nineAnime : extension = {
         return response;
     },
     "getVRF" : async function (query){
-        const vrf = await MakeFetch(`https://${localStorage.getItem("9anime").trim()}/vrf?query=${query}&apikey=${localStorage.getItem("apikey").trim()}`);
+        const vrf = await MakeFetch(`https://${localStorage.getItem("9anime").trim()}/vrf?query=${encodeURIComponent(query)}&apikey=${localStorage.getItem("apikey").trim()}`);
         return encodeURIComponent(JSON.parse(vrf).url);
     },
     "decryptSource" : async function (query){
-        const source = await MakeFetch(`https://${localStorage.getItem("9anime").trim()}/decrypt?query=${query}&apikey=${localStorage.getItem("apikey").trim()}`);
+        const source = await MakeFetch(`https://${localStorage.getItem("9anime").trim()}/decrypt?query=${encodeURIComponent(query)}&apikey=${localStorage.getItem("apikey").trim()}`);
         return JSON.parse(source).url;
     },
     "getVidstreamLink" : async function (query){
-        const source = await MakeFetch(`https://${localStorage.getItem("9anime").trim()}/vizcloud?query=${query}&apikey=${localStorage.getItem("apikey").trim()}`);
+        const source = await MakeFetch(`https://${localStorage.getItem("9anime").trim()}/vizcloud?query=${encodeURIComponent(query)}&apikey=${localStorage.getItem("apikey").trim()}`);
         return JSON.parse(source).data.media.sources[0].file;
     } 
 }

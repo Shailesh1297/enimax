@@ -204,10 +204,17 @@ var fmovies: extension = {
                 console.error(err);
             }
 
+            data.totalPages = values.length;
+            data.pageInfo = [];
             
             for (let key = 0; key < values.length; key++) {
-
                 let seasonData = values[key];
+
+                data.pageInfo.push({
+                    "pageName" : seasonNames[key],
+                    "pageSize" : seasonData.data.length
+                });
+
                 for (let i = 0; i < seasonData.data.length; i++) {
                     let tempData: extensionInfoEpisode = {
                         title: `${seasonNames[key]} | ${seasonData.data[i].title}`,
@@ -228,6 +235,8 @@ var fmovies: extension = {
                 }
             }
 
+
+
             if (Object.keys(response.data.seasons).length === 0) {
                 let thumbnail = null;
                 try{
@@ -245,6 +254,7 @@ var fmovies: extension = {
                     tempData.thumbnail = thumbnail;
                 }
                 data.episodes.push(tempData);
+                data.totalPages = 1;
             }
 
             return data;

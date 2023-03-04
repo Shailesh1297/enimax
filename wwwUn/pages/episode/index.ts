@@ -7,7 +7,7 @@ if (config.local || localStorage.getItem("offline") === 'true') {
     window.parent.postMessage({ "action": 20 }, "*");
 }
 
-let lastScrollPos : number;
+let lastScrollPos: number;
 let scrollDownTopDOM = document.getElementById("scrollDownTop");
 
 // @ts-ignore
@@ -31,7 +31,7 @@ scrollElem.addEventListener("scroll", function () {
 });
 
 
-function fix_title(title : string) {
+function fix_title(title: string) {
     try {
         let titleArray = title.split("-");
         let temp = "";
@@ -54,7 +54,7 @@ scrollDownTopDOM.onclick = function () {
 };
 
 
-function normalise(url : string) {
+function normalise(url: string) {
     url = url.replace("?watch=", "");
     url = url.split("&engine=")[0];
     return url;
@@ -80,7 +80,7 @@ function sendNoti(notiConfig: any) {
 
 
 
-function checkIfExists(localURL : string, dList : Array<string>, dName : string) : Promise<string> {
+function checkIfExists(localURL: string, dList: Array<string>, dName: string): Promise<string> {
     return (new Promise(function (resolve, reject) {
         let index = dList.indexOf(dName);
         if (index > -1) {
@@ -124,7 +124,7 @@ function ini() {
         }
 
 
-        async function processEpisodeData(data : extensionInfo, downloaded, main_url) {
+        async function processEpisodeData(data: extensionInfo, downloaded, main_url) {
 
             let currentLink = '';
             if (localStorage.getItem("currentLink")) {
@@ -191,8 +191,113 @@ function ini() {
 
             document.getElementById("imageMain").style.backgroundImage = `url("${data.image}")`;
             let animeEps = data.episodes;
-
             let epCon = document.getElementById("epListCon");
+
+            let catCon = createElement({
+                id: "categoriesCon",
+                style: {
+                    position: "sticky",
+                    top: "0",
+                    zIndex: "2",
+                },
+                innerHTML: `<div id="catActive">
+                                <div style="position: absolute;background: red;" id="catActiveMain"></div>
+                            <div>`
+            });
+
+            let catDataCon = createElement({
+                style:{
+                    width: "100%"
+                },
+                id: "custom_rooms",
+                class: "snappedCustomRooms"
+            });
+
+            epCon.append(catCon);
+            epCon.append(catDataCon);
+
+
+            const partitions = 50;
+            const catDataCons = [];
+            let totalCats = Math.ceil(animeEps.length / partitions);
+            let partitionSize = [];
+            let usesCustomPartions = false;
+            if(data.totalPages){
+                totalCats = data.pageInfo.length;
+                usesCustomPartions = true;
+            }
+
+
+            for (let i = 0; i < totalCats; i++) {
+
+                console.log();
+
+                let pageName = "? - ?"
+                try{
+                    if(!usesCustomPartions){
+                        const episodeKeyword = "episode";
+                        const fromNum = parseInt(animeEps[partitions * (i)].title.toLowerCase().split(episodeKeyword)[1]).toString();
+                        const toNum = parseInt(animeEps[Math.min(partitions * (i + 1) - 1, animeEps.length - 1)].title.toLowerCase().split(episodeKeyword)[1]).toString();
+                        pageName = `${fromNum} - ${toNum}`;
+                        partitionSize.push(partitions);
+                    }else{
+                        pageName = data.pageInfo[i].pageName;
+                        partitionSize.push(data.pageInfo[i].pageSize);
+                    }
+                    
+                }catch(err){
+
+                }
+
+                catCon.append(createCat(`room_${partitions * i}`, pageName, 1));
+                catDataCons.push(createElement({
+                    "class": `categoriesDataMain snappedCategoriesDataMain`,
+                    style: {
+                        "min-width": "100%"
+                    },
+                    "id": `room_${partitions * i}`
+                }));
+
+                catDataCon.append(catDataCons[catDataCons.length - 1]);
+
+                catDataCon.append();
+            }
+
+
+            if (isSnapSupported) {
+                let scrollLastIndex;
+                let tempCatDOM = document.getElementsByClassName("categories");
+                let cusRoomDOM = document.getElementById("custom_rooms");
+                cusRoomDOM.addEventListener("scroll", function () {
+                    let unRoundedIndex = cusRoomDOM.scrollLeft / cusRoomDOM.offsetWidth;
+                    let index = Math.round(unRoundedIndex);
+            
+                    if (index != scrollLastIndex) {
+                        for (let i = 0; i < tempCatDOM.length; i++) {
+                            if (i == index) {
+                                tempCatDOM[i].classList.add("activeCat");
+                                tempCatDOM[i].scrollIntoView();
+                                localStorage.setItem("currentCategory", tempCatDOM[i].getAttribute("data-id"));
+                            } else {
+                                tempCatDOM[i].classList.remove("activeCat");
+                            }
+                        }
+            
+                        let activeCatDOM = document.querySelector(".categories.activeCat") as HTMLElement;
+                        let temp = document.getElementById("catActiveMain") as HTMLElement;
+                        window.requestAnimationFrame(function () {
+                            window.requestAnimationFrame(function () {
+                                if (temp && activeCatDOM) {
+                                    temp.style.left = activeCatDOM.offsetLeft.toString();
+                                    temp.style.height = activeCatDOM.offsetHeight.toString();
+                                    temp.style.width = activeCatDOM.offsetWidth.toString();
+                                }
+                            });
+                        });
+                    }
+                    scrollLastIndex = index;
+                }, { "passive": true });
+            }
 
             let toAdd = [];
             for (var i = 0; i < animeEps.length; i++) {
@@ -211,12 +316,12 @@ function ini() {
                 tempDiv4.setAttribute('data-title', animeEps[i].title);
 
                 tempDiv4.onclick = function () {
-                    window.parent.postMessage({ 
-                        "action": 403, 
-                        "data": (this as HTMLElement).getAttribute("data-url"), 
-                        "anime": data, 
-                        "mainUrl": main_url, 
-                        "title": (this as HTMLElement).getAttribute("data-title") 
+                    window.parent.postMessage({
+                        "action": 403,
+                        "data": (this as HTMLElement).getAttribute("data-url"),
+                        "anime": data,
+                        "mainUrl": main_url,
+                        "title": (this as HTMLElement).getAttribute("data-title")
                     }, "*");
 
                     (this as HTMLElement).className = 'episodesLoading';
@@ -272,7 +377,7 @@ function ini() {
 
                 }
 
-               
+
 
 
                 let tempDiv2 = document.createElement("div");
@@ -284,31 +389,31 @@ function ini() {
                 };
 
                 if (check || !downloaded || config.chrome) {
-                    
 
-                    
+
+
                     if (!downloaded) {
                         tempDiv.style.flexDirection = "column";
-                        
+
                         tempDiv2.remove();
                         let tempDiv2Con = createElement({
-                            class : "episodesImageCon",
+                            class: "episodesImageCon",
                         });
 
                         tempDiv2Con.append(createElement({
-                            class : "episodesBackdrop",
+                            class: "episodesBackdrop",
                         }));
-                        
-                        
+
+
                         tempDiv2 = <HTMLImageElement>createElement({
-                            "class" : "episodesThumbnail",
-                            "element" : "img",
+                            "class": "episodesThumbnail",
+                            "element": "img",
                             "attributes": {
-                                "loading" : "lazy",
-                                "src" : (animeEps[i].thumbnail ? animeEps[i].thumbnail : "../../assets/images/anime2.png"),
+                                "loading": "lazy",
+                                "src": (animeEps[i].thumbnail ? animeEps[i].thumbnail : "../../assets/images/anime2.png"),
                             }
                         });
-     
+
 
                         let horizontalCon = createElement({
                             "class": "hozCon"
@@ -316,8 +421,8 @@ function ini() {
 
                         let horizontalConT = createElement({
                             "class": "hozCon",
-                            "style" : {
-                                "marginTop" : "12px"
+                            "style": {
+                                "marginTop": "12px"
                             }
                         });
 
@@ -327,9 +432,9 @@ function ini() {
 
 
                         horizontalConT.append(createElement({
-                            "class" : "episodesPlaySmall",
-                            "listeners" : {
-                                "click" : function() {
+                            "class": "episodesPlaySmall",
+                            "listeners": {
+                                "click": function () {
                                     localStorage.setItem("mainName", data.mainName);
                                     window.parent.postMessage({ "action": 4, "data": trr }, "*");
                                 }
@@ -350,33 +455,33 @@ function ini() {
                         tempDiv.append(horizontalConT);
 
                         let horizontalConD;
-                        if(animeEps[i].description){
+                        if (animeEps[i].description) {
                             horizontalConD = createElement({
                                 "class": "hozCon",
-                                "style" : {
-                                    "marginTop" : "12px",
-                                    "flex-direction" : "column"
+                                "style": {
+                                    "marginTop": "12px",
+                                    "flex-direction": "column"
                                 }
                             });
 
                             horizontalConD.append(createElement({
                                 "class": "episodesDescription",
-                                "innerText" : animeEps[i].description,
-                                "listeners":{
-                                    "click": function(){
+                                "innerText": animeEps[i].description,
+                                "listeners": {
+                                    "click": function () {
                                         let collapsed = this.getAttribute("collapsed");
                                         let readMore = this.nextSibling;
-                                        if(collapsed !== "false"){
+                                        if (collapsed !== "false") {
                                             this.style.maxHeight = "none";
                                             this.setAttribute("collapsed", "false");
 
-                                            if(readMore){
+                                            if (readMore) {
                                                 readMore.style.display = "none";
                                             }
-                                        }else{
+                                        } else {
                                             this.style.maxHeight = "94px";
                                             this.setAttribute("collapsed", "true");
-                                            if(readMore){
+                                            if (readMore) {
                                                 readMore.style.display = "block";
                                             }
                                         }
@@ -384,8 +489,8 @@ function ini() {
                                 }
                             }));
                             horizontalConD.append(createElement({
-                                "class" : "episodesDescEllipsis",
-                                "innerText" : "Read more..."
+                                "class": "episodesDescEllipsis",
+                                "innerText": "Read more..."
                             }));
                             tempDiv.append(horizontalConD);
 
@@ -398,7 +503,7 @@ function ini() {
                             tempDiv2.onclick = function () {
                                 window.parent.postMessage({ "action": 4, "data": `?watch=${localQuery}` }, "*");
                             };
-                        }    
+                        }
                         tempDiv.append(tempDiv2);
                         tempDiv.append(tempDiv3);
                         if (!config.chrome) {
@@ -407,7 +512,7 @@ function ini() {
                         // epCon.append(tempDiv);
                         toAdd.push(tempDiv);
                     }
-                    
+
 
                     if (trr == currentLink) {
                         scrollToDOM = tempDiv;
@@ -424,9 +529,19 @@ function ini() {
 
             }
 
-            for(let e of toAdd){
-                epCon.append(e);
+            let countAdded = 0;
+            let whichCon = 0;
+
+            for (let e of toAdd) {
+                if(countAdded >= partitionSize[whichCon]){
+                    whichCon++;
+                    countAdded = 0;
+                }
+                catDataCons[whichCon].append(e);
+                countAdded++;
+
             }
+
 
             if (downloaded) {
                 for (let downloadIndex = 0; downloadIndex < downloadedList.length; downloadIndex++) {
@@ -519,36 +634,36 @@ function ini() {
                 data.image = "https://raw.githubusercontent.com/enimax-anime/enimax/main/www/assets/images/placeholder.jpg";
             }
 
-            (<cordovaWindow> window.parent).apiCall("POST", { 
-                "username": username, 
-                "action": 5, 
-                "name": data.mainName, 
-                "img": data.image, 
-                "url": location.search 
-            }, () => {});
+            (<cordovaWindow>window.parent).apiCall("POST", {
+                "username": username,
+                "action": 5,
+                "name": data.mainName,
+                "img": data.image,
+                "url": location.search
+            }, () => { });
 
-            (<cordovaWindow> window.parent).apiCall("POST", { 
-                "username": username, 
-                "action": 2, 
-                "name": data.mainName, 
-                "fallbackDuration" : true
+            (<cordovaWindow>window.parent).apiCall("POST", {
+                "username": username,
+                "action": 2,
+                "name": data.mainName,
+                "fallbackDuration": true
             }, (epData) => {
                 let episodes = {};
-                for(let ep of epData.data){
+                for (let ep of epData.data) {
                     console.log(epData);
-                    if(epData.dexie){
-                        if(ep.comp != 0 && ep.ep != 0){
+                    if (epData.dexie) {
+                        if (ep.comp != 0 && ep.ep != 0) {
                             let thisEp = {
-                                duration : ep.comp,
-                                curtime : ep.cur_time
+                                duration: ep.comp,
+                                curtime: ep.cur_time
                             };
                             episodes[ep.main_link] = thisEp;
                         }
-                    }else{
-                        if(ep.duration != 0 && ep.ep != 0){
+                    } else {
+                        if (ep.duration != 0 && ep.ep != 0) {
                             let thisEp = {
-                                duration : ep.duration,
-                                curtime : ep.curtime,
+                                duration: ep.duration,
+                                curtime: ep.curtime,
                             };
                             episodes[ep.name] = thisEp;
                         }
@@ -556,26 +671,26 @@ function ini() {
                 }
 
 
-                for(const elem of document.getElementsByClassName("episodesCon")){
+                for (const elem of document.getElementsByClassName("episodesCon")) {
                     let dataURL = elem.getAttribute("data-url");
-                    if(dataURL in episodes){
-                        try{
+                    if (dataURL in episodes) {
+                        try {
                             let imageCon = elem.children[0].children[0];
                             let curEp = episodes[dataURL];
 
                             let tempDiv = createElement({
-                                "class" : "episodesProgressCon",
+                                "class": "episodesProgressCon",
                             });
 
                             tempDiv.append(createElement({
-                                "class" : "episodesProgress",
-                                "style" : {
-                                    "width" : `${100*(parseInt(curEp.curtime)/parseInt(curEp.duration))}%`
+                                "class": "episodesProgress",
+                                "style": {
+                                    "width": `${100 * (parseInt(curEp.curtime) / parseInt(curEp.duration))}%`
                                 }
                             }));
 
                             imageCon.append(tempDiv);
-                        }catch(err){
+                        } catch (err) {
                             console.error(err);
                         }
 
@@ -583,7 +698,7 @@ function ini() {
                     }
 
 
-                    if(Object.keys(episodes).length == 0){
+                    if (Object.keys(episodes).length == 0) {
                         break;
                     }
                 }
@@ -593,7 +708,7 @@ function ini() {
 
 
         if (localStorage.getItem("offline") === 'true') {
-            (<cordovaWindow> window.parent).makeLocalRequest("GET", `/${main_url.split("&downloaded")[0]}/info.json`).then(function (data) {
+            (<cordovaWindow>window.parent).makeLocalRequest("GET", `/${main_url.split("&downloaded")[0]}/info.json`).then(function (data) {
                 let temp = JSON.parse(data);
                 temp.data.episodes = temp.episodes;
                 processEpisodeData(temp.data, true, main_url);

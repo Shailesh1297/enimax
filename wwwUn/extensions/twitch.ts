@@ -32,14 +32,13 @@ var twitch : extension = {
         url = url.split("&engine")[0];
         let id = url.replace("?watch=/", "");
 
-        let response = {};
+        let response : extensionInfo = {};
         response.name = id;
 
         response.image = "https://wallpaperaccess.com/full/4487013.jpg";
         response.description = "Twitch VOD";
 
         response.mainName = id;
-        response.status = 200;
 
         const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
 
@@ -60,6 +59,13 @@ var twitch : extension = {
                 let isLive = resData[0].data.user.stream !== null;
                 let items = resData[1].data.user.videos.edges;
                 let data = [];
+
+                response.totalPages = 2;
+                response.pageInfo = [{
+                    pageName: "VODs",
+                    pageSize: items.length,
+                }];
+
                 if (sibling) {
                     data = [null, null, null];
                     for (let i = 0; i < items.length; i++) {
@@ -100,11 +106,10 @@ var twitch : extension = {
                         "title": `${id} is Live!`,
                     });
 
-                    data.unshift({
-                        "link": "?watch=" + encodeURIComponent(id) + "&id=" + "live" + "&engine=4",
-                        "id": id,
-                        "title": `${id} is Live!`,
-                    });
+                    response.pageInfo.push({
+                        pageName: "Live",
+                        pageSize: 1,
+                    })
                 }
                 response.episodes = data;
 
@@ -112,8 +117,6 @@ var twitch : extension = {
             }).catch((error) => reject(error));
 
         });
-
-
 
     },
 
@@ -168,19 +171,6 @@ var twitch : extension = {
 
         function getPlaylist(id, accessToken, vod) {
             return `https://usher.ttvnw.net/${vod ? 'vod' : 'api/channel/hls'}/${id}.m3u8?client_id=${clientId}&token=${accessToken.value}&sig=${accessToken.signature}&allow_source=true&allow_audio_only=true`;
-        }
-
-        function parsePlaylist(playlist) {
-            const parsedPlaylist = [];
-            const lines = playlist.split('\n');
-            for (let i = 4; i < lines.length; i += 3) {
-                parsedPlaylist.push({
-                    quality: lines[i - 2].split('NAME="')[1].split('"')[0],
-                    resolution: (lines[i - 1].indexOf('RESOLUTION') != -1 ? lines[i - 1].split('RESOLUTION=')[1].split(',')[0] : null),
-                    url: lines[i]
-                });
-            }
-            return parsedPlaylist;
         }
 
         function getStream(channel, raw) {

@@ -181,7 +181,7 @@ function toFormData(x) {
     }
     return form;
 }
-function makeRequest(method, url, form, timeout) {
+function makeRequest(method, url, form, timeout, shouldRedirect) {
     return new Promise(function (resolve, reject) {
         let formation = {};
         formation.method = method;
@@ -207,7 +207,7 @@ function makeRequest(method, url, form, timeout) {
             if (x.status == 200) {
                 resolve(x);
             }
-            else if ("errorCode" in x && x["errorCode"] == 70001) {
+            else if (shouldRedirect && "errorCode" in x && x["errorCode"] == 70001) {
                 window.parent.postMessage({ "action": 21, data: "" }, "*");
                 reject(x.message);
             }
@@ -220,7 +220,7 @@ function makeRequest(method, url, form, timeout) {
         });
     });
 }
-async function apiCall(method, form, callback, args = [], timeout = false) {
+async function apiCall(method, form, callback, args = [], timeout = false, shouldRedirect = true) {
     try {
         let url = `${config.remote}/api`;
         let response;
@@ -237,7 +237,7 @@ async function apiCall(method, form, callback, args = [], timeout = false) {
             }
         }
         else {
-            response = await makeRequest(method, url, form, timeout);
+            response = await makeRequest(method, url, form, timeout, shouldRedirect);
         }
         if (response.status == 200) {
             args.push(response);
@@ -249,7 +249,17 @@ async function apiCall(method, form, callback, args = [], timeout = false) {
         return response;
     }
     catch (err) {
-        sendNoti([2, null, "Alert", err]);
+        let isAbort = false;
+        try {
+            if (err.name == "AbortError") {
+                isAbort = true;
+            }
+        }
+        catch (err) {
+        }
+        if (!isAbort) {
+            sendNoti([2, null, "Alert", err]);
+        }
     }
 }
 if (true) {

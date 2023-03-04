@@ -150,6 +150,97 @@ function ini() {
             document.getElementById("imageMain").style.backgroundImage = `url("${data.image}")`;
             let animeEps = data.episodes;
             let epCon = document.getElementById("epListCon");
+            let catCon = createElement({
+                id: "categoriesCon",
+                style: {
+                    position: "sticky",
+                    top: "0",
+                    zIndex: "2",
+                },
+                innerHTML: `<div id="catActive">
+                                <div style="position: absolute;background: red;" id="catActiveMain"></div>
+                            <div>`
+            });
+            let catDataCon = createElement({
+                style: {
+                    width: "100%"
+                },
+                id: "custom_rooms",
+                class: "snappedCustomRooms"
+            });
+            epCon.append(catCon);
+            epCon.append(catDataCon);
+            const partitions = 50;
+            const catDataCons = [];
+            let totalCats = Math.ceil(animeEps.length / partitions);
+            let partitionSize = [];
+            let usesCustomPartions = false;
+            if (data.totalPages) {
+                totalCats = data.pageInfo.length;
+                usesCustomPartions = true;
+            }
+            for (let i = 0; i < totalCats; i++) {
+                console.log();
+                let pageName = "? - ?";
+                try {
+                    if (!usesCustomPartions) {
+                        const episodeKeyword = "episode";
+                        const fromNum = parseInt(animeEps[partitions * (i)].title.toLowerCase().split(episodeKeyword)[1]).toString();
+                        const toNum = parseInt(animeEps[Math.min(partitions * (i + 1) - 1, animeEps.length - 1)].title.toLowerCase().split(episodeKeyword)[1]).toString();
+                        pageName = `${fromNum} - ${toNum}`;
+                        partitionSize.push(partitions);
+                    }
+                    else {
+                        pageName = data.pageInfo[i].pageName;
+                        partitionSize.push(data.pageInfo[i].pageSize);
+                    }
+                }
+                catch (err) {
+                }
+                catCon.append(createCat(`room_${partitions * i}`, pageName, 1));
+                catDataCons.push(createElement({
+                    "class": `categoriesDataMain snappedCategoriesDataMain`,
+                    style: {
+                        "min-width": "100%"
+                    },
+                    "id": `room_${partitions * i}`
+                }));
+                catDataCon.append(catDataCons[catDataCons.length - 1]);
+                catDataCon.append();
+            }
+            if (isSnapSupported) {
+                let scrollLastIndex;
+                let tempCatDOM = document.getElementsByClassName("categories");
+                let cusRoomDOM = document.getElementById("custom_rooms");
+                cusRoomDOM.addEventListener("scroll", function () {
+                    let unRoundedIndex = cusRoomDOM.scrollLeft / cusRoomDOM.offsetWidth;
+                    let index = Math.round(unRoundedIndex);
+                    if (index != scrollLastIndex) {
+                        for (let i = 0; i < tempCatDOM.length; i++) {
+                            if (i == index) {
+                                tempCatDOM[i].classList.add("activeCat");
+                                tempCatDOM[i].scrollIntoView();
+                                localStorage.setItem("currentCategory", tempCatDOM[i].getAttribute("data-id"));
+                            }
+                            else {
+                                tempCatDOM[i].classList.remove("activeCat");
+                            }
+                        }
+                        let activeCatDOM = document.querySelector(".categories.activeCat");
+                        let temp = document.getElementById("catActiveMain");
+                        window.requestAnimationFrame(function () {
+                            window.requestAnimationFrame(function () {
+                                if (temp && activeCatDOM) {
+                                    temp.style.left = activeCatDOM.offsetLeft.toString();
+                                    temp.style.height = activeCatDOM.offsetHeight.toString();
+                                    temp.style.width = activeCatDOM.offsetWidth.toString();
+                                }
+                            });
+                        });
+                    }
+                    scrollLastIndex = index;
+                }, { "passive": true });
+            }
             let toAdd = [];
             for (var i = 0; i < animeEps.length; i++) {
                 let trr = animeEps[i].link;
@@ -332,8 +423,15 @@ function ini() {
                     }
                 }
             }
+            let countAdded = 0;
+            let whichCon = 0;
             for (let e of toAdd) {
-                epCon.append(e);
+                if (countAdded >= partitionSize[whichCon]) {
+                    whichCon++;
+                    countAdded = 0;
+                }
+                catDataCons[whichCon].append(e);
+                countAdded++;
             }
             if (downloaded) {
                 for (let downloadIndex = 0; downloadIndex < downloadedList.length; downloadIndex++) {

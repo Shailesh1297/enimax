@@ -187,6 +187,13 @@ interface extensionInfo {
     description: string,
     episodes: Array<extensionInfoEpisode>,
     mainName: string
+    totalPages? : number
+    pageInfo? : Array<PageInfo>
+}
+
+interface PageInfo{
+    pageSize : number,
+    pageName : string
 }
 
 interface extensionInfoEpisode {
