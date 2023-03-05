@@ -47,6 +47,13 @@ function extractKey(id : number, url = null, useCached = false) : Promise<string
             try {
                 let gitHTML = (await MakeFetch(`https://github.com/enimax-anime/key/blob/e${id}/key.txt`)) as unknown  as modifiedString;
                 let key = gitHTML.substringAfter('"blob-code blob-code-inner js-file-line">').substringBefore("</td>");
+                if(!key){
+                    key = gitHTML.substringAfter('"rawBlob":"').substringBefore("\"");
+                }
+
+                if(!key){
+                    key = (await MakeFetch(`https://raw.githubusercontent.com/enimax-anime/key/e${id}/key.txt`)) as unknown  as modifiedString;
+                }
                 resolve(key);
             } catch (err) {
                 reject(err);

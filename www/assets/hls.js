@@ -893,11 +893,6 @@ var AudioStreamController = /*#__PURE__*/function (_BaseStreamController) {
       // Exit early if we don't have media or if the media hasn't buffered anything yet (readyState 0)
       return;
     }
-    var mediaBuffer = this.mediaBuffer ? this.mediaBuffer : media;
-    var buffered = mediaBuffer.buffered;
-    if (!this.loadedmetadata && buffered.length) {
-      this.loadedmetadata = true;
-    }
     this.lastCurrentTime = media.currentTime;
   };
   _proto.doTickIdle = function doTickIdle() {
@@ -1165,6 +1160,12 @@ var AudioStreamController = /*#__PURE__*/function (_BaseStreamController) {
     var frag = data.frag,
       part = data.part;
     if (frag.type !== _types_loader__WEBPACK_IMPORTED_MODULE_6__.PlaylistLevelType.AUDIO) {
+      if (!this.loadedmetadata && frag.type === _types_loader__WEBPACK_IMPORTED_MODULE_6__.PlaylistLevelType.MAIN) {
+        var _ref3;
+        if ((_ref3 = this.videoBuffer || this.media) !== null && _ref3 !== void 0 && _ref3.buffered.length) {
+          this.loadedmetadata = true;
+        }
+      }
       return;
     }
     if (this.fragContextChanged(frag)) {
@@ -1227,8 +1228,8 @@ var AudioStreamController = /*#__PURE__*/function (_BaseStreamController) {
         break;
     }
   };
-  _proto.onBufferFlushed = function onBufferFlushed(event, _ref3) {
-    var type = _ref3.type;
+  _proto.onBufferFlushed = function onBufferFlushed(event, _ref4) {
+    var type = _ref4.type;
     if (type === _loader_fragment__WEBPACK_IMPORTED_MODULE_7__.ElementaryStreamTypes.AUDIO) {
       this.bufferFlushed = true;
     }
@@ -2030,19 +2031,22 @@ var BaseStreamController = /*#__PURE__*/function (_TaskLoop) {
     this.log("media seeking to " + ((0,_home_runner_work_hls_js_hls_js_src_polyfills_number__WEBPACK_IMPORTED_MODULE_0__.isFiniteNumber)(currentTime) ? currentTime.toFixed(3) : currentTime) + ", state: " + state);
     if (state === State.ENDED) {
       this.resetLoadingState();
-    } else if (fragCurrent && !bufferInfo.len) {
-      // check if we are seeking to a unbuffered area AND if frag loading is in progress
+    } else if (fragCurrent) {
+      // Seeking while frag load is in progress
       var tolerance = config.maxFragLookUpTolerance;
       var fragStartOffset = fragCurrent.start - tolerance;
       var fragEndOffset = fragCurrent.start + fragCurrent.duration + tolerance;
-      var pastFragment = currentTime > fragEndOffset;
-      // check if the seek position is past current fragment, and if so abort loading
-      if (currentTime < fragStartOffset || pastFragment) {
-        if (pastFragment && fragCurrent.loader) {
-          this.log('seeking outside of buffer while fragment load in progress, cancel fragment load');
-          fragCurrent.loader.abort();
+      // if seeking out of buffered range or into new one
+      if (!bufferInfo.len || fragEndOffset < bufferInfo.start || fragStartOffset > bufferInfo.end) {
+        var pastFragment = currentTime > fragEndOffset;
+        // if the seek position is outside the current fragment range
+        if (currentTime < fragStartOffset || pastFragment) {
+          if (pastFragment && fragCurrent.loader) {
+            this.log('seeking outside of buffer while fragment load in progress, cancel fragment load');
+            fragCurrent.loader.abort();
+          }
+          this.resetLoadingState();
         }
-        this.resetLoadingState();
       }
     }
     if (media) {
@@ -2237,7 +2241,7 @@ var BaseStreamController = /*#__PURE__*/function (_TaskLoop) {
     if (!media) {
       return;
     }
-    if (!this.loadedmetadata && media.buffered.length && ((_this$fragCurrent = this.fragCurrent) === null || _this$fragCurrent === void 0 ? void 0 : _this$fragCurrent.sn) === ((_this$fragPrevious = this.fragPrevious) === null || _this$fragPrevious === void 0 ? void 0 : _this$fragPrevious.sn)) {
+    if (!this.loadedmetadata && frag.type == _types_loader__WEBPACK_IMPORTED_MODULE_15__.PlaylistLevelType.MAIN && media.buffered.length && ((_this$fragCurrent = this.fragCurrent) === null || _this$fragCurrent === void 0 ? void 0 : _this$fragCurrent.sn) === ((_this$fragPrevious = this.fragPrevious) === null || _this$fragPrevious === void 0 ? void 0 : _this$fragPrevious.sn)) {
       this.loadedmetadata = true;
       this.seekToStartPos();
     }
@@ -8762,6 +8766,7 @@ var SubtitleStreamController = /*#__PURE__*/function (_BaseStreamController) {
     hls.on(_events__WEBPACK_IMPORTED_MODULE_0__.Events.SUBTITLE_TRACK_LOADED, this.onSubtitleTrackLoaded, this);
     hls.on(_events__WEBPACK_IMPORTED_MODULE_0__.Events.SUBTITLE_FRAG_PROCESSED, this.onSubtitleFragProcessed, this);
     hls.on(_events__WEBPACK_IMPORTED_MODULE_0__.Events.BUFFER_FLUSHING, this.onBufferFlushing, this);
+    hls.on(_events__WEBPACK_IMPORTED_MODULE_0__.Events.FRAG_BUFFERED, this.onFragBuffered, this);
   };
   _proto._unregisterListeners = function _unregisterListeners() {
     var hls = this.hls;
@@ -8775,11 +8780,13 @@ var SubtitleStreamController = /*#__PURE__*/function (_BaseStreamController) {
     hls.off(_events__WEBPACK_IMPORTED_MODULE_0__.Events.SUBTITLE_TRACK_LOADED, this.onSubtitleTrackLoaded, this);
     hls.off(_events__WEBPACK_IMPORTED_MODULE_0__.Events.SUBTITLE_FRAG_PROCESSED, this.onSubtitleFragProcessed, this);
     hls.off(_events__WEBPACK_IMPORTED_MODULE_0__.Events.BUFFER_FLUSHING, this.onBufferFlushing, this);
+    hls.off(_events__WEBPACK_IMPORTED_MODULE_0__.Events.FRAG_BUFFERED, this.onFragBuffered, this);
   };
-  _proto.startLoad = function startLoad() {
+  _proto.startLoad = function startLoad(startPosition) {
     this.stopLoad();
     this.state = _base_stream_controller__WEBPACK_IMPORTED_MODULE_6__.State.IDLE;
     this.setInterval(TICK_INTERVAL);
+    this.nextLoadPosition = this.startPosition = this.lastCurrentTime = startPosition;
     this.tick();
   };
   _proto.onManifestLoading = function onManifestLoading() {
@@ -8855,6 +8862,14 @@ var SubtitleStreamController = /*#__PURE__*/function (_BaseStreamController) {
       });
       this.fragmentTracker.removeFragmentsInRange(startOffset, endOffsetSubtitles, _types_loader__WEBPACK_IMPORTED_MODULE_7__.PlaylistLevelType.SUBTITLE);
     }
+  };
+  _proto.onFragBuffered = function onFragBuffered(event, data) {
+    if (!this.loadedmetadata && data.frag.type === _types_loader__WEBPACK_IMPORTED_MODULE_7__.PlaylistLevelType.MAIN) {
+      var _this$media;
+      if ((_this$media = this.media) !== null && _this$media !== void 0 && _this$media.buffered.length) {
+        this.loadedmetadata = true;
+      }
+    }
   }
 
   // If something goes wrong, proceed to next frag, if we were processing one.
@@ -8923,6 +8938,7 @@ var SubtitleStreamController = /*#__PURE__*/function (_BaseStreamController) {
       return;
     }
     this.mediaBuffer = this.mediaBufferTimeRanges;
+    var sliding = 0;
     if (newDetails.live || (_track$details = track.details) !== null && _track$details !== void 0 && _track$details.live) {
       var mainDetails = this.mainDetails;
       if (newDetails.deltaUpdateFailed || !mainDetails) {
@@ -8932,20 +8948,26 @@ var SubtitleStreamController = /*#__PURE__*/function (_BaseStreamController) {
       if (!track.details) {
         if (newDetails.hasProgramDateTime && mainDetails.hasProgramDateTime) {
           (0,_utils_discontinuities__WEBPACK_IMPORTED_MODULE_3__.alignMediaPlaylistByPDT)(newDetails, mainDetails);
+          sliding = newDetails.fragments[0].start;
         } else if (mainSlidingStartFragment) {
           // line up live playlist with main so that fragments in range are loaded
-          (0,_level_helper__WEBPACK_IMPORTED_MODULE_4__.addSliding)(newDetails, mainSlidingStartFragment.start);
+          sliding = mainSlidingStartFragment.start;
+          (0,_level_helper__WEBPACK_IMPORTED_MODULE_4__.addSliding)(newDetails, sliding);
         }
       } else {
-        var sliding = this.alignPlaylists(newDetails, track.details);
+        sliding = this.alignPlaylists(newDetails, track.details);
         if (sliding === 0 && mainSlidingStartFragment) {
           // realign with main when there is no overlap with last refresh
-          (0,_level_helper__WEBPACK_IMPORTED_MODULE_4__.addSliding)(newDetails, mainSlidingStartFragment.start);
+          sliding = mainSlidingStartFragment.start;
+          (0,_level_helper__WEBPACK_IMPORTED_MODULE_4__.addSliding)(newDetails, sliding);
         }
       }
     }
     track.details = newDetails;
     this.levelLastLoaded = trackId;
+    if (!this.startFragRequested && (this.mainDetails || !newDetails.live)) {
+      this.setStartPosition(track.details, sliding);
+    }
 
     // trigger handler right now
     this.tick();
@@ -8999,12 +9021,13 @@ var SubtitleStreamController = /*#__PURE__*/function (_BaseStreamController) {
       // Expand range of subs loaded by one target-duration in either direction to make up for misaligned playlists
       var trackDetails = levels[currentTrackId].details;
       var targetDuration = trackDetails.targetduration;
-      var config = this.config,
-        media = this.media;
-      var bufferedInfo = _utils_buffer_helper__WEBPACK_IMPORTED_MODULE_1__.BufferHelper.bufferedInfo(this.tracksBuffered[this.currentTrackId] || [], media.currentTime - targetDuration, config.maxBufferHole);
+      var config = this.config;
+      var currentTime = this.getLoadPosition();
+      var bufferedInfo = _utils_buffer_helper__WEBPACK_IMPORTED_MODULE_1__.BufferHelper.bufferedInfo(this.tracksBuffered[this.currentTrackId] || [], currentTime - targetDuration, config.maxBufferHole);
       var targetBufferTime = bufferedInfo.end,
         bufferLen = bufferedInfo.len;
-      var maxBufLen = this.getMaxBufferLength() + targetDuration;
+      var mainBufferInfo = this.getFwdBufferInfo(this.media, _types_loader__WEBPACK_IMPORTED_MODULE_7__.PlaylistLevelType.MAIN);
+      var maxBufLen = this.getMaxBufferLength(mainBufferInfo === null || mainBufferInfo === void 0 ? void 0 : mainBufferInfo.len) + targetDuration;
       if (bufferLen > maxBufLen) {
         return;
       }
@@ -9039,11 +9062,19 @@ var SubtitleStreamController = /*#__PURE__*/function (_BaseStreamController) {
       }
     }
   };
+  _proto.getMaxBufferLength = function getMaxBufferLength(mainBufferLength) {
+    var maxConfigBuffer = _BaseStreamController.prototype.getMaxBufferLength.call(this);
+    if (!mainBufferLength) {
+      return maxConfigBuffer;
+    }
+    return Math.max(maxConfigBuffer, mainBufferLength);
+  };
   _proto.loadFragment = function loadFragment(frag, levelDetails, targetBufferTime) {
     this.fragCurrent = frag;
     if (frag.sn === 'initSegment') {
       this._loadInitSegment(frag);
     } else {
+      this.startFragRequested = true;
       _BaseStreamController.prototype.loadFragment.call(this, frag, levelDetails, targetBufferTime);
     }
   };
@@ -15509,7 +15540,7 @@ var Hls = /*#__PURE__*/function () {
   }], [{
     key: "version",
     get: function get() {
-      return "1.2.8";
+      return "1.2.9";
     }
   }, {
     key: "Events",

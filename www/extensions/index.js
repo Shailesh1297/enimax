@@ -39,7 +39,7 @@ function extractKey(id, url = null, useCached = false) {
         if (config.chrome || useCached) {
             try {
                 let gitHTML = (await MakeFetch(`https://github.com/enimax-anime/key/blob/e${id}/key.txt`));
-                let key = gitHTML.substringAfter('"blob-code blob-code-inner js-file-line">').substringBefore("</td>");
+                let key = gitHTML.substringAfter('"rawBlob":"').substringBefore("\"");
                 resolve(key);
             }
             catch (err) {
