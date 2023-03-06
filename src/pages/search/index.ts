@@ -139,7 +139,6 @@ function search() {
         console.error(error);
         document.getElementById("mainConSearch").innerHTML = "Error";
         sendNoti([0, null, "Message", error.data]);
-
     });
 }
 

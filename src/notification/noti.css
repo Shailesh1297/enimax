@@ -82,6 +82,7 @@ a {
     width: 100%;
     padding: 20px;
     padding-top: 10px;
+    word-break: break-all;
     box-sizing: border-box;
 }
 

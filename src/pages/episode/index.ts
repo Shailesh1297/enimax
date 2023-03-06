@@ -1,3 +1,61 @@
+
+// https://stackoverflow.com/questions/2541481/get-average-color-of-image-via-javascript
+function getAverageRGB(imgEl: HTMLImageElement) {
+
+    var blockSize = 5, // only visit every 5 pixels
+        defaultRGB = { r: 0, g: 0, b: 0 }, // for non-supporting envs
+        canvas = document.createElement('canvas'),
+        context = canvas.getContext && canvas.getContext('2d'),
+        data, width, height,
+        i = -4,
+        length,
+        rgb = { r: 0, g: 0, b: 0 },
+        count = 0;
+
+    if (!context) {
+        return defaultRGB;
+    }
+
+    height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;
+    width = canvas.width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;
+
+    context.drawImage(imgEl, 0, 0);
+
+    try {
+        data = context.getImageData(0, 0, width, height);
+    } catch (e) {
+        /* security error, img on diff domain */
+        return defaultRGB;
+    }
+
+    length = data.data.length;
+
+    while ((i += blockSize * 4) < length) {
+        ++count;
+        rgb.r += data.data[i];
+        rgb.g += data.data[i + 1];
+        rgb.b += data.data[i + 2];
+    }
+
+    // ~~ used to floor values
+    rgb.r = ~~(rgb.r / count);
+    rgb.g = ~~(rgb.g / count);
+    rgb.b = ~~(rgb.b / count);
+    canvas.remove();
+    context = null;
+    return rgb;
+}
+
+function componentToHex(c: number) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+
+function rgbToHex(r : number, g: number, b: number) {
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+
 // @ts-ignore
 const extensionList = (<cordovaWindow>window.parent).returnExtensionList();
 
@@ -9,11 +67,42 @@ if (config.local || localStorage.getItem("offline") === 'true') {
 
 let lastScrollPos: number;
 let scrollDownTopDOM = document.getElementById("scrollDownTop");
-
+let scrollSnapFunc: undefined | Function;
 // @ts-ignore
 let pullTabArray = [];
 
 pullTabArray.push(new pullToRefresh(document.getElementById("con_11")));
+
+
+
+
+document.getElementById("showDescription").addEventListener("click", function () {
+    const descDOM = document.getElementById("imageDesc");
+    const descMoreDOM = document.getElementById("descReadMore");
+
+    if (descDOM.getAttribute("data-expanded") !== "true") {
+        descDOM.setAttribute("data-expanded", "true");
+        descMoreDOM.innerText = "";
+        descDOM.style.maxHeight = "none";
+    } else {
+        descDOM.setAttribute("data-expanded", "false");
+        descMoreDOM.innerText = "Read more...";
+        descDOM.style.maxHeight = "240px";
+    }
+});
+
+document.getElementById("dottedMenu").addEventListener("click", function () {
+    let settingDOM = document.getElementById("settingsCon");
+    if (settingDOM.getAttribute("data-open") == "true") {
+        settingDOM.setAttribute("data-open", "false");
+        settingDOM.style.display = "none";
+    } else {
+        settingDOM.setAttribute("data-open", "true");
+        settingDOM.style.display = "block";
+    }
+});
+
+
 
 let scrollElem = document.getElementById("con_11");
 scrollElem.addEventListener("scroll", function () {
@@ -94,7 +183,7 @@ function checkIfExists(localURL: string, dList: Array<string>, dName: string): P
                 resolve(x);
             }).catch(function () {
                 clearTimeout(timeout);
-                reject(new Error("notdownloaded"));
+                reject("notdownloaded");
 
             });
         } else {
@@ -187,9 +276,18 @@ function ini() {
 
 
             document.getElementById("imageTitle").innerText = data.name.trim();
-            document.getElementById("imageDesc").innerText = data.description.trim();
+            document.getElementById("showDescription").innerText = data.description.trim();
+            if(document.getElementById("showDescription").offsetHeight < 240){
+                document.getElementById("descReadMore").style.display = "none";
+                document.getElementById("epListCon").style.marginTop = "0";
+            }
+            const imageDOM = document.getElementById("imageMain") as HTMLImageElement;
+            imageDOM.src = data.image;
+            imageDOM.onload = function () {
+                let color = getAverageRGB(imageDOM);
+                document.documentElement.style.setProperty('--theme-color', rgbToHex(color.r, color.g, color.b));
+            };
 
-            document.getElementById("imageMain").style.backgroundImage = `url("${data.image}")`;
             let animeEps = data.episodes;
             let epCon = document.getElementById("epListCon");
 
@@ -199,6 +297,9 @@ function ini() {
                     position: "sticky",
                     top: "0",
                     zIndex: "2",
+                    boxSizing: "border-box",
+                    padding: "10px",
+                    backgroundColor: "black"
                 },
                 innerHTML: `<div id="catActive">
                                 <div style="position: absolute;background: red;" id="catActiveMain"></div>
@@ -206,7 +307,7 @@ function ini() {
             });
 
             let catDataCon = createElement({
-                style:{
+                style: {
                     width: "100%"
                 },
                 id: "custom_rooms",
@@ -222,7 +323,7 @@ function ini() {
             let totalCats = Math.ceil(animeEps.length / partitions);
             let partitionSize = [];
             let usesCustomPartions = false;
-            if(data.totalPages){
+            if (data.totalPages) {
                 totalCats = data.pageInfo.length;
                 usesCustomPartions = true;
             }
@@ -233,19 +334,19 @@ function ini() {
                 console.log();
 
                 let pageName = "? - ?"
-                try{
-                    if(!usesCustomPartions){
+                try {
+                    if (!usesCustomPartions) {
                         const episodeKeyword = "episode";
                         const fromNum = parseInt(animeEps[partitions * (i)].title.toLowerCase().split(episodeKeyword)[1]).toString();
                         const toNum = parseInt(animeEps[Math.min(partitions * (i + 1) - 1, animeEps.length - 1)].title.toLowerCase().split(episodeKeyword)[1]).toString();
                         pageName = `${fromNum} - ${toNum}`;
                         partitionSize.push(partitions);
-                    }else{
+                    } else {
                         pageName = data.pageInfo[i].pageName;
                         partitionSize.push(data.pageInfo[i].pageSize);
                     }
-                    
-                }catch(err){
+
+                } catch (err) {
 
                 }
 
@@ -268,10 +369,10 @@ function ini() {
                 let scrollLastIndex;
                 let tempCatDOM = document.getElementsByClassName("categories");
                 let cusRoomDOM = document.getElementById("custom_rooms");
-                cusRoomDOM.addEventListener("scroll", function () {
+                scrollSnapFunc = function () {
                     let unRoundedIndex = cusRoomDOM.scrollLeft / cusRoomDOM.offsetWidth;
                     let index = Math.round(unRoundedIndex);
-            
+
                     if (index != scrollLastIndex) {
                         for (let i = 0; i < tempCatDOM.length; i++) {
                             if (i == index) {
@@ -282,13 +383,13 @@ function ini() {
                                 tempCatDOM[i].classList.remove("activeCat");
                             }
                         }
-            
+
                         let activeCatDOM = document.querySelector(".categories.activeCat") as HTMLElement;
                         let temp = document.getElementById("catActiveMain") as HTMLElement;
                         window.requestAnimationFrame(function () {
                             window.requestAnimationFrame(function () {
                                 if (temp && activeCatDOM) {
-                                    temp.style.left = activeCatDOM.offsetLeft.toString();
+                                    temp.style.left = (parseFloat(activeCatDOM.offsetLeft.toString()) - 10) + "px";
                                     temp.style.height = activeCatDOM.offsetHeight.toString();
                                     temp.style.width = activeCatDOM.offsetWidth.toString();
                                 }
@@ -296,7 +397,8 @@ function ini() {
                         });
                     }
                     scrollLastIndex = index;
-                }, { "passive": true });
+                };
+                cusRoomDOM.addEventListener("scroll", scrollSnapFunc, { "passive": true });
             }
 
             let toAdd = [];
@@ -533,7 +635,7 @@ function ini() {
             let whichCon = 0;
 
             for (let e of toAdd) {
-                if(countAdded >= partitionSize[whichCon]){
+                if (countAdded >= partitionSize[whichCon]) {
                     whichCon++;
                     countAdded = 0;
                 }
@@ -593,6 +695,9 @@ function ini() {
             try {
                 if (!downloaded && localStorage.getItem("scrollBool") !== "false") {
                     scrollToDOM.scrollIntoView();
+                    if(scrollSnapFunc){
+                        scrollSnapFunc();
+                    }
 
                 }
             } catch (err) {

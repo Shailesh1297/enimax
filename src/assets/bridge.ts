@@ -275,12 +275,12 @@ async function MakeCusReq(url : string, options : RequestOption) {
     });
 }
 
-async function MakeFetch(url : string, options : {[key : string] : string}) {
+async function MakeFetch(url : string, options = {}) : Promise<string> {
     return new Promise(function (resolve, reject) {
-        fetch(url, options).then(response => response.text()).then((response) => {
+        fetch(url, options).then(response => response.text()).then((response : string) => {
             resolve(response);
         }).catch(function (err) {
-            reject(err);
+            reject(new Error(`${err.message}: ${url}`));
         });
     });
 }
@@ -386,12 +386,11 @@ function exec_action(x : MessageAction, reqSource : Window) {
         currentEngine.getLinkFromUrl(temp3[0]).then(function (x) {
             x.action = 1;
             reqSource.postMessage(x, "*");
-
-        }).catch(function (x) {
+        }).catch(function (err) {
+            sendNoti([0, null, "Message", err.message]);
             x.action = 1;
-            console.error(x);
-            reqSource.postMessage(x, "*");
-
+            console.error(err);
+            reqSource.postMessage(err, "*");
         });
     } else if (x.action == 11) {
         // @ts-ignore

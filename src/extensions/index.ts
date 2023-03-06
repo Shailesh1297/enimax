@@ -94,7 +94,7 @@ async function MakeFetch(url : string, options = {}) : Promise<string> {
         fetch(url, options).then(response => response.text()).then((response : string) => {
             resolve(response);
         }).catch(function (err) {
-            reject(err);
+            reject(new Error(`${err.message}: ${url}`));
         });
     });
 }
@@ -107,7 +107,7 @@ async function MakeFetchTimeout(url, options = {}, timeout = 5000) : Promise<str
         fetch(url, options).then(response => response.text()).then((response) => {
             resolve(response);
         }).catch(function (err) {
-            reject(err);
+            reject(new Error(`${err.message}: ${url}`));
         });
 
         setTimeout(function(){
@@ -203,7 +203,7 @@ async function MakeFetchZoro(url : string, options = {}) : Promise<string> {
             }
             resolve(response);
         }).catch(function (err) {
-            reject(err);
+            reject(new Error(`${err.message}: ${url}`));
         });
     });
 }

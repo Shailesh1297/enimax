@@ -69,9 +69,7 @@ function applyTheme() {
         document.documentElement.style.setProperty('--theme-color', themeColorL);
     } else {
         document.documentElement.style.setProperty('--theme-color', "#4b4bc2");
-
     }
-
 }
 
 function changeTheme() {

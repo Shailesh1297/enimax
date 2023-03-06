@@ -200,12 +200,12 @@ async function MakeCusReq(url, options) {
         });
     });
 }
-async function MakeFetch(url, options) {
+async function MakeFetch(url, options = {}) {
     return new Promise(function (resolve, reject) {
         fetch(url, options).then(response => response.text()).then((response) => {
             resolve(response);
         }).catch(function (err) {
-            reject(err);
+            reject(new Error(`${err.message}: ${url}`));
         });
     });
 }
@@ -297,10 +297,11 @@ function exec_action(x, reqSource) {
         currentEngine.getLinkFromUrl(temp3[0]).then(function (x) {
             x.action = 1;
             reqSource.postMessage(x, "*");
-        }).catch(function (x) {
+        }).catch(function (err) {
+            sendNoti([0, null, "Message", err.message]);
             x.action = 1;
-            console.error(x);
-            reqSource.postMessage(x, "*");
+            console.error(err);
+            reqSource.postMessage(err, "*");
         });
     }
     else if (x.action == 11) {
