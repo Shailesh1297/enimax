@@ -284,6 +284,36 @@ var nineAnime: extension = {
             return title;
         }
     },
+    discover: async function (): Promise<Array<extensionDiscoverData>> {
+        let temp = document.createElement("div");
+        temp.innerHTML = DOMPurify.sanitize(await MakeFetchZoro(`https://9anime.to/home`, {}));
+        temp = temp.querySelector(".ani.items");
+        let data = [];
+        for (const elem of temp.querySelectorAll(".item")) {
+            let image = elem.querySelector("img").getAttribute("src");
+            let name = (elem.querySelector(".name.d-title") as HTMLElement).innerText.trim();
+            let link = elem.querySelector(".name.d-title").getAttribute("href");
+            const splitLink = link.split("/");
+            splitLink.pop();
+            link = splitLink.join("/").replace("/watch", "");
+
+
+            try {
+                link = (new URL(link)).pathname;
+            } catch (err) {
+
+            }
+
+            data.push({
+                image,
+                name,
+                link
+            });
+        }
+
+
+        return data;
+    },
     config: {
         "referer": "https://9anime.to",
     }

@@ -1000,7 +1000,7 @@ async function populateDiscover() {
     let parents = [];
     let exTitle = [];
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < extensionList.length; i++) {
         parents.push(createElement({
             "style": {
                 "display": "none",
@@ -1024,10 +1024,11 @@ async function populateDiscover() {
         disCon.append(parents[i]);
 
     }
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < extensionList.length; i++) {
         let engine = i;
         try {
-            extensionList[engine]["discover"]().then(function (data) {
+            extensionList[engine]["discover"]().then(function (data : extensionDiscoverData[]) {
+                console.log("here", data);
                 let parentDiscover = parents[engine];
                 let titleDiscover = exTitle[engine];
                 for (const card of data) {
@@ -1492,7 +1493,7 @@ if (true) {
             }
         } catch (err) {
             alert("Couldn't update the library");
-            console.log(err);
+            console.error(err);
             console.error("Error 342");
         }
     }
@@ -1611,8 +1612,8 @@ if (true) {
                 currentExtensionName = extensionNames[engine];
                 currentExtension = extensionList[engine];
             } catch (err) {
-                console.log(err);
-                console.log(data[i]);
+                console.error(err);
+                console.error(data[i]);
             }
 
             let tempDivEx = createElement({ "class": "card_title_extension", "attributes": {}, "listeners": {}, "innerText": currentExtensionName });
