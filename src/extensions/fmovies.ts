@@ -53,6 +53,7 @@ var fmovies: extension = {
 
     "getSeason": async function getSeason(showID: string, showURL: string) {
         try {
+            const isInk = fmoviesBaseURL.includes(".ink");
             let seasonHTML = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/tv/seasons/${showID}`);
 
             let tempSeasonDIV = document.createElement("div");
@@ -69,11 +70,20 @@ var fmovies: extension = {
             let showMetaData = await MakeFetch(`https://${fmoviesBaseURL}/${showURL}`);
             let tempMetaDataDIV = document.createElement("div");
             tempMetaDataDIV.innerHTML = DOMPurify.sanitize(showMetaData);
-            let metaData = {
-                "name": (tempMetaDataDIV.querySelector(".movie_information").querySelector(".heading-name") as HTMLElement).innerText,
-                "image": (tempMetaDataDIV.querySelector(".movie_information").querySelector(".film-poster-img") as HTMLImageElement).src,
-                "des": (tempMetaDataDIV.querySelector(".m_i-d-content").querySelector(".description") as HTMLElement).innerText,
-            };
+            let metaData;
+            if (isInk) {
+                metaData = {
+                    "name": (tempMetaDataDIV.querySelector(".detail_page-infor").querySelector(".heading-name") as HTMLElement).innerText,
+                    "image": (tempMetaDataDIV.querySelector(".detail_page-infor").querySelector(".film-poster-img") as HTMLImageElement).src,
+                    "des": (tempMetaDataDIV.querySelector(".detail_page-infor").querySelector(".description") as HTMLElement).innerText,
+                };
+            } else {
+                metaData = {
+                    "name": (tempMetaDataDIV.querySelector(".movie_information").querySelector(".heading-name") as HTMLElement).innerText,
+                    "image": (tempMetaDataDIV.querySelector(".movie_information").querySelector(".film-poster-img") as HTMLImageElement).src,
+                    "des": (tempMetaDataDIV.querySelector(".m_i-d-content").querySelector(".description") as HTMLElement).innerText,
+                };
+            }
 
             tempSeasonDIV.remove();
             tempMetaDataDIV.remove();
@@ -111,6 +121,8 @@ var fmovies: extension = {
     },
 
     'getAnimeInfo': async function (url: string): Promise<extensionInfo> {
+        const isInk = url.includes("-full-");
+        
         let self = this;
         let urlSplit = url.split("&engine");
         if (urlSplit.length >= 2) {
@@ -134,7 +146,7 @@ var fmovies: extension = {
             data.name = response.data.meta.name;
             data.image = response.data.meta.image;
             data.description = response.data.meta.des;
-            data.mainName = url.split("/watch-")[1].split("-online")[0] + "-" + showId + "-";
+            data.mainName = url.split("/watch-")[1].split(isInk ? "-full" : "-online")[0] + "-" + showId + "-";
             data.episodes = [];
 
             let allAwaits = [];
@@ -146,73 +158,73 @@ var fmovies: extension = {
             for (let season in response.data.seasons) {
                 seasonNames.push(season);
 
-                try{
+                try {
                     // metaDataPromises.push(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/tv/season?id=${showId}&season=${season.split(" ")[1].trim()}`, {}, 1000));
-                }catch(err){
+                } catch (err) {
 
                 }
 
-              
+
                 allAwaits.push(self.getEpisode(response.data.seasons[season]));
             }
 
             let values;
-            let tempMetaData : string[] = [];
+            let tempMetaData: string[] = [];
             let isSettleSupported = "allSettled" in Promise;
-            if(!isSettleSupported){
-                try{
+            if (!isSettleSupported) {
+                try {
                     tempMetaData = await Promise.all(metaDataPromises);
-                }catch(err){
+                } catch (err) {
 
                 }
                 values = await Promise.all(allAwaits);
 
-            }else{
+            } else {
                 let allReponses = await Promise.allSettled([Promise.all(allAwaits), Promise.all(metaDataPromises)]);
-                if(allReponses[0].status === "fulfilled"){
+                if (allReponses[0].status === "fulfilled") {
                     values = allReponses[0].value;
                     console.log(values);
-                }else{
+                } else {
                     throw Error("Could not get the seasons. Try again.");
                 }
 
-                if(allReponses[1].status === "fulfilled"){
+                if (allReponses[1].status === "fulfilled") {
                     tempMetaData = allReponses[1].value;
                 }
 
-            } 
+            }
 
 
 
-            try{
-                for(let i = 0; i < tempMetaData.length; i++){
+            try {
+                for (let i = 0; i < tempMetaData.length; i++) {
                     let metaJSON = JSON.parse(tempMetaData[i]);
 
-                    let episodeData : any = {};
+                    let episodeData: any = {};
 
-                    for(let j = 0; j < metaJSON.episodes.length; j++){
+                    for (let j = 0; j < metaJSON.episodes.length; j++) {
                         let curEpisode = metaJSON.episodes[j];
                         episodeData[curEpisode.episode_number] = {};
                         episodeData[curEpisode.episode_number].thumbnail = `https://image.tmdb.org/t/p/w300${curEpisode.still_path}`,
-                        episodeData[curEpisode.episode_number].description =  curEpisode.overview
+                            episodeData[curEpisode.episode_number].description = curEpisode.overview
                     }
 
                     metaData[metaJSON.season_number] = episodeData;
 
                 }
-            }catch(err){
+            } catch (err) {
                 console.error(err);
             }
 
             data.totalPages = values.length;
             data.pageInfo = [];
-            
+
             for (let key = 0; key < values.length; key++) {
                 let seasonData = values[key];
 
                 data.pageInfo.push({
-                    "pageName" : seasonNames[key],
-                    "pageSize" : seasonData.data.length
+                    "pageName": seasonNames[key],
+                    "pageSize": seasonData.data.length
                 });
 
                 for (let i = 0; i < seasonData.data.length; i++) {
@@ -221,14 +233,14 @@ var fmovies: extension = {
                         link: `?watch=${url}.${seasonData.data[i].id}&engine=2`,
                     };
 
-                    try{
+                    try {
                         let ep = parseInt(seasonData.data[i].title.split("Eps ")[1]);
                         let season = seasonNames[key].split(" ")[1].trim();
-                        if(season in metaData && ep in metaData[season]){
+                        if (season in metaData && ep in metaData[season]) {
                             tempData.thumbnail = metaData[season][ep].thumbnail;
                             tempData.description = metaData[season][ep].description;
                         }
-                    }catch(err){
+                    } catch (err) {
                         console.error(err);
                     }
                     data.episodes.push(tempData);
@@ -238,10 +250,12 @@ var fmovies: extension = {
 
 
             if (Object.keys(response.data.seasons).length === 0) {
+
+               
                 let thumbnail = null;
-                try{
+                try {
                     // thumbnail = `https://image.tmdb.org/t/p/w300${JSON.parse(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/movies?id=${showId}`, {}, 1000)).backdrop_path}`;
-                }catch(err){
+                } catch (err) {
 
                 }
 
@@ -250,11 +264,16 @@ var fmovies: extension = {
                     link: `?watch=${url}&engine=2`
                 };
 
-                if(thumbnail){
+                if (thumbnail) {
                     tempData.thumbnail = thumbnail;
                 }
                 data.episodes.push(tempData);
                 data.totalPages = 1;
+                data.pageInfo = [{
+                    "pageName": "Movie",
+                    "pageSize": 1
+                }];
+
             }
 
             return data;
@@ -286,10 +305,13 @@ var fmovies: extension = {
         }
     },
     'getLinkFromUrl': async function (url: string): Promise<extensionVidSource> {
+        const isInk = fmoviesBaseURL.includes(".ink");
 
         let self = this;
-        if (!url.includes("-online-")) {
+        if (!url.includes("-online-") && !fmoviesBaseURL.includes(".ink")) {
             url = url.replace("-full-", "-online-");
+        } else if (url.includes("-online-") && fmoviesBaseURL.includes(".ink")) {
+            url = url.replace("-online-", "-full-");
         }
 
         url = url.split("&engine")[0];
@@ -302,8 +324,8 @@ var fmovies: extension = {
             episode: "",
             status: 400,
             message: "",
-            next : null,
-            prev : null
+            next: null,
+            prev: null
         };
 
         let showIdSplit = url.split("-");
@@ -321,12 +343,12 @@ var fmovies: extension = {
             let split = url.split("-");
             split = split[split.length - 1].split(".");
 
-            let isShow  = split.length == 1;
-            let server : string;
-            let ep : string;
+            let isShow = split.length == 1;
+            let server: string;
+            let ep: string;
 
 
-            let responseAPI : string;
+            let responseAPI: string;
             if (isShow) {
                 ep = split[0];
                 responseAPI = await MakeCusReqFmovies(`https://${fmoviesBaseURL}/ajax/movie/episodes/${ep}`, option);
@@ -422,7 +444,7 @@ var fmovies: extension = {
 
             let sourceJSON = parallelReqs[0];
             let encryptedURL = sourceJSON.sources;
-            let decryptKey : string;
+            let decryptKey: string;
 
             if (typeof encryptedURL == "string") {
                 try {
@@ -453,8 +475,8 @@ var fmovies: extension = {
                 data.episode = parseFloat(title.split(" ")[1]).toString();
             }
 
-            data.name = url.split("/watch-")[1].split("-online")[0] + "-" + showId + "-";
-            data.nameWSeason = url.split("/watch-")[1].split("-online")[0] + "-" + currentSeason;
+            data.name = url.split("/watch-")[1].split(isInk ? "-full" : "-online")[0] + "-" + showId + "-";
+            data.nameWSeason = url.split("/watch-")[1].split(isInk ? "-full" : "-online")[0] + "-" + currentSeason;
 
             data.sources = [{
                 "url": sourceJSON.sources[0].file,
@@ -463,11 +485,11 @@ var fmovies: extension = {
             }];
 
 
-            try{
+            try {
                 title = title.split(":");
                 title.shift();
                 title = title.join(":").trim();
-            }catch(err){
+            } catch (err) {
 
             }
 
@@ -508,6 +530,23 @@ var fmovies: extension = {
         }
 
         return data;
+    },
+    fixTitle: function (title: string) {
+        try {
+            const tempTitle = title.split("-");
+            console.log(tempTitle, title)
+            if (tempTitle.length > 2) {
+                tempTitle.pop();
+                if (title[title.length - 1] == "-") {
+                    tempTitle.pop();
+                }
+                title = tempTitle.join("-");
+                return title;
+            } else {
+                return title;
+            }
+        } catch (err) {
+            return title;
+        }
     }
-
 };

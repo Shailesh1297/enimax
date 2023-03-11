@@ -1,4 +1,4 @@
-function fix_title(title : string) {
+function fix_title(title: string) {
     try {
         let titleArray = title.split("-");
         let temp = "";
@@ -12,9 +12,9 @@ function fix_title(title : string) {
 }
 
 function normalise(url: string): string {
-	url = url.replace("?watch=", "");
-	url = url.split("&engine=")[0];
-	return url;
+    url = url.replace("?watch=", "");
+    url = url.split("&engine=")[0];
+    return url;
 }
 
 class DownloadVid {
@@ -47,7 +47,7 @@ class DownloadVid {
     controller: AbortController;
     fileEntry: FileEntry;
     message: string;
-    constructor(vidData : videoData, data : extensionInfo, success : Function, error : Function, episodes : extensionInfo, pause : boolean) {
+    constructor(vidData: videoData, data: extensionInfo, success: Function, error: Function, episodes: extensionInfo, pause: boolean) {
         this.success = success;
         this.episodes = episodes;
         this.error = error;
@@ -138,7 +138,7 @@ class DownloadVid {
             });
         }
 
-        let self : DownloadVid = this;
+        let self: DownloadVid = this;
         this.base64Image = null;
         fetch(this.metaData.image).then(x => x.blob()).then(blob => blobToBase64(blob)).then((img) => {
             self.base64Image = img;
@@ -203,7 +203,7 @@ class DownloadVid {
 
     }
 
-    getBaseUrl(url : string) : string {
+    getBaseUrl(url: string): string {
         let newUrl = url.substring(0, url.indexOf("?") == -1 ? url.length : url.indexOf("?"));
         newUrl = newUrl[newUrl.length - 1] == "/" ? newUrl.substring(0, newUrl.length - 1) : newUrl;
         newUrl = newUrl.substring(0, newUrl.lastIndexOf("/") == -1 ? newUrl.length : newUrl.lastIndexOf("/")) + "/";
@@ -248,11 +248,11 @@ class DownloadVid {
     ini() {
 
         let self = this;
-        (window as unknown as cordovaWindow).resolveLocalFileSystemURL(cordova.file.externalDataDirectory, function (fs : DirectoryEntry) {
+        (window as unknown as cordovaWindow).resolveLocalFileSystemURL(cordova.file.externalDataDirectory, function (fs: DirectoryEntry) {
             fs.getDirectory(`${self.name}`, { create: true, exclusive: false }, function (nameDir) {
                 self.nameDir = nameDir;
 
-                nameDir.getDirectory(`${btoa(self.vidData.ogURL)}`, { create: true, exclusive: false }, function (epDir : DirectoryEntry) {
+                nameDir.getDirectory(`${btoa(self.vidData.ogURL)}`, { create: true, exclusive: false }, function (epDir: DirectoryEntry) {
                     self.fileDir = epDir;
                     if ("subtitles" in self.vidData) {
                         for (let i = 0; i < self.vidData.subtitles.length; i++) {
@@ -272,7 +272,7 @@ class DownloadVid {
                     epDir.getFile(`.downloaded`, { create: false, exclusive: false }, function (dir) {
                         self.errorHandler(self, "Has already been downloaded");
                     }, function (x) {
-                        nameDir.getFile(`info.json`, { create: true, exclusive: false }, function (dir : FileEntry) {
+                        nameDir.getFile(`info.json`, { create: true, exclusive: false }, function (dir: FileEntry) {
                             self.infoFile = dir;
                             self.iniInfo(self);
                             self.updateMetaData(self);
@@ -305,13 +305,13 @@ class DownloadVid {
         });
     }
 
-    updateMetaData(self : DownloadVid) {
+    updateMetaData(self: DownloadVid) {
         let data = new Blob([JSON.stringify(
             {
                 "data": self.vidData,
             }
         )], { "type": "text/plain" });
-        self.fileDir.getFile("viddata.json", { create: true, exclusive: false }, function (file : FileEntry) {
+        self.fileDir.getFile("viddata.json", { create: true, exclusive: false }, function (file: FileEntry) {
 
             file.createWriter(function (fileWriter) {
 
@@ -337,7 +337,7 @@ class DownloadVid {
         });
     }
 
-    iniInfo(self : DownloadVid) {
+    iniInfo(self: DownloadVid) {
         let data = new Blob([JSON.stringify(
             {
                 "data": self.metaData,
@@ -362,7 +362,7 @@ class DownloadVid {
         });
     }
 
-    updateDownloadStatus(self : DownloadVid) {
+    updateDownloadStatus(self: DownloadVid) {
         return new Promise(function (resolve, reject) {
 
             let data = new Blob([JSON.stringify(
@@ -406,33 +406,49 @@ class DownloadVid {
 
 
 
-    async makeRequest(uri : string, typeFunc : TypeFunc) : Promise<string> {
+    async makeRequest(uri: string, typeFunc: TypeFunc, headers?): Promise<string> {
+        console.log(uri, headers);
         return new Promise(function (resolve, reject) {
+            if (headers) {
+                const options = {
+                    "method": "GET",
+			        "responseType": "text"
+                };
 
-            const controller = new AbortController();
+                options.headers = headers;
+                window.parent.cordova.plugin.http.sendRequest(uri, options,
+                    function (response) {
+                        resolve(response.data);
+                    },
+                    function (error) {
+                        reject(error);
+                    });
+            } else {
+                const controller = new AbortController();
 
-            let timeout = setTimeout(function () {
-                controller.abort();
-                reject("timeout");
-            }, 60000);
+                let timeout = setTimeout(function () {
+                    controller.abort();
+                    reject("timeout");
+                }, 60000);
 
-            fetch(uri, { signal: controller.signal }).then((x) => {
-                if (x.status >= 200 && x.status < 300) {
-                    return x;
-                } else {
-                    throw 'Error';
-                }
-            }).then(typeFunc).then(function (x) {
-                clearTimeout(timeout);
-                resolve(x);
-            }).catch(function (x) {
-                clearTimeout(timeout);
-                reject(x);
-            });
+                fetch(uri, { signal: controller.signal }).then((x) => {
+                    if (x.status >= 200 && x.status < 300) {
+                        return x;
+                    } else {
+                        throw 'Error';
+                    }
+                }).then(typeFunc).then(function (x) {
+                    clearTimeout(timeout);
+                    resolve(x);
+                }).catch(function (x) {
+                    clearTimeout(timeout);
+                    reject(x);
+                });
+            }
         });
     }
 
-    saveAs(blob : Blob, filename : string, self : DownloadVid) {
+    saveAs(blob: Blob, filename: string, self: DownloadVid) {
 
         return new Promise(function (resolve, reject) {
 
@@ -463,7 +479,7 @@ class DownloadVid {
     }
 
 
-    downloadFileTransfer(filename : string, uri : string, self : DownloadVid, headers : any = {}) : Promise<string> {
+    downloadFileTransfer(filename: string, uri: string, self: DownloadVid, headers: any = {}): Promise<string> {
         return new Promise(function (resolve, reject) {
             self.fileDir.getFile(filename, { create: true, exclusive: false }, function (fileEntry) {
                 //todo
@@ -483,7 +499,7 @@ class DownloadVid {
                         clearTimeout(timeout);
                         resolve("done");
                     },
-                    function (error : Error) {
+                    function (error: Error) {
                         clearTimeout(timeout);
                         reject(error);
                     },
@@ -507,7 +523,7 @@ class DownloadVid {
         self.saveAs(blob, filename, self);
     }
 
-    readFile(self : DownloadVid) : Promise<string> {
+    readFile(self: DownloadVid): Promise<string> {
         return new Promise(function (resolve, reject) {
             self.fileDir.getFile("downloaded.json", { create: true, exclusive: false }, function (fileEntry) {
 
@@ -535,7 +551,7 @@ class DownloadVid {
     }
 
 
-    saveToLocal(x = 0, self : DownloadVid) {
+    saveToLocal(x = 0, self: DownloadVid) {
         if (self.pause) {
             return;
         }
@@ -600,9 +616,9 @@ class DownloadVid {
 
 
 
-    async startDownloadMP4(self : DownloadVid) {
+    async startDownloadMP4(self: DownloadVid) {
 
-        self.fileDir.getFile(`master.m3u8`, { create: true, exclusive: false }, function (fileEntry : FileEntry) {
+        self.fileDir.getFile(`master.m3u8`, { create: true, exclusive: false }, function (fileEntry: FileEntry) {
             self.fileEntry = fileEntry;
             fileEntry.getMetadata(function (x) {
                 self.buffers = [];
@@ -683,9 +699,16 @@ class DownloadVid {
         });
     }
 
-    async startDownload(self : DownloadVid) {
+    async startDownload(self: DownloadVid) {
         try {
-            let m3u8File = await self.makeRequest(`${self.url}`, (x) => x.text());
+            const hasConfig = !!extensionList[this.engine].config;
+            let m3u8File : string;
+
+            if(hasConfig){
+                m3u8File = await self.makeRequest(`${self.url}`, (x) => x.text(), extensionList[this.engine].config);
+            }else{
+                m3u8File = await self.makeRequest(`${self.url}`, (x) => x.text());
+            }
             let parser = new m3u8Parser.Parser();
 
             parser.push(m3u8File);
@@ -736,7 +759,11 @@ class DownloadVid {
                 }
 
                 self.baseURL = self.getBaseUrl(url);
-                m3u8File = await self.makeRequest(url, (x) => x.text());
+                if(hasConfig){
+                    m3u8File = await self.makeRequest(`${url}`, (x) => x.text(), extensionList[this.engine].config);
+                }else{
+                    m3u8File = await self.makeRequest(`${url}`, (x) => x.text());
+                }
 
             }
 
@@ -744,12 +771,14 @@ class DownloadVid {
             let x = m3u8File.split("\n");
 
 
-            let localMapping : {[key : string] : {
-                "downloaded" : boolean,
-                "uri" : string
-            }} = {};
+            let localMapping: {
+                [key: string]: {
+                    "downloaded": boolean,
+                    "uri": string
+                }
+            } = {};
 
-            
+
             try {
                 let tempMappingString = await self.readFile(self);
 
@@ -857,11 +886,21 @@ class DownloadVid {
                             continue;
                         }
 
+                        const headers = {
+                            "user-agent": navigator.userAgent,
+                        };
 
-                        promises.push(self.downloadFileTransfer(mapping[j].fileName, mapping[j].uri, self, {
-                            "headers": {
-                                "user-agent": navigator.userAgent,
+                        try {
+                            if (extensionList[this.engine].config) {
+                                for (let key in extensionList[this.engine].config) {
+                                    headers[key] = extensionList[this.engine].config[key];
+                                }
                             }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                        promises.push(self.downloadFileTransfer(mapping[j].fileName, mapping[j].uri, self, {
+                            "headers": headers
                         }));
 
                     }
@@ -921,7 +960,7 @@ class DownloadVid {
 
                 let lastSum = 0;
                 let count = 0;
-                let interval : number;
+                let interval: number;
 
                 interval = window.setInterval(function () {
 
@@ -976,7 +1015,7 @@ class DownloadVid {
 
     }
 
-    done(self : DownloadVid) {
+    done(self: DownloadVid) {
         if (self.pause) {
             return;
         }
@@ -995,7 +1034,7 @@ class DownloadVid {
     }
 
 
-    errorHandler(self : DownloadVid, x : string) {
+    errorHandler(self: DownloadVid, x: string) {
         if (self.controller) {
             self.controller.abort();
         }

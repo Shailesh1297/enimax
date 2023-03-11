@@ -6,9 +6,9 @@ if (localVal != "true" && localVal != "false") {
 let currentResolve;
 let currentReject;
 let wcoRef;
-let fmoviesBaseURL = !localStorage.getItem("fmoviesBaseURL") ? "fmovies.app" : localStorage.getItem("fmoviesBaseURL");
+let fmoviesBaseURL = !localStorage.getItem("fmoviesBaseURL") ? "fmovies.ink" : localStorage.getItem("fmoviesBaseURL");
 function setFmoviesBase() {
-    fmoviesBaseURL = !localStorage.getItem("fmoviesBaseURL") ? "fmovies.app" : localStorage.getItem("fmoviesBaseURL");
+    fmoviesBaseURL = !localStorage.getItem("fmoviesBaseURL") ? "fmovies.ink" : localStorage.getItem("fmoviesBaseURL");
 }
 String.prototype["substringAfter"] = function (toFind) {
     let str = this;
@@ -569,6 +569,7 @@ var fmovies = {
     },
     "getSeason": async function getSeason(showID, showURL) {
         try {
+            const isInk = fmoviesBaseURL.includes(".ink");
             let seasonHTML = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/tv/seasons/${showID}`);
             let tempSeasonDIV = document.createElement("div");
             tempSeasonDIV.innerHTML = DOMPurify.sanitize(seasonHTML);
@@ -580,11 +581,21 @@ var fmovies = {
             let showMetaData = await MakeFetch(`https://${fmoviesBaseURL}/${showURL}`);
             let tempMetaDataDIV = document.createElement("div");
             tempMetaDataDIV.innerHTML = DOMPurify.sanitize(showMetaData);
-            let metaData = {
-                "name": tempMetaDataDIV.querySelector(".movie_information").querySelector(".heading-name").innerText,
-                "image": tempMetaDataDIV.querySelector(".movie_information").querySelector(".film-poster-img").src,
-                "des": tempMetaDataDIV.querySelector(".m_i-d-content").querySelector(".description").innerText,
-            };
+            let metaData;
+            if (isInk) {
+                metaData = {
+                    "name": tempMetaDataDIV.querySelector(".detail_page-infor").querySelector(".heading-name").innerText,
+                    "image": tempMetaDataDIV.querySelector(".detail_page-infor").querySelector(".film-poster-img").src,
+                    "des": tempMetaDataDIV.querySelector(".detail_page-infor").querySelector(".description").innerText,
+                };
+            }
+            else {
+                metaData = {
+                    "name": tempMetaDataDIV.querySelector(".movie_information").querySelector(".heading-name").innerText,
+                    "image": tempMetaDataDIV.querySelector(".movie_information").querySelector(".film-poster-img").src,
+                    "des": tempMetaDataDIV.querySelector(".m_i-d-content").querySelector(".description").innerText,
+                };
+            }
             tempSeasonDIV.remove();
             tempMetaDataDIV.remove();
             return { "status": 200, "data": { "seasons": seasonInfo, "meta": metaData } };
@@ -615,6 +626,7 @@ var fmovies = {
         }
     },
     'getAnimeInfo': async function (url) {
+        const isInk = url.includes("-full-");
         let self = this;
         let urlSplit = url.split("&engine");
         if (urlSplit.length >= 2) {
@@ -634,7 +646,7 @@ var fmovies = {
             data.name = response.data.meta.name;
             data.image = response.data.meta.image;
             data.description = response.data.meta.des;
-            data.mainName = url.split("/watch-")[1].split("-online")[0] + "-" + showId + "-";
+            data.mainName = url.split("/watch-")[1].split(isInk ? "-full" : "-online")[0] + "-" + showId + "-";
             data.episodes = [];
             let allAwaits = [];
             let seasonNames = [];
@@ -732,6 +744,10 @@ var fmovies = {
                 }
                 data.episodes.push(tempData);
                 data.totalPages = 1;
+                data.pageInfo = [{
+                        "pageName": "Movie",
+                        "pageSize": 1
+                    }];
             }
             return data;
         }
@@ -758,9 +774,13 @@ var fmovies = {
         }
     },
     'getLinkFromUrl': async function (url) {
+        const isInk = fmoviesBaseURL.includes(".ink");
         let self = this;
-        if (!url.includes("-online-")) {
+        if (!url.includes("-online-") && !fmoviesBaseURL.includes(".ink")) {
             url = url.replace("-full-", "-online-");
+        }
+        else if (url.includes("-online-") && fmoviesBaseURL.includes(".ink")) {
+            url = url.replace("-online-", "-full-");
         }
         url = url.split("&engine")[0];
         const data = {
@@ -887,8 +907,8 @@ var fmovies = {
             else {
                 data.episode = parseFloat(title.split(" ")[1]).toString();
             }
-            data.name = url.split("/watch-")[1].split("-online")[0] + "-" + showId + "-";
-            data.nameWSeason = url.split("/watch-")[1].split("-online")[0] + "-" + currentSeason;
+            data.name = url.split("/watch-")[1].split(isInk ? "-full" : "-online")[0] + "-" + showId + "-";
+            data.nameWSeason = url.split("/watch-")[1].split(isInk ? "-full" : "-online")[0] + "-" + currentSeason;
             data.sources = [{
                     "url": sourceJSON.sources[0].file,
                     "name": "HLS",
@@ -931,6 +951,26 @@ var fmovies = {
             });
         }
         return data;
+    },
+    fixTitle: function (title) {
+        try {
+            const tempTitle = title.split("-");
+            console.log(tempTitle, title);
+            if (tempTitle.length > 2) {
+                tempTitle.pop();
+                if (title[title.length - 1] == "-") {
+                    tempTitle.pop();
+                }
+                title = tempTitle.join("-");
+                return title;
+            }
+            else {
+                return title;
+            }
+        }
+        catch (err) {
+            return title;
+        }
     }
 };
 
@@ -1219,11 +1259,6 @@ var zoro = {
         resp.subtitles = subtitles;
         resp.status = 200;
         return resp;
-    },
-    "config": {
-        "socketURL": "https://ws1.rapid-cloud.co",
-        "origin": "https://rapid-cloud.co",
-        "referer": "https://rapid-cloud.co/",
     },
     "discover": async function () {
         let temp = document.createElement("div");
@@ -1700,6 +1735,25 @@ var nineAnime = {
         catch (err) {
             throw new Error("VIZCLOUD0: Could not parse the JSON correctly.");
         }
+    },
+    fixTitle: function (title) {
+        try {
+            const tempTitle = title.split(".");
+            if (tempTitle.length > 1) {
+                tempTitle.pop();
+                title = tempTitle.join(".");
+                return title;
+            }
+            else {
+                return title;
+            }
+        }
+        catch (err) {
+            return title;
+        }
+    },
+    config: {
+        "referer": "https://9anime.to",
     }
 };
 

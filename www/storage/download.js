@@ -273,27 +273,42 @@ class DownloadVid {
             });
         });
     }
-    async makeRequest(uri, typeFunc) {
+    async makeRequest(uri, typeFunc, headers) {
+        console.log(uri, headers);
         return new Promise(function (resolve, reject) {
-            const controller = new AbortController();
-            let timeout = setTimeout(function () {
-                controller.abort();
-                reject("timeout");
-            }, 60000);
-            fetch(uri, { signal: controller.signal }).then((x) => {
-                if (x.status >= 200 && x.status < 300) {
-                    return x;
-                }
-                else {
-                    throw 'Error';
-                }
-            }).then(typeFunc).then(function (x) {
-                clearTimeout(timeout);
-                resolve(x);
-            }).catch(function (x) {
-                clearTimeout(timeout);
-                reject(x);
-            });
+            if (headers) {
+                const options = {
+                    "method": "GET",
+                    "responseType": "text"
+                };
+                options.headers = headers;
+                window.parent.cordova.plugin.http.sendRequest(uri, options, function (response) {
+                    resolve(response.data);
+                }, function (error) {
+                    reject(error);
+                });
+            }
+            else {
+                const controller = new AbortController();
+                let timeout = setTimeout(function () {
+                    controller.abort();
+                    reject("timeout");
+                }, 60000);
+                fetch(uri, { signal: controller.signal }).then((x) => {
+                    if (x.status >= 200 && x.status < 300) {
+                        return x;
+                    }
+                    else {
+                        throw 'Error';
+                    }
+                }).then(typeFunc).then(function (x) {
+                    clearTimeout(timeout);
+                    resolve(x);
+                }).catch(function (x) {
+                    clearTimeout(timeout);
+                    reject(x);
+                });
+            }
         });
     }
     saveAs(blob, filename, self) {
@@ -492,7 +507,14 @@ class DownloadVid {
     }
     async startDownload(self) {
         try {
-            let m3u8File = await self.makeRequest(`${self.url}`, (x) => x.text());
+            const hasConfig = !!extensionList[this.engine].config;
+            let m3u8File;
+            if (hasConfig) {
+                m3u8File = await self.makeRequest(`${self.url}`, (x) => x.text(), extensionList[this.engine].config);
+            }
+            else {
+                m3u8File = await self.makeRequest(`${self.url}`, (x) => x.text());
+            }
             let parser = new m3u8Parser.Parser();
             parser.push(m3u8File);
             parser.end();
@@ -528,7 +550,12 @@ class DownloadVid {
                     url = self.baseURL + url;
                 }
                 self.baseURL = self.getBaseUrl(url);
-                m3u8File = await self.makeRequest(url, (x) => x.text());
+                if (hasConfig) {
+                    m3u8File = await self.makeRequest(`${url}`, (x) => x.text(), extensionList[this.engine].config);
+                }
+                else {
+                    m3u8File = await self.makeRequest(`${url}`, (x) => x.text());
+                }
             }
             let x = m3u8File.split("\n");
             let localMapping = {};
@@ -621,10 +648,21 @@ class DownloadVid {
                         else if (mapping[j].downloaded === -1) {
                             continue;
                         }
-                        promises.push(self.downloadFileTransfer(mapping[j].fileName, mapping[j].uri, self, {
-                            "headers": {
-                                "user-agent": navigator.userAgent,
+                        const headers = {
+                            "user-agent": navigator.userAgent,
+                        };
+                        try {
+                            if (extensionList[this.engine].config) {
+                                for (let key in extensionList[this.engine].config) {
+                                    headers[key] = extensionList[this.engine].config[key];
+                                }
                             }
+                        }
+                        catch (err) {
+                            console.error(err);
+                        }
+                        promises.push(self.downloadFileTransfer(mapping[j].fileName, mapping[j].uri, self, {
+                            "headers": headers
                         }));
                     }
                     try {

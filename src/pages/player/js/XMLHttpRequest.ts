@@ -6,12 +6,15 @@ class XMLHttpRequest2 {
 
 		this.delegate = null;
 		this.requestHeaders = {
-			"origin": extensionList[3].config.origin,
-			"referer": extensionList[3].config.referer,
+
 		};
 
-		if (tempConfig.sockets) {
-			this.requestHeaders["sid"] = sid;
+		try {
+			for (let key in extensionList[engine].config) {
+				this.requestHeaders[key] = extensionList[engine].config[key];
+			}
+		} catch (err) {
+			console.error(err);
 		}
 		this.responseHeaders = {};
 		this.listeners = {};

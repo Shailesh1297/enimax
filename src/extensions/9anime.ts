@@ -150,7 +150,7 @@ var nineAnime: extension = {
 
                 sources.push(source);
 
-                if("skip_data" in serverData){
+                if ("skip_data" in serverData) {
                     source.skipIntro = {
                         start: serverData.skip_data.intro_begin,
                         end: serverData.skip_data.intro_end
@@ -176,7 +176,7 @@ var nineAnime: extension = {
         } else {
             try {
                 await Promise.all(promises);
-                epList = (await this.getAnimeInfo(`?watch=/${searchParams.get("watch")}`,true)).episodes;
+                epList = (await this.getAnimeInfo(`?watch=/${searchParams.get("watch")}`, true)).episodes;
             } catch (err) {
                 console.error(err);
             }
@@ -269,5 +269,22 @@ var nineAnime: extension = {
         } catch (err) {
             throw new Error("VIZCLOUD0: Could not parse the JSON correctly.");
         }
+    },
+    fixTitle: function (title: string) {
+        try {
+            const tempTitle = title.split(".");
+            if (tempTitle.length > 1) {
+                tempTitle.pop();
+                title = tempTitle.join(".");
+                return title;
+            } else {
+                return title;
+            }
+        } catch (err) {
+            return title;
+        }
+    },
+    config: {
+        "referer": "https://9anime.to",
     }
 }

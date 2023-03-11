@@ -1536,6 +1536,7 @@ if (true) {
         updateRoomAdd();
         addCustomRoom();
         let extensionNames = (<cordovaWindow>window.parent).returnExtensionNames();
+        let extensionList = (<cordovaWindow>window.parent).returnExtensionList();
 
         if (!offlineMode) {
             let updateLibCon = createElement({
@@ -1597,6 +1598,7 @@ if (true) {
             let tempDiv2 = createElement({ "class": "s_card_title", "attributes": {}, "listeners": {} });
 
             let currentExtensionName = "null";
+            let currentExtension = null;
             try {
                 let engineTemp = data[i][5].split("engine=");
                 let engine;
@@ -1607,6 +1609,7 @@ if (true) {
                 }
 
                 currentExtensionName = extensionNames[engine];
+                currentExtension = extensionList[engine];
             } catch (err) {
                 console.log(err);
                 console.log(data[i]);
@@ -1617,7 +1620,7 @@ if (true) {
 
             let tempDiv3 = document.createElement("div");
             tempDiv3.className = "s_card_title_main";
-            tempDiv3.textContent = fix_title(data[i][0]);
+            tempDiv3.textContent = (currentExtension && "fixTitle" in currentExtension) ? fix_title(currentExtension.fixTitle(data[i][0])) : fix_title(data[i][0]);
             tempDiv3.setAttribute("data-href", data[i][5]);
             tempDiv3.setAttribute("data-current", data[i][3]);
             tempDiv3.setAttribute("data-mainname", data[i][0]);

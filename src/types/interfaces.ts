@@ -167,6 +167,7 @@ interface extension {
     getAnimeInfo: (url: string) => Promise<extensionInfo>;
     getLinkFromUrl: (url: any) => Promise<extensionVidSource>;
     discover?: () => Promise<Array<extensionDiscoverData>>;
+    fixTitle?: (title: string) => string;
     [key: string]: any;
 }
 

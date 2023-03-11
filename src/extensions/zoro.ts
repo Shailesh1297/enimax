@@ -346,11 +346,6 @@ var zoro : extension = {
         return resp;
 
     },
-    "config": {
-        "socketURL": "https://ws1.rapid-cloud.co",
-        "origin": "https://rapid-cloud.co",
-        "referer": "https://rapid-cloud.co/",
-    },
     "discover": async function () :  Promise<Array<extensionDiscoverData>> {
         let temp = document.createElement("div");
         temp.innerHTML = DOMPurify.sanitize(await MakeFetchZoro(`https://zoro.to/top-airing`, {}));

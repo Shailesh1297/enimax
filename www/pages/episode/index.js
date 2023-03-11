@@ -77,20 +77,15 @@ document.getElementById("dottedMenu").addEventListener("click", function () {
         settingDOM.style.display = "block";
     }
 });
-let scrollElem = document.getElementById("con_11");
-scrollElem.addEventListener("scroll", function () {
-    if (lastScrollPos) {
-        if (lastScrollPos - scrollElem.scrollTop > 0) {
-            scrollDownTopDOM.className = "scrollTopDOM";
-        }
-        else {
-            scrollDownTopDOM.className = "scrollBottomDOM";
-        }
+let lastScrollElem = undefined;
+scrollDownTopDOM.onclick = function () {
+    if (scrollDownTopDOM.className == "scrollTopDOM" && lastScrollElem) {
+        lastScrollElem.scrollTop = 0;
     }
-    lastScrollPos = scrollElem.scrollTop;
-}, {
-    "passive": true
-});
+    else if (scrollDownTopDOM.className == "scrollBottomDOM" && lastScrollElem) {
+        lastScrollElem.scrollTop = lastScrollElem.scrollHeight;
+    }
+};
 function fix_title(title) {
     try {
         let titleArray = title.split("-");
@@ -104,14 +99,6 @@ function fix_title(title) {
         return title;
     }
 }
-scrollDownTopDOM.onclick = function () {
-    if (scrollDownTopDOM.className == "scrollTopDOM") {
-        scrollElem.scrollTop = 0;
-    }
-    else if (scrollDownTopDOM.className == "scrollBottomDOM") {
-        scrollElem.scrollTop = scrollElem.scrollHeight;
-    }
-};
 function normalise(url) {
     url = url.replace("?watch=", "");
     url = url.split("&engine=")[0];
@@ -281,7 +268,21 @@ function ini() {
                     style: {
                         "min-width": "100%"
                     },
-                    "id": `room_${partitions * i}`
+                    "id": `room_${partitions * i}`,
+                    listeners: {
+                        scroll: function () {
+                            lastScrollElem = this;
+                            if (lastScrollPos) {
+                                if (lastScrollPos - this.scrollTop > 0) {
+                                    scrollDownTopDOM.className = "scrollTopDOM";
+                                }
+                                else {
+                                    scrollDownTopDOM.className = "scrollBottomDOM";
+                                }
+                            }
+                            lastScrollPos = this.scrollTop;
+                        }
+                    }
                 }));
                 catDataCon.append(catDataCons[catDataCons.length - 1]);
                 catDataCon.append();
@@ -290,7 +291,7 @@ function ini() {
                 let scrollLastIndex;
                 let tempCatDOM = document.getElementsByClassName("categories");
                 let cusRoomDOM = document.getElementById("custom_rooms");
-                scrollSnapFunc = function () {
+                scrollSnapFunc = function (elem, event) {
                     let unRoundedIndex = cusRoomDOM.scrollLeft / cusRoomDOM.offsetWidth;
                     let index = Math.round(unRoundedIndex);
                     if (index != scrollLastIndex) {
@@ -298,7 +299,7 @@ function ini() {
                             if (i == index) {
                                 tempCatDOM[i].classList.add("activeCat");
                                 tempCatDOM[i].scrollIntoView();
-                                localStorage.setItem("currentCategory", tempCatDOM[i].getAttribute("data-id"));
+                                lastScrollElem = document.getElementById(tempCatDOM[i].getAttribute("data-id"));
                             }
                             else {
                                 tempCatDOM[i].classList.remove("activeCat");
@@ -550,9 +551,9 @@ function ini() {
             try {
                 if (!downloaded && localStorage.getItem("scrollBool") !== "false") {
                     scrollToDOM.scrollIntoView();
-                    if (scrollSnapFunc) {
-                        scrollSnapFunc();
-                    }
+                }
+                if (scrollSnapFunc) {
+                    scrollSnapFunc();
                 }
             }
             catch (err) {

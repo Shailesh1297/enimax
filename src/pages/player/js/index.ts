@@ -1,10 +1,11 @@
 var CustomXMLHttpRequest = XMLHttpRequest;
+var engine: number;
 
 
 var username = "hi";
 // @ts-ignore
 const extensionList = (<cordovaWindow>window.parent).returnExtensionList();
-let hls : any;
+let hls: any;
 let doubleTapTime = isNaN(parseInt(localStorage.getItem("doubleTapTime"))) ? 5 : parseInt(localStorage.getItem("doubleTapTime"));
 let skipButTime = isNaN(parseInt(localStorage.getItem("skipButTime"))) ? 30 : parseInt(localStorage.getItem("skipButTime"));
 let currentVidData: videoData;
@@ -12,63 +13,63 @@ let skipIntroInfo: skipData = {
 	start: 0,
 	end: 0
 };
-let curTrack : undefined | TextTrack= undefined;
+let curTrack: undefined | TextTrack = undefined;
 let marginApplied = false;
-let updateCurrentTime : number, 
-	getEpCheck : number, 
-	lastUpdate : number, 
-	updateCheck : number, 
-	int_up : number;
+let updateCurrentTime: number,
+	getEpCheck: number,
+	lastUpdate: number,
+	updateCheck: number,
+	int_up: number;
+let isPlayingLocally = false;
 let engineTemp = location.search.split("engine=");
-let engine : number;
-let nextTrackTime : number;
+let nextTrackTime: number;
 let downloaded = localStorage.getItem("offline") === 'true';
 let fMode = parseInt(localStorage.getItem("fillMode"));
 let errorCount = 0;
-let vidInstance : vid;
-let subtitleConfig : subtitleConfig = {
-	backgroundColor : localStorage.getItem("subtitle-bgColor"),
-	backgroundOpacity : parseInt(localStorage.getItem("subtitle-bgOpacity")),
-	fontSize : parseInt(localStorage.getItem("subtitle-fontSize")),
-	color : localStorage.getItem("subtitle-color"),
-	lineHeight : parseInt(localStorage.getItem("subtitle-lineHeight")),
+let vidInstance: vid;
+let subtitleConfig: subtitleConfig = {
+	backgroundColor: localStorage.getItem("subtitle-bgColor"),
+	backgroundOpacity: parseInt(localStorage.getItem("subtitle-bgOpacity")),
+	fontSize: parseInt(localStorage.getItem("subtitle-fontSize")),
+	color: localStorage.getItem("subtitle-color"),
+	lineHeight: parseInt(localStorage.getItem("subtitle-lineHeight")),
 };
 let lastFragError = -10;
 let lastFragDuration = 0;
 let fragErrorCount = 0;
 
-function applySubtitleConfig() : void{
+function applySubtitleConfig(): void {
 	let subtitleStyle = document.getElementById("subtitleStyle") as HTMLStyleElement;
-	while(subtitleStyle.sheet.cssRules.length > 0){
+	while (subtitleStyle.sheet.cssRules.length > 0) {
 		subtitleStyle.sheet.deleteRule(0);
 	}
 
 	let subtitleStyleString = ``;
 	let opacity = 255;
-	if(!isNaN(subtitleConfig.backgroundOpacity)){
+	if (!isNaN(subtitleConfig.backgroundOpacity)) {
 		opacity = subtitleConfig.backgroundOpacity;
 	}
 
 	let opacityHex = opacity.toString(16);
-	if(opacityHex.length == 1){
+	if (opacityHex.length == 1) {
 		opacityHex = `0${opacityHex}`
 	}
 
-	if(subtitleConfig.backgroundColor){
+	if (subtitleConfig.backgroundColor) {
 		subtitleStyleString += `background-color: ${subtitleConfig.backgroundColor}${opacityHex};`;
-	} else if(!isNaN(subtitleConfig.backgroundOpacity)){
+	} else if (!isNaN(subtitleConfig.backgroundOpacity)) {
 		subtitleStyleString += `background-color: #000000${opacityHex};`;
 	}
 
-	if(!isNaN(subtitleConfig.fontSize)){
+	if (!isNaN(subtitleConfig.fontSize)) {
 		subtitleStyleString += `font-size: ${subtitleConfig.fontSize}px;`;
 	}
 
-	if(!isNaN(subtitleConfig.lineHeight)){
+	if (!isNaN(subtitleConfig.lineHeight)) {
 		subtitleStyleString += `line-height: ${subtitleConfig.lineHeight}px;`;
 	}
 
-	if(subtitleConfig.color){
+	if (subtitleConfig.color) {
 		subtitleStyleString += `color: ${subtitleConfig.color};`;
 	}
 
@@ -152,11 +153,11 @@ let DMenu = new dropDownMenu(
 			"items": [
 				{
 					"text": "Background Color",
-					"attributes" : {
-						style : "width: 100%"
+					"attributes": {
+						style: "width: 100%"
 					},
-					"classes" : ["inputItem"],
-					"color" : true,
+					"classes": ["inputItem"],
+					"color": true,
 					"value": localStorage.getItem("subtitle-bgColor"),
 					"onInput": function (event: InputEvent) {
 						let target = <HTMLInputElement>event.target;
@@ -171,11 +172,11 @@ let DMenu = new dropDownMenu(
 					"text": "Background Transparency",
 					"slider": true,
 					"sliderConfig": {
-						"max" : 255,
-						"min" : 0,
-						"step" : 1
+						"max": 255,
+						"min": 0,
+						"step": 1
 					},
-					"classes" : ["inputItem", "sliderMenu"],
+					"classes": ["inputItem", "sliderMenu"],
 					"value": localStorage.getItem("subtitle-bgOpacity"),
 					"onInput": function (event: InputEvent) {
 						let target = <HTMLInputElement>event.target;
@@ -189,7 +190,7 @@ let DMenu = new dropDownMenu(
 				{
 					"text": "Font Size",
 					"textBox": true,
-					"classes" : ["inputItem"],
+					"classes": ["inputItem"],
 					"value": localStorage.getItem("subtitle-fontSize"),
 					"onInput": function (event: InputEvent) {
 						let target = <HTMLInputElement>event.target;
@@ -203,9 +204,9 @@ let DMenu = new dropDownMenu(
 				{
 					"text": "Font Color",
 					"color": true,
-					"classes" : ["inputItem"],
-					"attributes" : {
-						style : "width: 100%"
+					"classes": ["inputItem"],
+					"attributes": {
+						style: "width: 100%"
 					},
 					"value": localStorage.getItem("subtitle-color"),
 					"onInput": function (event: InputEvent) {
@@ -220,9 +221,9 @@ let DMenu = new dropDownMenu(
 				{
 					"text": "Spacing",
 					"textBox": true,
-					"classes" : ["inputItem"],
-					"attributes" : {
-						style : "width: 100%"
+					"classes": ["inputItem"],
+					"attributes": {
+						style: "width: 100%"
 					},
 					"value": localStorage.getItem("subtitle-lineHeight"),
 					"onInput": function (event: InputEvent) {
@@ -236,9 +237,9 @@ let DMenu = new dropDownMenu(
 				{
 					"text": "Subtitle Margin",
 					"textBox": true,
-					"classes" : ["inputItem"],
+					"classes": ["inputItem"],
 					"value": isNaN(parseInt(localStorage.getItem("sub-margin"))) ? "0" : parseInt(localStorage.getItem("sub-margin")).toString(),
-					"onInput": function (event : InputEvent) {
+					"onInput": function (event: InputEvent) {
 						let target = <HTMLInputElement>event.target;
 						localStorage.setItem("sub-margin", target.value);
 						setSubtitleMargin(curTrack);
@@ -323,12 +324,12 @@ let DMenu = new dropDownMenu(
 				},
 				{
 					"text": "Skip broken segments",
-					"toggle" : true,
-					"on" : localStorage.getItem("skipBroken") === "true",
-					"toggleOn" : function(){
+					"toggle": true,
+					"on": localStorage.getItem("skipBroken") === "true",
+					"toggleOn": function () {
 						localStorage.setItem("skipBroken", "true");
 					},
-					"toggleOff" : function(){
+					"toggleOff": function () {
 						localStorage.setItem("skipBroken", "false");
 					}
 				},
@@ -400,7 +401,7 @@ let DMenu = new dropDownMenu(
 	], document.querySelector(".menuCon"));
 
 
-	
+
 function setSubtitleMarginMain(track: TextTrack) {
 	let success = -1;
 	try {
@@ -569,13 +570,13 @@ function getEpIni() {
 						currentVidData.prev = encodeURIComponent(`/${rootDir.split("/")[1]}/${btoa(temp)}`);
 						document.getElementById("prev_ep").style.display = "table-cell";
 
-					}).catch((error : Error) => console.error(error));
+					}).catch((error: Error) => console.error(error));
 				} catch (err) {
 
 				}
 			}
 
-			let skipIntro : skipData;
+			let skipIntro: skipData;
 			if ("skipIntro" in viddata.sources[0]) {
 				skipIntro = viddata.sources[0].skipIntro;
 			}
@@ -591,7 +592,7 @@ function getEpIni() {
 
 			engine = currentVidData.engine;
 			getEp();
-		}).catch(function (err : Error) {
+		}).catch(function (err: Error) {
 			alert(err);
 		});
 
@@ -600,7 +601,7 @@ function getEpIni() {
 	}
 }
 
-function changeEp(nextOrPrev : number, msg : null | string = null) {
+function changeEp(nextOrPrev: number, msg: null | string = null) {
 
 	// Discarding all text tracks
 	for (var i = 0; i < vidInstance.vid.textTracks.length; i++) {
@@ -617,7 +618,7 @@ function changeEp(nextOrPrev : number, msg : null | string = null) {
 	}
 
 
-	if(newLocation){
+	if (newLocation) {
 		history.replaceState({ page: 1 }, "", newLocation);
 		currentVidData = null;
 		vidInstance.vid.pause();
@@ -666,7 +667,7 @@ function ini_main() {
 	}
 }
 
-async function update(shouldCheck : number) {
+async function update(shouldCheck: number) {
 	let currentTime = vidInstance.vid.currentTime;
 	let currentDuration = Math.floor(vidInstance.vid.duration);
 
@@ -680,7 +681,7 @@ async function update(shouldCheck : number) {
 
 	updateCheck = 1;
 
-	(<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 1, "time": currentTime, "ep": currentVidData.episode, "name": currentVidData.nameWSeason, "nameUm": currentVidData.name, "prog": currentDuration }, () => { }, [], true, false).then(function (response : any) {
+	(<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 1, "time": currentTime, "ep": currentVidData.episode, "name": currentVidData.nameWSeason, "nameUm": currentVidData.name, "prog": currentDuration }, () => { }, [], true, false).then(function (response: any) {
 		try {
 			if (response.status == 200) {
 				lastUpdate = currentTime;
@@ -693,7 +694,7 @@ async function update(shouldCheck : number) {
 
 		}
 
-	}).catch(function (error : Error) {
+	}).catch(function (error: Error) {
 		console.error(error);
 
 	}).finally(function () {
@@ -724,7 +725,7 @@ function chooseQualHls(x: string, type: string, elem: HTMLElement): void {
 }
 
 
-function loadSubs(sourceName : string) {
+function loadSubs(sourceName: string) {
 	let vidDom = document.getElementById("v").children;
 
 
@@ -806,7 +807,7 @@ function loadSubs(sourceName : string) {
 		for (var i = 0; i < vidInstance.vid.textTracks.length; i++) {
 			if (vidInstance.vid.textTracks[i].label == localStorage.getItem(`${engine}-${sourceName}-subtitle`) && check) {
 				console.log("e");
-				let subDOM : Selectables = DMenu.selections[`subtitle-${i}`];
+				let subDOM: Selectables = DMenu.selections[`subtitle-${i}`];
 				console.log(subDOM);
 
 				if (subDOM) {
@@ -833,10 +834,10 @@ function loadSubs(sourceName : string) {
 	}
 }
 
-function chooseQual(config : sourceConfig) {
+function chooseQual(config: sourceConfig) {
 	let skipTo = 0;
-	let defURL : string = "";
-	let selectedSourceName : string;
+	let defURL: string = "";
+	let selectedSourceName: string;
 
 	if (config.clicked) {
 		selectedSourceName = config.name;
@@ -889,16 +890,23 @@ function chooseQual(config : sourceConfig) {
 	if (config.type == "hls") {
 		//@ts-ignore
 		if (Hls.isSupported()) {
+			if (typeof engine === "number" &&
+				extensionList[engine] &&
+				extensionList[engine].config &&
+				CustomXMLHttpRequest != (<cordovaWindow>window.parent).XMLHttpRequest) {
+				CustomXMLHttpRequest = XMLHttpRequest2;
+			}
+
 			//@ts-ignore
 			hls = new Hls({});
 
-			if(localStorage.getItem("skipBroken") === "true"){
+			if (localStorage.getItem("skipBroken") === "true") {
 				lastFragError = -10;
 				fragErrorCount = 0;
 
 				//@ts-ignore
-				hls.on(Hls.Events.BUFFER_APPENDING, function(event, data){
-					if(localStorage.getItem("skipBroken") !== "true"){
+				hls.on(Hls.Events.BUFFER_APPENDING, function (event, data) {
+					if (localStorage.getItem("skipBroken") !== "true") {
 						return;
 					}
 					fragErrorCount = 0;
@@ -906,7 +914,7 @@ function chooseQual(config : sourceConfig) {
 
 				// @ts-ignore
 				hls.on(Hls.Events.ERROR, function (event, data) {
-					if(localStorage.getItem("skipBroken") !== "true"){
+					if (localStorage.getItem("skipBroken") !== "true") {
 						return;
 					}
 
@@ -917,14 +925,14 @@ function chooseQual(config : sourceConfig) {
 						data.details === Hls.ErrorDetails.FRAG_PARSING_ERROR) {
 						lastFragError = data.frag.start;
 						lastFragDuration = data.frag.duration;
-						if((errorFatal || (data.frag.start - vidInstance.vid.currentTime) < 0.3) && fragErrorCount < 10){
+						if ((errorFatal || (data.frag.start - vidInstance.vid.currentTime) < 0.3) && fragErrorCount < 10) {
 							vidInstance.vid.currentTime = data.frag.start + data.frag.duration + 0.3;
 							fragErrorCount++;
 							hls.startLoad();
 						}
-					}else if(data.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR){
+					} else if (data.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR) {
 						console.log(lastFragError, lastFragDuration, vidInstance.vid.currentTime);
-						if((Math.abs(lastFragError - vidInstance.vid.currentTime) < 0.3) && fragErrorCount < 10){
+						if ((Math.abs(lastFragError - vidInstance.vid.currentTime) < 0.3) && fragErrorCount < 10) {
 							vidInstance.vid.currentTime = lastFragError + lastFragDuration + 0.3;
 							fragErrorCount++;
 							hls.startLoad();
@@ -1006,7 +1014,7 @@ function loadHLSsource() {
 		}
 
 		hls.loadLevel = hslLevel;
-		
+
 		for (var i = -1; i < hls.levels.length; i++) {
 
 			let selected = false;
@@ -1026,7 +1034,7 @@ function loadHLSsource() {
 				"highlightable": true,
 				"selected": selected,
 			}, false);
-			
+
 		}
 	} catch (err) {
 		console.error(err);
@@ -1040,7 +1048,7 @@ async function getEp(x = 0) {
 	}
 
 	getEpCheck = 1;
-	
+
 	try {
 		DMenu.getScene("source").deleteItems();
 		DMenu.getScene("source").addItem({
@@ -1048,7 +1056,7 @@ async function getEp(x = 0) {
 		}, true);
 		for (var i = 0; i < currentVidData.sources.length; i++) {
 
-			let curAttributes : SourceDOMAttributes = {
+			let curAttributes: SourceDOMAttributes = {
 				"data-url": currentVidData.sources[i].url,
 				"data-type": currentVidData.sources[i].type,
 				"data-name": currentVidData.sources[i].name,
@@ -1074,11 +1082,11 @@ async function getEp(x = 0) {
 					"callback": function () {
 						localStorage.setItem(`${engine}-sourceName`, this.getAttribute("data-name"));
 						chooseQual(<sourceConfig>{
-							url: this.getAttribute("data-url"), 
-							type: this.getAttribute("data-type"), 
-							name : this.getAttribute("data-name"),
+							url: this.getAttribute("data-url"),
+							type: this.getAttribute("data-type"),
+							name: this.getAttribute("data-name"),
 							element: this,
-							clicked : true,
+							clicked: true,
 						});
 					},
 					"selected": i == 0
@@ -1103,15 +1111,15 @@ async function getEp(x = 0) {
 
 
 
-		let response = await (<cordovaWindow>window.parent).apiCall("POST", 
-			{ 
-				"username": username, 
-				"action": 2, 
-				"name": currentVidData.nameWSeason, 
-				"nameUm": currentVidData.name, 
-				"ep": currentVidData.episode, 
+		let response = await (<cordovaWindow>window.parent).apiCall("POST",
+			{
+				"username": username,
+				"action": 2,
+				"name": currentVidData.nameWSeason,
+				"nameUm": currentVidData.name,
+				"ep": currentVidData.episode,
 				"cur": location.search
-			}, () => {});
+			}, () => { });
 
 
 		document.getElementById("ep_dis").innerHTML = currentVidData.episode.toString();
@@ -1127,9 +1135,9 @@ async function getEp(x = 0) {
 		}
 
 		chooseQual(<sourceConfig>{
-			type: currentVidData.sources[0].type, 
+			type: currentVidData.sources[0].type,
 			skipTo,
-			clicked : false,
+			clicked: false,
 		});
 
 		getEpCheck = 0;
@@ -1173,7 +1181,7 @@ function closeSettings() {
 	});
 }
 
-function isLocked() : boolean{
+function isLocked(): boolean {
 	return vidInstance.locked;
 }
 
@@ -1206,7 +1214,7 @@ document.getElementById("skipIntroDOM").onclick = function () {
 	}
 }
 
-document.getElementById("fastFor").addEventListener("click", function (){
+document.getElementById("fastFor").addEventListener("click", function () {
 	skipToNextTrack();
 });
 
@@ -1228,21 +1236,21 @@ window.onmessage = async function (message: MessageEvent) {
 	if (message.data.action == 1) {
 		currentVidData = message.data;
 
-		
-		if("title" in currentVidData){
+
+		if ("title" in currentVidData) {
 			document.getElementById("titleCon").innerText = currentVidData.title as string;
-		}else{
+		} else {
 
 			document.getElementById("titleCon").innerText = "";
-			try{
-				extensionList[engine].getVideoTitle(window.location.search).then((title : string) => {
+			try {
+				extensionList[engine].getVideoTitle(window.location.search).then((title: string) => {
 					document.getElementById("titleCon").innerText = title;
-				}).catch((err : Error) => {
+				}).catch((err: Error) => {
 					console.log(err);
 					document.getElementById("titleCon").innerText = "";
 				});
-			}catch(err){
-	
+			} catch (err) {
+
 			}
 		}
 		if (config.chrome) {
@@ -1262,7 +1270,7 @@ window.onmessage = async function (message: MessageEvent) {
 				}
 				if (res) {
 					let vidString = (await (<cordovaWindow>window.parent).makeLocalRequest("GET", `${rootDir}/viddata.json`));
-					let viddata : videoData = JSON.parse(vidString).data;
+					let viddata: videoData = JSON.parse(vidString).data;
 					currentVidData.sources = [{
 						"name": viddata.sources[0].name,
 						"type": viddata.sources[0].type,
@@ -1349,16 +1357,16 @@ window.addEventListener("keydown", function (event) {
 
 window.addEventListener("videoDurationChanged", () => {
 	try {
-		(<cordovaWindow>window.parent).apiCall("POST", 
-		{ 
-			"username": username, 
-			"action": 2, 
-			"name": currentVidData.nameWSeason, 
-			"nameUm": currentVidData.name, 
-			"ep": currentVidData.episode, 
-			"duration": Math.floor(vidInstance.vid.duration), 
-			"cur": location.search 
-		}, () => {});
+		(<cordovaWindow>window.parent).apiCall("POST",
+			{
+				"username": username,
+				"action": 2,
+				"name": currentVidData.nameWSeason,
+				"nameUm": currentVidData.name,
+				"ep": currentVidData.episode,
+				"duration": Math.floor(vidInstance.vid.duration),
+				"cur": location.search
+			}, () => { });
 	} catch (err) {
 		console.error(err);
 	}
@@ -1376,14 +1384,14 @@ window.addEventListener("videoTimeUpdated", () => {
 
 window.addEventListener("videoLoadedMetaData", () => {
 
-	window.parent.postMessage({ 
-		"action": 12, 
-		nameShow: currentVidData.name, 
-		episode: currentVidData.episode, 
-		prev: true, 
-		next: true, 
-		"duration": vidInstance.vid.duration, 
-		"elapsed": vidInstance.vid.currentTime 
+	window.parent.postMessage({
+		"action": 12,
+		nameShow: currentVidData.name,
+		episode: currentVidData.episode,
+		prev: true,
+		next: true,
+		"duration": vidInstance.vid.duration,
+		"elapsed": vidInstance.vid.currentTime
 	}, "*");
 
 	vidInstance.total.innerText = vidInstance.timeToString(vidInstance.vid.duration);
