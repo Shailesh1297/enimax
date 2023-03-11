@@ -1044,7 +1044,7 @@ async function populateDiscover() {
                 }
 
                 parentDiscover.style.display = "block";
-                titleDiscover.style.display = "block";
+                titleDiscover.style.display = "inline-block";
 
             }).catch(function (err) {
                 console.error(err);

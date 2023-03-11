@@ -141,6 +141,9 @@ input[type="color"]::-webkit-color-swatch {
     font-weight: bolder;
     border: 5px solid #d8c9c9;
 }
+#discoverCon{
+    text-align: center;
+}
 
 #themeColor {
     display: inline-block;
@@ -340,6 +343,7 @@ input[type="color"]::-webkit-color-swatch {
     font-weight: bold;
     border-radius: 25px;
     font-size: 15px;
+    display: inline-block;
 }
 
 #themesCon {

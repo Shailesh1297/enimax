@@ -1399,7 +1399,8 @@ input:checked+.slider:before {
 .snappedCategoriesDataMain {
     min-width: 100%;
     width: 100%;
-    display: flex !important;
+    display: block !important;
+	text-align: center;
     scroll-snap-align: center;
     max-height: 100%;
     height: 100%;
