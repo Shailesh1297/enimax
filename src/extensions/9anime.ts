@@ -47,6 +47,19 @@ var nineAnime: extension = {
         response.description = (infoMainDOM.querySelector(".content") as HTMLElement).innerText;
         response.image = infoDOM.querySelector("#w-info").querySelector("img").getAttribute("src");
 
+        try {
+            response.genres = [];
+            const metaCon = infoDOM.querySelector(".bmeta").querySelector(".meta");
+            for (const genreAnchor of metaCon.querySelectorAll("a")) {
+                const href = genreAnchor.getAttribute("href");
+                if (href && href.includes("/genre/")) {
+                    response.genres.push(genreAnchor.innerText);
+                }
+            }
+        } catch (err) {
+            console.log(err);
+        }
+
         let episodes = [];
 
         let IDVRF = await this.getVRF(nineAnimeID);
@@ -88,6 +101,8 @@ var nineAnime: extension = {
         response.episodes = episodes;
         episodesDOM.remove();
         infoDOM.remove();
+
+        console.log(response);
         return response;
     },
     getLinkFromUrl: async function (url: string) {
@@ -173,7 +188,7 @@ var nineAnime: extension = {
                     sources.push(source);
                 }
 
-                
+
                 if ("skip_data" in serverData) {
                     source.skipIntro = {
                         start: serverData.skip_data.intro_begin,

@@ -51,7 +51,7 @@ function componentToHex(c: number) {
     return hex.length == 1 ? "0" + hex : hex;
 }
 
-function rgbToHex(r : number, g: number, b: number) {
+function rgbToHex(r: number, g: number, b: number) {
     return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 
@@ -75,8 +75,7 @@ pullTabArray.push(new pullToRefresh(document.getElementById("con_11")));
 
 
 
-
-document.getElementById("showDescription").addEventListener("click", function () {
+function collapseDesc() {
     const descDOM = document.getElementById("imageDesc");
     const descMoreDOM = document.getElementById("descReadMore");
 
@@ -89,7 +88,10 @@ document.getElementById("showDescription").addEventListener("click", function ()
         descMoreDOM.innerText = "Read more...";
         descDOM.style.maxHeight = "240px";
     }
-});
+}
+
+document.getElementById("showDescription").addEventListener("click", collapseDesc);
+document.getElementById("descReadMore").addEventListener("click", collapseDesc);
 
 document.getElementById("dottedMenu").addEventListener("click", function () {
     let settingDOM = document.getElementById("settingsCon");
@@ -262,7 +264,7 @@ function ini() {
 
             document.getElementById("imageTitle").innerText = data.name.trim();
             document.getElementById("showDescription").innerText = data.description.trim();
-            if(document.getElementById("showDescription").offsetHeight < 240){
+            if (document.getElementById("showDescription").offsetHeight < 180) {
                 document.getElementById("descReadMore").style.display = "none";
                 document.getElementById("epListCon").style.marginTop = "0";
             }
@@ -299,9 +301,6 @@ function ini() {
                 class: "snappedCustomRooms"
             });
 
-            epCon.append(catCon);
-            epCon.append(catDataCon);
-
 
             const partitions = 50;
             const catDataCons = [];
@@ -313,10 +312,27 @@ function ini() {
                 usesCustomPartions = true;
             }
 
+            if (downloaded) {
+                totalCats = 0;
+            } else {
+                epCon.append(catCon);
+                epCon.append(catDataCon);
+            }
+
+            if (data.genres) {
+                const genreContainer = document.getElementById("genres");
+                genreContainer.style.display = "block";
+                for (const genreText of data.genres) {
+                    const genreDOM = createElement({
+                        class: "genreItem",
+                        innerText: genreText
+                    });
+
+                    genreContainer.append(genreDOM);
+                }
+            }
 
             for (let i = 0; i < totalCats; i++) {
-
-                console.log();
 
                 let pageName = "? - ?"
                 try {
@@ -343,7 +359,7 @@ function ini() {
                     },
                     "id": `room_${partitions * i}`,
                     listeners: {
-                        scroll: function(){
+                        scroll: function () {
                             lastScrollElem = this;
                             if (lastScrollPos) {
                                 if (lastScrollPos - this.scrollTop > 0) {
@@ -352,18 +368,16 @@ function ini() {
                                     scrollDownTopDOM.className = "scrollBottomDOM";
                                 }
                             }
-                            lastScrollPos = this.scrollTop;                        
+                            lastScrollPos = this.scrollTop;
                         }
                     }
                 }));
 
                 catDataCon.append(catDataCons[catDataCons.length - 1]);
-
-                catDataCon.append();
             }
 
 
-            if (isSnapSupported) {
+            if (isSnapSupported && !downloaded) {
                 let scrollLastIndex;
                 let tempCatDOM = document.getElementsByClassName("categories");
                 let cusRoomDOM = document.getElementById("custom_rooms");
@@ -630,12 +644,16 @@ function ini() {
             let whichCon = 0;
 
             for (let e of toAdd) {
-                if (countAdded >= partitionSize[whichCon]) {
-                    whichCon++;
-                    countAdded = 0;
+                if (downloaded) {
+                    epCon.append(e);
+                } else {
+                    if (countAdded >= partitionSize[whichCon]) {
+                        whichCon++;
+                        countAdded = 0;
+                    }
+                    catDataCons[whichCon].append(e);
+                    countAdded++;
                 }
-                catDataCons[whichCon].append(e);
-                countAdded++;
 
             }
 
@@ -692,7 +710,7 @@ function ini() {
                     scrollToDOM.scrollIntoView();
                 }
 
-                if(scrollSnapFunc){
+                if (scrollSnapFunc) {
                     scrollSnapFunc();
                 }
             } catch (err) {
@@ -750,7 +768,6 @@ function ini() {
             }, (epData) => {
                 let episodes = {};
                 for (let ep of epData.data) {
-                    console.log(epData);
                     if (epData.dexie) {
                         if (ep.comp != 0 && ep.ep != 0) {
                             let thisEp = {

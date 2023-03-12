@@ -133,9 +133,10 @@
 			font-size: 40px;
 		}
 
-		#catActiveMain{
+		#catActiveMain {
 			background-color: #3d3d45 !important;
 		}
+
 		#scrollDownTop {
 			position: fixed;
 			bottom: 20px;
@@ -180,9 +181,30 @@
 			border: 1px solid white;
 			border-radius: 35px;
 		}
-		
-		#epListCon{
+
+		#epListCon {
 			margin-top: 20px;
+		}
+
+		#home {
+			min-height: 100%;
+			background-image: linear-gradient(0deg, black 0 71%, var(--theme-color) 135% 100%);
+		}
+
+		#genres {
+			margin-top: 30px;
+			display: none;
+		}
+
+		.genreItem {
+			background-color: transparent;
+			color: white;
+			border: 2px solid white;
+			padding: 10px 15px;
+			border-radius: 20px;
+			font-size: 15px;
+			display: inline-block;
+			margin: 5px;
 		}
 
 		@media only screen and (max-width: 800px) {
@@ -192,11 +214,10 @@
 				line-height: 13px;
 				font-size: 13px;
 			}
-		}
-
-		#home {
-			min-height: 100%;
-			background-image: linear-gradient(0deg, black 0 71%, var(--theme-color) 135% 100%);
+			
+			.genreItem{
+				font-size: 13px;
+			}
 		}
 	</style>
 </head>
@@ -216,12 +237,16 @@
 				<div id="dottedMenu">...</div>
 				<img class="imageMain" id="imageMain" />
 				<div id="imageDescCon">
-					<div id="imageDesc">
-						<div id="imageTitle">Loading...</div>
-						<span id="showDescription"></span>
+					<div style="position: relative;">
+						<div id="imageDesc">
+							<div id="imageTitle">Loading...</div>
+							<span id="showDescription"></span>
+						</div>
+
+						<div id="descReadMore">Read more...</div>
 					</div>
 
-					<div id="descReadMore">Read more...</div>
+					<div id="genres"></div>
 				</div>
 			</div>
 

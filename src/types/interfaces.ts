@@ -190,6 +190,7 @@ interface extensionInfo {
     mainName: string
     totalPages? : number
     pageInfo? : Array<PageInfo>
+    genres?: Array<string>
 }
 
 interface PageInfo{

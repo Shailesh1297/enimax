@@ -1,6 +1,6 @@
-var zoro : extension = {
-    "baseURL" : "https://zoro.to",
-    "searchApi": async function (query : string) : Promise<extensionSearch> {
+var zoro: extension = {
+    "baseURL": "https://zoro.to",
+    "searchApi": async function (query: string): Promise<extensionSearch> {
         let searchHTML = await MakeFetchZoro(`https://zoro.to/search?keyword=${query}`, {});
         let dom = document.createElement("div");
         let orDom = dom;
@@ -23,29 +23,29 @@ var zoro : extension = {
     },
 
 
-    'getAnimeInfo': async function (url, idToFind = null) : Promise<extensionInfo> {
+    'getAnimeInfo': async function (url, idToFind = null): Promise<extensionInfo> {
         url = url.split("&engine")[0];
         let idSplit = url.replace("?watch=/", "").split("-");
         let id = idSplit[idSplit.length - 1].split("?")[0];
 
-        let response : extensionInfo = {
-            "name" : "",
-            "image" : "",
-            "description" : "",
-            "episodes" : [],
-            "mainName" : ""
+        let response: extensionInfo = {
+            "name": "",
+            "image": "",
+            "description": "",
+            "episodes": [],
+            "mainName": ""
         };
 
 
         let animeHTML = await MakeFetchZoro(`https://zoro.to/${url}`, {});
         let malID = null;
         let settled = "allSettled" in Promise;
-        try{
+        try {
             let tempID = parseInt(animeHTML.split(`"mal_id":"`)[1]);
-            if(!isNaN(tempID)){
+            if (!isNaN(tempID)) {
                 malID = tempID;
             }
-        }catch(err){
+        } catch (err) {
 
         }
 
@@ -64,50 +64,60 @@ var zoro : extension = {
         response.image = (animeDOM.querySelector(".layout-page.layout-page-detail") as HTMLElement).querySelector("img").src;
         response.description = (animeDOM.querySelector(".film-description.m-hide") as HTMLElement).innerText;
 
+        try {
+            response.genres = [];
+            const metaCon = animeDOM.querySelector(".item.item-list");
+            for (const genreAnchor of metaCon.querySelectorAll("a")) {
+                response.genres.push(genreAnchor.innerText);
+            }
+        } catch (err) {
+            console.log(err);
+        }
+
         ogDOM.remove();
 
         let thumbnails = {};
         let promises = [];
         let episodeHTML;
         let check = false;
-        if(malID !== null){
-            try{
+        if (malID !== null) {
+            try {
 
                 let thumbnailsTemp = [];
 
-                if(settled){
+                if (settled) {
                     promises.push(MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}));
                     promises.push(MakeFetchZoro(`https://zoro.to/ajax/v2/episode/list/${id}`, {}));
 
                     let responses = await Promise.allSettled(promises);
 
-                    try{
-                        if(responses[0].status === "fulfilled"){
+                    try {
+                        if (responses[0].status === "fulfilled") {
                             thumbnailsTemp = JSON.parse(responses[0].value).episodes;
                         }
-                    }catch(err){
+                    } catch (err) {
 
                     }
 
-                    if(responses[1].status === "fulfilled"){
+                    if (responses[1].status === "fulfilled") {
                         episodeHTML = responses[1].value;
                         check = true;
                     }
-                }else{
+                } else {
 
                     let metaData = await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {});
                     thumbnailsTemp = JSON.parse(metaData).episodes;
                 }
 
-                for(let i = 0; i < thumbnailsTemp.length; i++){
+                for (let i = 0; i < thumbnailsTemp.length; i++) {
                     thumbnails[thumbnailsTemp[i].number] = thumbnailsTemp[i];
                 }
-            }catch(err){
+            } catch (err) {
                 console.error(err);
             }
         }
-        
-        if(!check){
+
+        if (!check) {
             episodeHTML = await MakeFetchZoro(`https://zoro.to/ajax/v2/episode/list/${id}`, {});
         }
 
@@ -122,33 +132,33 @@ var zoro : extension = {
         let data = [];
 
         for (var i = 0; i < episodeListDOM.length; i++) {
-            let tempEp : extensionInfoEpisode = {
+            let tempEp: extensionInfoEpisode = {
                 "link": episodeListDOM[i].getAttribute("href").replace("/watch/", "?watch=").replace("?ep=", "&ep=") + "&engine=3",
                 "id": episodeListDOM[i].getAttribute("data-id"),
                 "title": "Episode " + episodeListDOM[i].getAttribute("data-number"),
             };
 
-            if(idToFind !== null && parseInt(episodeListDOM[i].getAttribute("data-id")) == idToFind){
-                try{
+            if (idToFind !== null && parseInt(episodeListDOM[i].getAttribute("data-id")) == idToFind) {
+                try {
                     let epIndex = parseFloat(episodeListDOM[i].getAttribute("data-number"));
-                    if(epIndex in thumbnails){
+                    if (epIndex in thumbnails) {
                         response.name = thumbnails[epIndex].title;
                     }
-                }catch(err){
+                } catch (err) {
                     console.error(err);
                 }
 
                 return response;
             }
 
-            try{
+            try {
                 let epIndex = parseFloat(episodeListDOM[i].getAttribute("data-number"));
-                if(epIndex in thumbnails){
+                if (epIndex in thumbnails) {
                     tempEp.thumbnail = thumbnails[epIndex].image;
                     tempEp.title = "Episode " + epIndex + " - " + thumbnails[epIndex].title;
                     tempEp.description = thumbnails[epIndex].description;
                 }
-            }catch(err){
+            } catch (err) {
 
             }
 
@@ -163,7 +173,7 @@ var zoro : extension = {
     },
 
 
-    "getEpisodeListFromAnimeId" : async function getEpisodeListFromAnimeId(showID : string, episodeId : string) {
+    "getEpisodeListFromAnimeId": async function getEpisodeListFromAnimeId(showID: string, episodeId: string) {
         let res = JSON.parse((await MakeFetchZoro(`https://zoro.to/ajax/v2/episode/list/${showID}`, {})));
         res = res.html;
         let dom = document.createElement("div");
@@ -193,7 +203,7 @@ var zoro : extension = {
 
 
 
-    addSource : async function addSource(type : string, id : string, subtitlesArray : Array<videoSubtitle>, sourceURLs: Array<videoSource>){
+    addSource: async function addSource(type: string, id: string, subtitlesArray: Array<videoSubtitle>, sourceURLs: Array<videoSource>) {
         let sources = await MakeFetchZoro(`https://zoro.to/ajax/v2/episode/sources?id=${id}`, {});
         sources = JSON.parse(sources).link;
         let urlHost = (new URL(sources)).origin;
@@ -225,15 +235,15 @@ var zoro : extension = {
                 } catch (err) {
                     if (err.message == "Malformed UTF-8 data") {
                         decryptKey = await extractKey(6);
-                        try{
+                        try {
                             sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
-                        }catch(err){
+                        } catch (err) {
 
                         }
                     }
                 }
             }
-            let tempSrc : videoSource = { "url": sourceJSON.sources[0].file, "name": "HLS#" + type, "type": "hls" };
+            let tempSrc: videoSource = { "url": sourceJSON.sources[0].file, "name": "HLS#" + type, "type": "hls" };
             if ("intro" in sourceJSON && "start" in sourceJSON.intro && "end" in sourceJSON.intro) {
                 tempSrc.skipIntro = sourceJSON.intro;
             }
@@ -242,31 +252,31 @@ var zoro : extension = {
             console.error(err);
         }
     },
-    'getVideoTitle' : async function (url: string) : Promise<string>{
+    'getVideoTitle': async function (url: string): Promise<string> {
         let showURL = new URLSearchParams(url);
 
-        try{
+        try {
             return (await this.getAnimeInfo(showURL.get("watch"), showURL.get("ep"))).name;
-        }catch(err){
+        } catch (err) {
             return "";
         }
     },
-    'getLinkFromUrl': async function (url : string): Promise<extensionVidSource>{
-        const sourceURLs : Array<videoSource> = [];
-        let subtitles : Array<videoSubtitle> = [];       
+    'getLinkFromUrl': async function (url: string): Promise<extensionVidSource> {
+        const sourceURLs: Array<videoSource> = [];
+        let subtitles: Array<videoSubtitle> = [];
 
-        const resp : extensionVidSource= {
-            sources : sourceURLs,
+        const resp: extensionVidSource = {
+            sources: sourceURLs,
             name: "",
-            nameWSeason : "",
-            episode : "",
-            status : 400,
+            nameWSeason: "",
+            episode: "",
+            status: 400,
             message: "",
-            next : null,
-            prev : null,
+            next: null,
+            prev: null,
         };
 
-        let episodeId : string, animeId;
+        let episodeId: string, animeId;
 
 
         episodeId = parseFloat(url.split("&ep=")[1]).toString();
@@ -323,7 +333,7 @@ var zoro : extension = {
         }
         ogDOM.remove();
 
-        resp["sources"] =  sourceURLs;
+        resp["sources"] = sourceURLs;
         resp["episode"] = epNum.toString();
 
         if (next != null) {
@@ -346,7 +356,7 @@ var zoro : extension = {
         return resp;
 
     },
-    "discover": async function () :  Promise<Array<extensionDiscoverData>> {
+    "discover": async function (): Promise<Array<extensionDiscoverData>> {
         let temp = document.createElement("div");
         temp.innerHTML = DOMPurify.sanitize(await MakeFetchZoro(`https://zoro.to/top-airing`, {}));
         let data = [];

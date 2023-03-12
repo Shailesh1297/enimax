@@ -596,8 +596,22 @@ var fmovies = {
                     "des": tempMetaDataDIV.querySelector(".m_i-d-content").querySelector(".description").innerText,
                 };
             }
+            try {
+                metaData.genres = [];
+                const metaCon = tempMetaDataDIV.querySelector(".elements");
+                for (const genreAnchor of metaCon.querySelectorAll("a")) {
+                    const href = genreAnchor.getAttribute("href");
+                    if (href && href.includes("/genre/")) {
+                        metaData.genres.push(genreAnchor.innerText);
+                    }
+                }
+            }
+            catch (err) {
+                console.log(err);
+            }
             tempSeasonDIV.remove();
             tempMetaDataDIV.remove();
+            console.log(metaData);
             return { "status": 200, "data": { "seasons": seasonInfo, "meta": metaData } };
         }
         catch (error) {
@@ -648,6 +662,9 @@ var fmovies = {
             data.description = response.data.meta.des;
             data.mainName = url.split("/watch-")[1].split(isInk ? "-full" : "-online")[0] + "-" + showId + "-";
             data.episodes = [];
+            if (response.data.meta.genres && response.data.meta.genres.length > 0) {
+                data.genres = response.data.meta.genres;
+            }
             let allAwaits = [];
             let seasonNames = [];
             let metaDataPromises = [];
@@ -1028,6 +1045,16 @@ var zoro = {
         response.name = animeDOM.querySelector(".film-name.dynamic-name").innerText;
         response.image = animeDOM.querySelector(".layout-page.layout-page-detail").querySelector("img").src;
         response.description = animeDOM.querySelector(".film-description.m-hide").innerText;
+        try {
+            response.genres = [];
+            const metaCon = animeDOM.querySelector(".item.item-list");
+            for (const genreAnchor of metaCon.querySelectorAll("a")) {
+                response.genres.push(genreAnchor.innerText);
+            }
+        }
+        catch (err) {
+            console.log(err);
+        }
         ogDOM.remove();
         let thumbnails = {};
         let promises = [];
@@ -1527,6 +1554,19 @@ var nineAnime = {
         response.name = infoMainDOM.querySelector(".title").innerText;
         response.description = infoMainDOM.querySelector(".content").innerText;
         response.image = infoDOM.querySelector("#w-info").querySelector("img").getAttribute("src");
+        try {
+            response.genres = [];
+            const metaCon = infoDOM.querySelector(".bmeta").querySelector(".meta");
+            for (const genreAnchor of metaCon.querySelectorAll("a")) {
+                const href = genreAnchor.getAttribute("href");
+                if (href && href.includes("/genre/")) {
+                    response.genres.push(genreAnchor.innerText);
+                }
+            }
+        }
+        catch (err) {
+            console.log(err);
+        }
         let episodes = [];
         let IDVRF = await this.getVRF(nineAnimeID);
         let episodesHTML = "";
@@ -1563,6 +1603,7 @@ var nineAnime = {
         response.episodes = episodes;
         episodesDOM.remove();
         infoDOM.remove();
+        console.log(response);
         return response;
     },
     getLinkFromUrl: async function (url) {

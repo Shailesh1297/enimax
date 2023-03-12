@@ -52,7 +52,7 @@ let scrollSnapFunc;
 // @ts-ignore
 let pullTabArray = [];
 pullTabArray.push(new pullToRefresh(document.getElementById("con_11")));
-document.getElementById("showDescription").addEventListener("click", function () {
+function collapseDesc() {
     const descDOM = document.getElementById("imageDesc");
     const descMoreDOM = document.getElementById("descReadMore");
     if (descDOM.getAttribute("data-expanded") !== "true") {
@@ -65,7 +65,9 @@ document.getElementById("showDescription").addEventListener("click", function ()
         descMoreDOM.innerText = "Read more...";
         descDOM.style.maxHeight = "240px";
     }
-});
+}
+document.getElementById("showDescription").addEventListener("click", collapseDesc);
+document.getElementById("descReadMore").addEventListener("click", collapseDesc);
 document.getElementById("dottedMenu").addEventListener("click", function () {
     let settingDOM = document.getElementById("settingsCon");
     if (settingDOM.getAttribute("data-open") == "true") {
@@ -200,7 +202,7 @@ function ini() {
             }
             document.getElementById("imageTitle").innerText = data.name.trim();
             document.getElementById("showDescription").innerText = data.description.trim();
-            if (document.getElementById("showDescription").offsetHeight < 240) {
+            if (document.getElementById("showDescription").offsetHeight < 180) {
                 document.getElementById("descReadMore").style.display = "none";
                 document.getElementById("epListCon").style.marginTop = "0";
             }
@@ -233,8 +235,6 @@ function ini() {
                 id: "custom_rooms",
                 class: "snappedCustomRooms"
             });
-            epCon.append(catCon);
-            epCon.append(catDataCon);
             const partitions = 50;
             const catDataCons = [];
             let totalCats = Math.ceil(animeEps.length / partitions);
@@ -244,8 +244,25 @@ function ini() {
                 totalCats = data.pageInfo.length;
                 usesCustomPartions = true;
             }
+            if (downloaded) {
+                totalCats = 0;
+            }
+            else {
+                epCon.append(catCon);
+                epCon.append(catDataCon);
+            }
+            if (data.genres) {
+                const genreContainer = document.getElementById("genres");
+                genreContainer.style.display = "block";
+                for (const genreText of data.genres) {
+                    const genreDOM = createElement({
+                        class: "genreItem",
+                        innerText: genreText
+                    });
+                    genreContainer.append(genreDOM);
+                }
+            }
             for (let i = 0; i < totalCats; i++) {
-                console.log();
                 let pageName = "? - ?";
                 try {
                     if (!usesCustomPartions) {
@@ -285,9 +302,8 @@ function ini() {
                     }
                 }));
                 catDataCon.append(catDataCons[catDataCons.length - 1]);
-                catDataCon.append();
             }
-            if (isSnapSupported) {
+            if (isSnapSupported && !downloaded) {
                 let scrollLastIndex;
                 let tempCatDOM = document.getElementsByClassName("categories");
                 let cusRoomDOM = document.getElementById("custom_rooms");
@@ -506,12 +522,17 @@ function ini() {
             let countAdded = 0;
             let whichCon = 0;
             for (let e of toAdd) {
-                if (countAdded >= partitionSize[whichCon]) {
-                    whichCon++;
-                    countAdded = 0;
+                if (downloaded) {
+                    epCon.append(e);
                 }
-                catDataCons[whichCon].append(e);
-                countAdded++;
+                else {
+                    if (countAdded >= partitionSize[whichCon]) {
+                        whichCon++;
+                        countAdded = 0;
+                    }
+                    catDataCons[whichCon].append(e);
+                    countAdded++;
+                }
             }
             if (downloaded) {
                 for (let downloadIndex = 0; downloadIndex < downloadedList.length; downloadIndex++) {
@@ -604,7 +625,6 @@ function ini() {
             }, (epData) => {
                 let episodes = {};
                 for (let ep of epData.data) {
-                    console.log(epData);
                     if (epData.dexie) {
                         if (ep.comp != 0 && ep.ep != 0) {
                             let thisEp = {

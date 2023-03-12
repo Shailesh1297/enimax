@@ -85,8 +85,26 @@ var fmovies: extension = {
                 };
             }
 
+
+            try {
+                metaData.genres = [];
+                const metaCon = tempMetaDataDIV.querySelector(".elements");
+
+                for (const genreAnchor of metaCon.querySelectorAll("a")) {
+                    const href = genreAnchor.getAttribute("href");
+                    if (href && href.includes("/genre/")) {
+                        metaData.genres.push(genreAnchor.innerText);
+                    }
+                }
+            } catch (err) {
+                console.log(err);
+            }
+
+
             tempSeasonDIV.remove();
             tempMetaDataDIV.remove();
+
+            console.log(metaData);
             return { "status": 200, "data": { "seasons": seasonInfo, "meta": metaData } };
 
         } catch (error) {
@@ -122,7 +140,7 @@ var fmovies: extension = {
 
     'getAnimeInfo': async function (url: string): Promise<extensionInfo> {
         const isInk = url.includes("-full-");
-        
+
         let self = this;
         let urlSplit = url.split("&engine");
         if (urlSplit.length >= 2) {
@@ -149,6 +167,10 @@ var fmovies: extension = {
             data.mainName = url.split("/watch-")[1].split(isInk ? "-full" : "-online")[0] + "-" + showId + "-";
             data.episodes = [];
 
+            if(response.data.meta.genres && response.data.meta.genres.length > 0){
+                data.genres = response.data.meta.genres;
+            }
+            
             let allAwaits = [];
             let seasonNames = [];
             let metaDataPromises = [];
@@ -251,7 +273,7 @@ var fmovies: extension = {
 
             if (Object.keys(response.data.seasons).length === 0) {
 
-               
+
                 let thumbnail = null;
                 try {
                     // thumbnail = `https://image.tmdb.org/t/p/w300${JSON.parse(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/movies?id=${showId}`, {}, 1000)).backdrop_path}`;
