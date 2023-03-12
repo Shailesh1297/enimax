@@ -783,6 +783,8 @@ var yy;
 var saveCheck = 0;
 var last_order;
 
+// todo
+// @ts-ignore
 function toFormData(formObject : { [key: string]: string } ) {
     const form = new FormData();
     for (const value in formObject) {
@@ -1177,6 +1179,8 @@ function addCustomRoom() {
     }
 }
 
+// todo
+// @ts-ignore
 function getUserInfo() {
     ini_api.get_userinfo();
 }
@@ -1523,7 +1527,8 @@ if (true) {
             rooms_order = a[2][0].split(",");
 
             for (var i = 0; i < rooms_order.length; i++) {
-                rooms_order[i] = parseInt(rooms_order[i]);
+                // todo
+                rooms_order[i] = parseInt(rooms_order[i].toString());
 
             }
         }

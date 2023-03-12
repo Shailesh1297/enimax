@@ -1,12 +1,11 @@
 // RIP
-var animixplay: extension = {
+var animixplay = {
     baseURL: "https://animixplay.to",
-    searchApi: async function (query: string) {
-        const response: Array<extensionSearchData> = [];
+    searchApi: async function (query) {
+        const response = [];
         alert("Animixplay has been shut down.");
-        return { status: 400, data: response } as extensionSearch;
+        return { status: 400, data: response };
     },
-
     getAnimeInfo: async function (url) {
         alert("Animixplay has been shut down.");
         return {
@@ -17,7 +16,7 @@ var animixplay: extension = {
             "mainName": ""
         };
     },
-    getLinkFromUrl:async function (url) {
+    getLinkFromUrl: async function (url) {
         alert("Animixplay has been shut down.");
         return {
             sources: [],
@@ -31,4 +30,4 @@ var animixplay: extension = {
             prev: null
         };
     }
-}
+};

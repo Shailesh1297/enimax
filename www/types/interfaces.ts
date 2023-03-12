@@ -255,7 +255,8 @@ interface queueElement {
 
 interface MessageAction {
     action: number | string,
-    data: any
+    data: any,
+    [key: string]: any
 }
 
 

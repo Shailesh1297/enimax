@@ -1,5 +1,4 @@
-
-var twitch: extension = {
+var twitch = {
     baseURL: "https://twitch.tv",
     searchApi: async function (query) {
         try {
@@ -10,20 +9,17 @@ var twitch: extension = {
                     'Content-Type': 'application/json',
                 },
                 "method": "POST",
-                "body": JSON.stringify(
-                    {
-                        "operationName": "SearchResultsPage_SearchResults",
-                        "variables": { "query": query, "options": null },
-                        "extensions": {
-                            "persistedQuery": {
-                                "version": 1,
-                                "sha256Hash": "6ea6e6f66006485e41dbe3ebd69d5674c5b22896ce7b595d7fce6411a3790138"
-                            }
+                "body": JSON.stringify({
+                    "operationName": "SearchResultsPage_SearchResults",
+                    "variables": { "query": query, "options": null },
+                    "extensions": {
+                        "persistedQuery": {
+                            "version": 1,
+                            "sha256Hash": "6ea6e6f66006485e41dbe3ebd69d5674c5b22896ce7b595d7fce6411a3790138"
                         }
                     }
-                )
+                })
             });
-
             const responseJSON = JSON.parse(response);
             const data = [];
             for (let channels of responseJSON.data.searchFor.channels.edges) {
@@ -34,9 +30,9 @@ var twitch: extension = {
                     "link": "/" + encodeURIComponent(channels.item.login) + "&engine=4"
                 });
             }
-
             return { data, "status": 200 };
-        } catch (err) {
+        }
+        catch (err) {
             return {
                 data: err.toString(),
                 status: 400
@@ -46,22 +42,18 @@ var twitch: extension = {
     getAnimeInfo: function (url, sibling = false, currentID = -1) {
         url = url.split("&engine")[0];
         let id = url.replace("?watch=/", "");
-
-        let response: extensionInfo = {
+        let response = {
             "name": "",
             "image": "",
             "description": "",
             "episodes": [],
             "mainName": ""
         };
-
         response.name = id;
         response.image = "https://wallpaperaccess.com/full/4487013.jpg";
         response.description = "Twitch VOD";
         response.mainName = id;
-
         const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
-
         return new Promise((resolve, reject) => {
             fetch("https://gql.twitch.tv/gql", {
                 "headers": {
@@ -69,35 +61,32 @@ var twitch: extension = {
                     'Content-Type': 'application/json',
                 },
                 "method": "POST",
-                "body": JSON.stringify(
-                    [
-                        { "operationName": "StreamRefetchManager", "variables": { "channel": id }, "extensions": { "persistedQuery": { "version": 1, "sha256Hash": "ecdcb724b0559d49689e6a32795e6a43bba4b2071b5e762a4d1edf2bb42a6789" } } },
-                        { "operationName": "FilterableVideoTower_Videos", "variables": { "limit": 50, "channelOwnerLogin": id, "broadcastType": "ARCHIVE", "videoSort": "TIME" }, "extensions": { "persistedQuery": { "version": 1, "sha256Hash": "a937f1d22e269e39a03b509f65a7490f9fc247d7f83d6ac1421523e3b68042cb" } } }
-                    ]
-                )
+                "body": JSON.stringify([
+                    { "operationName": "StreamRefetchManager", "variables": { "channel": id }, "extensions": { "persistedQuery": { "version": 1, "sha256Hash": "ecdcb724b0559d49689e6a32795e6a43bba4b2071b5e762a4d1edf2bb42a6789" } } },
+                    { "operationName": "FilterableVideoTower_Videos", "variables": { "limit": 50, "channelOwnerLogin": id, "broadcastType": "ARCHIVE", "videoSort": "TIME" }, "extensions": { "persistedQuery": { "version": 1, "sha256Hash": "a937f1d22e269e39a03b509f65a7490f9fc247d7f83d6ac1421523e3b68042cb" } } }
+                ])
             }).then((x) => x.json()).then((resData) => {
                 let isLive = resData[0].data.user.stream !== null;
                 let items = resData[1].data.user.videos.edges;
                 let data = [];
-
                 response.totalPages = 2;
                 response.pageInfo = [{
-                    pageName: "VODs",
-                    pageSize: items.length,
-                }];
-
+                        pageName: "VODs",
+                        pageSize: items.length,
+                    }];
                 if (sibling) {
                     data = [null, null, null];
                     for (let i = 0; i < items.length; i++) {
                         let which = -1;
                         if (currentID == items[i].node.id) {
                             which = 1;
-                        } else if (i != 0 && currentID == items[i - 1].node.id) {
+                        }
+                        else if (i != 0 && currentID == items[i - 1].node.id) {
                             which = 0;
-                        } else if (i != (items.length - 1) && currentID == items[i + 1].node.id) {
+                        }
+                        else if (i != (items.length - 1) && currentID == items[i + 1].node.id) {
                             which = 2;
                         }
-
                         if (which != -1) {
                             data[which] = {
                                 "link": encodeURIComponent(id) + "&id=" + items[i].node.id + "&engine=4",
@@ -106,8 +95,8 @@ var twitch: extension = {
                             };
                         }
                     }
-
-                } else {
+                }
+                else {
                     for (let vod of items) {
                         response.image = vod.node.owner.profileImageURL;
                         data.unshift({
@@ -118,29 +107,23 @@ var twitch: extension = {
                         });
                     }
                 }
-
                 if (isLive && !sibling) {
                     data.push({
                         "link": "?watch=" + encodeURIComponent(id) + "&id=" + "live" + "&engine=4",
                         "id": id,
                         "title": `${id} is Live!`,
                     });
-
                     response.pageInfo.push({
                         pageName: "Live",
                         pageSize: 1,
-                    })
+                    });
                 }
                 response.episodes = data;
-
                 resolve(response);
             }).catch((error) => reject(error));
-
         });
-
     },
-
-    'getLinkFromUrl': async function (url): Promise<extensionVidSource> {
+    'getLinkFromUrl': async function (url) {
         url = "?watch=" + url;
         const params = new URLSearchParams(url);
         const name = params.get("watch");
@@ -148,8 +131,7 @@ var twitch: extension = {
         const isLive = (ep == "live");
         const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
         let title = "";
-
-        function getAccessToken(id: string, isVod: boolean): Promise<string> {
+        function getAccessToken(id, isVod) {
             const data = JSON.stringify({
                 operationName: "PlaybackAccessToken",
                 extensions: {
@@ -166,7 +148,6 @@ var twitch: extension = {
                     playerType: "embed"
                 }
             });
-
             return new Promise((resolve, reject) => {
                 fetch("https://gql.twitch.tv/gql", {
                     "headers": {
@@ -179,19 +160,17 @@ var twitch: extension = {
                     console.log(resData);
                     if (isVod) {
                         resolve(resData.data.videoPlaybackAccessToken);
-                    } else {
+                    }
+                    else {
                         resolve(resData.data.streamPlaybackAccessToken);
                     }
                 }).catch((error) => reject(error));
-
             });
         }
-
-        function getPlaylist(id, accessToken, vod): string {
+        function getPlaylist(id, accessToken, vod) {
             return `https://usher.ttvnw.net/${vod ? 'vod' : 'api/channel/hls'}/${id}.m3u8?client_id=${clientId}&token=${accessToken.value}&sig=${accessToken.signature}&allow_source=true&allow_audio_only=true`;
         }
-
-        function getStream(channel: string): Promise<string> {
+        function getStream(channel) {
             return new Promise((resolve, reject) => {
                 getAccessToken(channel, false)
                     .then((accessToken) => getPlaylist(channel, accessToken, false))
@@ -199,8 +178,7 @@ var twitch: extension = {
                     .catch(error => reject(error));
             });
         }
-
-        function getVod(vid: string): Promise<string> {
+        function getVod(vid) {
             return new Promise((resolve, reject) => {
                 getAccessToken(vid, true)
                     .then((accessToken) => getPlaylist(vid, accessToken, true))
@@ -208,8 +186,7 @@ var twitch: extension = {
                     .catch(error => reject(error));
             });
         }
-
-        const resp: extensionVidSource = {
+        const resp = {
             sources: [],
             name: "",
             title: "",
@@ -220,33 +197,30 @@ var twitch: extension = {
             next: null,
             prev: null
         };
-
         if (!isLive) {
             try {
                 const epList = await this.getAnimeInfo(name, true, parseInt(ep));
-
                 if (epList.episodes[0]) {
                     resp.prev = epList.episodes[0].link;
                 }
-
                 if (epList.episodes[2]) {
                     resp.next = epList.episodes[2].link;
                 }
-
                 try {
                     if (epList.episodes[1]) {
                         title = epList.episodes[1].title;
                     }
-                } catch (err) {
+                }
+                catch (err) {
                     title = "";
                 }
-            } catch (err) {
-
             }
-        } else {
+            catch (err) {
+            }
+        }
+        else {
             title = "Live";
         }
-
         resp.sources = [
             {
                 "url": isLive ? (await getStream(name)) : (await getVod(ep)),
@@ -260,7 +234,6 @@ var twitch: extension = {
         resp.subtitles = [];
         resp.status = 200;
         resp.title = title;
-
         return resp;
     },
 };

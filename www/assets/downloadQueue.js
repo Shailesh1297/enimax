@@ -1,24 +1,16 @@
-
-
 class downloadQueue {
-    queue : Array<queueElement>;
-    doneQueue : Array<queueElement>;
-    pause : boolean;
     constructor() {
         this.queue = [];
         this.doneQueue = [];
         this.pause = localStorage.getItem("downloadPaused") === 'true';
         this.init();
-
         let self = this;
-
         setInterval(function () {
             self.emitPercent(self);
             if (self.shouldPause()) {
                 self.pauseIt(self);
             }
         }, 1000);
-
         setInterval(function () {
             // @ts-ignore
             if (self.pause && cordova.plugins.backgroundMode.isActive()) {
@@ -27,58 +19,49 @@ class downloadQueue {
             }
         }, 5000);
     }
-
-    emitPercent(self : downloadQueue) {
+    emitPercent(self) {
         try {
             let currentHead = self.queue[0].downloadInstance;
             let downloadPercent = currentHead.downloaded / currentHead.total;
             downloadPercent = Math.floor(downloadPercent * 10000) / 100;
-            (document.getElementById("frame") as HTMLIFrameElement).contentWindow.postMessage({
+            document.getElementById("frame").contentWindow.postMessage({
                 "action": "percentageUpate",
                 "data": downloadPercent
             }, "*");
-
-        } catch (err) {
-
         }
-
-
+        catch (err) {
+        }
     }
-
     isInQueue(self, url) {
         for (var i = 0; i < self.queue.length; i++) {
             if (self.queue[i].data == url) {
                 return true;
             }
         }
-
         return false;
-
     }
-
     async init() {
         try {
             let temp2 = (await downloadedDB.keyValue.get({ "key": "localQueue" })).value;
             let temp = JSON.parse(temp2);
             this.queue = temp ? temp : [];
-        } catch (err) {
+        }
+        catch (err) {
             console.error(err);
         }
-
         try {
             let temp = JSON.parse((await downloadedDB.keyValue.get({ "key": "localDoneQueue" })).value);
             this.doneQueue = temp ? temp : [];
-        } catch (err) {
+        }
+        catch (err) {
             console.error(err);
         }
-
         this.startDownload(this);
     }
     async removeFromDoneQueue(name, self) {
         if (self.doneQueue.length == 0) {
             return;
         }
-
         let curElem;
         let curElemIndex = 0;
         for (let i = 0; i < self.doneQueue.length; i++) {
@@ -88,19 +71,15 @@ class downloadQueue {
                 break;
             }
         }
-
         if (curElem) {
             self.doneQueue.splice(curElemIndex, 1);
             await self.updateLocalDoneQueue(self);
         }
     }
-
-
     async retryFromDoneQueue(name, self) {
         if (self.doneQueue.length == 0) {
             return;
         }
-
         let curElem;
         let curElemIndex = 0;
         for (let i = 0; i < self.doneQueue.length; i++) {
@@ -110,35 +89,23 @@ class downloadQueue {
                 break;
             }
         }
-
         if (curElem) {
             let temp = self.doneQueue.splice(curElemIndex, 1)[0];
             await self.updateLocalDoneQueue(self);
-
-
-            self.add(
-                temp.data,
-                temp.anime,
-                temp.mainUrl,
-                temp.title,
-                self,
-            );
+            self.add(temp.data, temp.anime, temp.mainUrl, temp.title, self);
         }
     }
-
     deleteFilesHead(self) {
-
         try {
             let curElem = self.queue[0];
             let temp3 = curElem.data.replace("?watch=", "");
             temp3 = temp3.split("&engine=");
-            (window.parent as cordovaWindow).removeDirectory(`/${curElem.anime.mainName}/${btoa(temp3[0])}/`).then(function () {
-
+            window.parent.removeDirectory(`/${curElem.anime.mainName}/${btoa(temp3[0])}/`).then(function () {
             }).catch(function () {
                 alert("Could not delete the file. You have to delete it manually. Error 1000");
-
             });
-        } catch (err) {
+        }
+        catch (err) {
             alert("Could not delete the file. You have to delete it manually.");
         }
     }
@@ -156,8 +123,6 @@ class downloadQueue {
                 break;
             }
         }
-
-
         if (curElem) {
             if (curElem == currentHead) {
                 self.deleteFilesHead(self);
@@ -168,17 +133,17 @@ class downloadQueue {
                     currentHead.downloadInstance.pause = true;
                     currentHead.downloadInstance.message = "Cancelled by the user.";
                     self.error(self);
-
-                } catch (err) {
-
                 }
-            } else {
+                catch (err) {
+                }
+            }
+            else {
                 self.queue.splice(curElemIndex, 1);
                 await self.updateLocalStorage(self);
             }
         }
     }
-    async add(data : string, anime : extensionInfo, mainUrl : string, title : string, self : downloadQueue) {
+    async add(data, anime, mainUrl, title, self) {
         if (!self) {
             self = this;
         }
@@ -190,11 +155,9 @@ class downloadQueue {
                 break;
             }
         }
-
         if ("episodes" in anime) {
             delete anime["episodes"];
         }
-
         if (flag) {
             self.queue.push({
                 "data": data,
@@ -202,24 +165,22 @@ class downloadQueue {
                 "mainUrl": mainUrl,
                 "title": title,
             });
-
             if (self.queue.length == 1) {
                 self.startDownload(self);
             }
-
             await self.updateLocalStorage(self);
         }
     }
-
     pauseIt(self) {
-        (document.getElementById("frame") as HTMLIFrameElement).contentWindow.postMessage({
+        document.getElementById("frame").contentWindow.postMessage({
             "action": "paused",
         }, "*");
         if (self.queue.length == 0) {
             self.pause = true;
             localStorage.setItem("downloadPaused", "true");
             return true;
-        } else {
+        }
+        else {
             if ("downloadInstance" in self.queue[0]) {
                 self.queue[0].downloadInstance.pause = true;
             }
@@ -227,45 +188,40 @@ class downloadQueue {
             localStorage.setItem("downloadPaused", "true");
             return true;
         }
-
-
     }
-
     playIt(self) {
         if (self.queue.length == 0 || self.shouldPause()) {
             return false;
-        } else {
+        }
+        else {
             self.pause = false;
             self.startDownload(self);
             localStorage.setItem("downloadPaused", "false");
             return true;
         }
     }
-
     shouldPause() {
         // @ts-ignore
         return (localStorage.getItem("autoPause") === "true" && navigator.connection.type !== Connection.WIFI);
     }
-
     removeActive(self) {
         if (self.queue.length !== 0) {
             if ("downloadInstance" in self.queue[0]) {
                 self.queue[0].downloadInstance.pause = true;
-
             }
             self.deleteFilesHead(self);
             self.queue = [];
             self.updateLocalStorage(self);
         }
     }
-
     removeDone(self, isDone) {
         if (self.doneQueue.length !== 0) {
             let tempDoneQueue = [];
             for (let i = 0; i < self.doneQueue.length; i++) {
                 if (isDone && self.doneQueue[i].errored === true) {
                     tempDoneQueue.push(self.doneQueue[i]);
-                } else if (!isDone && self.doneQueue[i].errored !== true) {
+                }
+                else if (!isDone && self.doneQueue[i].errored !== true) {
                     tempDoneQueue.push(self.doneQueue[i]);
                 }
             }
@@ -273,52 +229,40 @@ class downloadQueue {
             self.updateLocalDoneQueue(self);
         }
     }
-    async updateLocalStorage(self : downloadQueue) {
-        
-        (document.getElementById("frame") as HTMLIFrameElement).contentWindow.postMessage({
+    async updateLocalStorage(self) {
+        document.getElementById("frame").contentWindow.postMessage({
             "action": "activeUpdate",
         }, "*");
-
-
         let tempLen = await (downloadedDB.keyValue.where({ "key": "localQueue" })).toArray();
-
         if (tempLen.length == 0) {
             await downloadedDB.keyValue.add({ "key": "localQueue", "value": JSON.stringify(self.queue) });
-        } else {
-            await downloadedDB.keyValue.where({ "key": "localQueue" }).modify({ "value": JSON.stringify(self.queue) });
-
         }
-
+        else {
+            await downloadedDB.keyValue.where({ "key": "localQueue" }).modify({ "value": JSON.stringify(self.queue) });
+        }
     }
-
     async updateLocalDoneQueue(self) {
-        (document.getElementById("frame") as HTMLIFrameElement).contentWindow.postMessage({
+        document.getElementById("frame").contentWindow.postMessage({
             "action": "doneUpdate",
         }, "*");
-
-
         let tempLen = await (downloadedDB.keyValue.where({ "key": "localDoneQueue" })).toArray();
-
         if (tempLen.length == 0) {
             await downloadedDB.keyValue.add({ "key": "localDoneQueue", "value": JSON.stringify(self.doneQueue) });
-        } else {
-            await downloadedDB.keyValue.where({ "key": "localDoneQueue" }).modify({ "value": JSON.stringify(self.doneQueue) });
-
         }
-
+        else {
+            await downloadedDB.keyValue.where({ "key": "localDoneQueue" }).modify({ "value": JSON.stringify(self.doneQueue) });
+        }
     }
-
-    startDownload(self : downloadQueue) {
+    startDownload(self) {
         if (self.pause) {
             return;
         }
-
-
         if (self.queue.length == 0) {
             // @ts-ignore
             cordova.plugins.backgroundMode.disable();
             return;
-        } else {
+        }
+        else {
             // @ts-ignore
             cordova.plugins.backgroundMode.enable();
         }
@@ -329,12 +273,14 @@ class downloadQueue {
         if (temp3.length == 1) {
             currentEngine = wco;
             engineNum = 0;
-        } else {
+        }
+        else {
             currentEngine = parseInt(temp3[1]);
             engineNum = currentEngine;
             if (currentEngine == 0) {
                 currentEngine = extensionList[0];
-            } else {
+            }
+            else {
                 currentEngine = extensionList[currentEngine];
             }
         }
@@ -348,7 +294,7 @@ class downloadQueue {
                 }
                 temp.ogURL = temp3[0];
                 temp.engine = engineNum;
-                curQueueElem.downloadInstance = new DownloadVid(temp, curQueueElem.anime, () => { self.done(self) }, () => { self.error(self) }, episodes.episodes, self.pause);
+                curQueueElem.downloadInstance = new DownloadVid(temp, curQueueElem.anime, () => { self.done(self); }, () => { self.error(self); }, episodes.episodes, self.pause);
             }).catch(function (x) {
                 // @ts-ignore
                 curQueueElem.downloadInstance = {};
@@ -362,27 +308,24 @@ class downloadQueue {
             self.error(self);
         });
     }
-
     error(self) {
         setTimeout(async function () {
             if (self.shouldPause()) {
                 self.pauseIt(self);
-            } else {
+            }
+            else {
                 self.doneQueue.push((await self.remove(self, true)));
                 self.updateLocalDoneQueue(self);
                 self.startDownload(self);
             }
         }, 1000);
-
     }
-
-    async done(self : downloadQueue) {
+    async done(self) {
         self.doneQueue.push((await self.remove(self)));
         self.updateLocalDoneQueue(self);
-
         self.startDownload(self);
     }
-    async remove(self : downloadQueue, error = false) {
+    async remove(self, error = false) {
         let temp = self.queue.shift();
         temp.errored = error;
         if ("downloadInstance" in temp) {
@@ -391,6 +334,5 @@ class downloadQueue {
         }
         await self.updateLocalStorage(self);
         return temp;
-
     }
 }
