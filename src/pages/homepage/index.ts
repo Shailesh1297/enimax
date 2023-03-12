@@ -1593,7 +1593,15 @@ if (true) {
             }
 
             let tempDiv = createElement({ "class": "s_card", "attributes": {}, "listeners": {} });
-            tempDiv.style.backgroundImage = `url(${encodeURI(img_url(data[i][2]))})`;
+
+            tempDiv.append(createElement({
+                element : "img",
+                class: "cardImage",
+                attributes: {
+                    "src": img_url(data[i][2]),
+                    "loading": "lazy",
+                }
+            }));
 
             let tempDiv1 = createElement({ "class": "s_card_bg", "attributes": {}, "listeners": {} });
             let tempDiv2 = createElement({ "class": "s_card_title", "attributes": {}, "listeners": {} });

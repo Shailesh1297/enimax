@@ -351,6 +351,16 @@ input[type="color"]::-webkit-color-swatch {
     align-items: center;
 }
 
+.cardImage{
+    height: 100%;
+    width: 100%;
+    border-radius: 10px;
+    position: absolute;
+    top: 0;
+    object-fit: cover;
+    left: 0;
+}
+
 .themesContainer {
     height: 100px;
     width: 80px;
