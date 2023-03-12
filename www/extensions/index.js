@@ -1597,26 +1597,47 @@ var nineAnime = {
         response.status = 200;
         let sources = [];
         let vidstreamIDs = [];
+        let filemoonIDs = [];
         for (let i = 0; i < allServers.length; i++) {
             let currentServer = allServers[i];
             if (currentServer.innerText.toLowerCase() == "vidstream") {
                 vidstreamIDs.push(currentServer.getAttribute("data-link-id"));
             }
+            else if (currentServer.innerText.toLowerCase() == "filemoon") {
+                filemoonIDs.push(currentServer.getAttribute("data-link-id"));
+            }
         }
-        async function addSource(ID, self, index) {
+        async function addSource(ID, self, index, extractor = "vidstream") {
             try {
                 const serverVRF = await self.getVRF(ID);
                 const serverData = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/server/${ID}?vrf=${(serverVRF)}`)).result;
                 const serverURL = serverData.url;
                 const sourceDecrypted = await self.decryptSource(serverURL);
-                const vidstreamID = sourceDecrypted.split("/").pop();
-                const m3u8File = await self.getVidstreamLink(vidstreamID);
-                const source = {
-                    "name": "HLS#" + index,
-                    "type": "hls",
-                    "url": m3u8File,
+                let source = {
+                    "name": "",
+                    "type": "",
+                    "url": "",
                 };
-                sources.push(source);
+                if (extractor == "vidstream") {
+                    const vidstreamID = sourceDecrypted.split("/").pop();
+                    const m3u8File = await self.getVidstreamLink(vidstreamID);
+                    source = {
+                        "name": "HLS#" + index,
+                        "type": "hls",
+                        "url": m3u8File,
+                    };
+                    sources.push(source);
+                }
+                else {
+                    const filemoonHTML = await MakeFetch(sourceDecrypted);
+                    const m3u8File = await self.getFilemoonLink(filemoonHTML);
+                    source = {
+                        "name": "Filemoon#" + index,
+                        "type": m3u8File.includes(".m3u8") ? "hls" : "mp4",
+                        "url": m3u8File,
+                    };
+                    sources.push(source);
+                }
                 if ("skip_data" in serverData) {
                     source.skipIntro = {
                         start: serverData.skip_data.intro_begin,
@@ -1630,6 +1651,9 @@ var nineAnime = {
         }
         for (let i = 0; i < vidstreamIDs.length; i++) {
             promises.push(addSource(vidstreamIDs[i], this, i));
+        }
+        for (let i = 0; i < filemoonIDs.length; i++) {
+            promises.push(addSource(filemoonIDs[i], this, i, "filemoon"));
         }
         let settledSupported = "allSettled" in Promise;
         let epList = [];
@@ -1736,6 +1760,32 @@ var nineAnime = {
             throw new Error("VIZCLOUD0: Could not parse the JSON correctly.");
         }
     },
+    getFilemoonLink: async function (filemoonHTML) {
+        this.checkConfig();
+        const nineAnimeURL = localStorage.getItem("9anime").trim();
+        const apiKey = localStorage.getItem("apikey").trim();
+        const source = await MakeFetch(`https://${nineAnimeURL}/filemoon?apikey=${apiKey}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams({
+                "query": filemoonHTML
+            })
+        });
+        try {
+            const parsedJSON = JSON.parse(source);
+            if (parsedJSON.url) {
+                return parsedJSON.url;
+            }
+            else {
+                throw new Error("FILEMOON1: Received an empty URL or the URL was not found.");
+            }
+        }
+        catch (err) {
+            throw new Error("FILEMOON0: Could not parse the JSON correctly.");
+        }
+    },
     fixTitle: function (title) {
         try {
             const tempTitle = title.split(".");
@@ -1764,11 +1814,6 @@ var nineAnime = {
             const splitLink = link.split("/");
             splitLink.pop();
             link = splitLink.join("/").replace("/watch", "");
-            try {
-                link = (new URL(link)).pathname;
-            }
-            catch (err) {
-            }
             data.push({
                 image,
                 name,

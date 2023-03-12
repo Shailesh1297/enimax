@@ -1,7 +1,7 @@
 var CustomXMLHttpRequest = XMLHttpRequest;
 var engine: number;
 
-
+const isChrome = config.chrome;
 var username = "hi";
 // @ts-ignore
 const extensionList = (<cordovaWindow>window.parent).returnExtensionList();
@@ -893,6 +893,7 @@ function chooseQual(config: sourceConfig) {
 			if (typeof engine === "number" &&
 				extensionList[engine] &&
 				extensionList[engine].config &&
+				!isChrome &&
 				CustomXMLHttpRequest != (<cordovaWindow>window.parent).XMLHttpRequest) {
 				CustomXMLHttpRequest = XMLHttpRequest2;
 			}
