@@ -1,7 +1,6 @@
 var wco : extension = {
-    "baseURL" : "https://www.wcoforever.net",
-    'searchApi': function (query : string) : Promise<extensionSearch> {
-
+    baseURL : "https://www.wcoforever.net",
+    searchApi: function (query : string) : Promise<extensionSearch> {
         let baseURL = this.baseURL;
 
         return (new Promise(function (resolve, reject) {
@@ -41,13 +40,8 @@ var wco : extension = {
         }));
 
     },
-
-
-    'getAnimeInfo': function (url : string) : Promise<extensionInfo> {
-        
+    getAnimeInfo: function (url : string) : Promise<extensionInfo> {
         let baseURL = this.baseURL;
-
-
         return (new Promise(function (resolve, reject) {
             url = url.split("&engine")[0];
             url = baseURL + "/" + url;
@@ -148,20 +142,12 @@ var wco : extension = {
 
         }));
     },
-
-
-
-
-    'getLinkFromUrl': async function (url : string) : Promise<extensionVidSource> {
-
+    getLinkFromUrl: async function (url : string) : Promise<extensionVidSource> {
         let baseURL = this.baseURL;
-
         url = url.split("&engine")[0];
         url = `${baseURL}${url}`;
-
         let animeNameMain = decodeURIComponent(url.split(`${baseURL}/`)[1].split("/")[0]);
-        let animeEp;
-        
+        let animeEp;     
         let animeName = animeNameMain.split("episode")[0];
         animeName = animeName.trim();
         if (animeNameMain.split("episode").length == 1) {
@@ -200,7 +186,6 @@ var wco : extension = {
         else if (animeEp < 1) {
             animeEp = 0.1;
         }
-
 
         const data : extensionVidSource= {
             sources : [],
@@ -365,7 +350,6 @@ var wco : extension = {
                 });
             }
 
-
             data.sources = sources;
             data.name = animeName;
             data.nameWSeason = animeName;
@@ -382,7 +366,7 @@ var wco : extension = {
         }
 
     },
-    "discover": async function () : Promise<Array<extensionDiscoverData>> {
+    discover: async function () : Promise<Array<extensionDiscoverData>> {
         let baseURL = this.baseURL;
         let temp = document.createElement("div");
         temp.innerHTML = DOMPurify.sanitize(await MakeFetch(baseURL, {}));
@@ -407,9 +391,7 @@ var wco : extension = {
         }
         return data;
     },
-
-    "getDiscoverLink": async function (mainLink : string) : Promise<string> {
-
+    getDiscoverLink: async function (mainLink : string) : Promise<string> {
         let baseURL = this.baseURL;
         
         try {

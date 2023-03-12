@@ -84,6 +84,8 @@ function changeTheme() {
 const isSnapSupported = CSS.supports('scroll-snap-align:start') && CSS.supports("scroll-snap-stop: always") && CSS.supports("scroll-snap-type: x mandatory") && localStorage.getItem("fancyHome") !== "true";
 
 const backgroundGradients = [
+    "linear-gradient(0deg, black 0 71%, var(--theme-color) 135% 100%)",
+    "linear-gradient(to bottom, #000000, #000000)",
     "linear-gradient(to bottom, #0f2027, #203a43, #2c5364)",
     "linear-gradient(to bottom, #c31432, #240b36)",
     "linear-gradient(to bottom, #c04848, #480048)",

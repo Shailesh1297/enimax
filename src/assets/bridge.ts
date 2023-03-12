@@ -765,3 +765,4 @@ if (config.chrome) {
 updateTheme();
 setGradient();
 setOpacity();
+applyTheme();

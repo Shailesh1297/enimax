@@ -1,6 +1,6 @@
 var fmovies: extension = {
-    "baseURL": fmoviesBaseURL,
-    "searchApi": async function (query: string): Promise<extensionSearch> {
+    baseURL: fmoviesBaseURL,
+    searchApi: async function (query: string): Promise<extensionSearch> {
         query = decodeURIComponent(query);
         let response = await MakeFetch(`https://${fmoviesBaseURL}/search/${query.replace(" ", "-")}`, {});
 
@@ -13,32 +13,25 @@ var fmovies: extension = {
 
             let current = section[i];
 
-
             let dataCur: extensionSearchData = {
                 "image": "",
                 "link": "",
                 "name": "",
             };
+
             let poster = current.querySelector(".film-poster");
             let detail = current.querySelector(".film-detail");
-
             let temlLink = poster.querySelector("a").getAttribute("href");
 
             if (temlLink.includes("http")) {
                 temlLink = (new URL(temlLink)).pathname;
             }
 
-
             dataCur.image = poster.querySelector("img").getAttribute("data-src");
             dataCur.link = temlLink + "&engine=2";
             dataCur.name = (detail.querySelector(".film-name") as HTMLElement).innerText.trim();
 
-
-
             data.push(dataCur);
-
-
-
         }
 
         tempDOM.remove();
@@ -47,11 +40,8 @@ var fmovies: extension = {
             "status": 200,
             "data": data
         };
-
-
     },
-
-    "getSeason": async function getSeason(showID: string, showURL: string) {
+    getSeason: async function getSeason(showID: string, showURL: string) {
         try {
             const isInk = fmoviesBaseURL.includes(".ink");
             let seasonHTML = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/tv/seasons/${showID}`);
@@ -64,8 +54,6 @@ var fmovies: extension = {
             for (var i = 0; i < tempDOM.length; i++) {
                 seasonInfo[(tempDOM[i] as HTMLElement).innerText] = tempDOM[i].getAttribute("data-id");
             }
-
-
 
             let showMetaData = await MakeFetch(`https://${fmoviesBaseURL}/${showURL}`);
             let tempMetaDataDIV = document.createElement("div");
@@ -85,7 +73,6 @@ var fmovies: extension = {
                 };
             }
 
-
             try {
                 metaData.genres = [];
                 const metaCon = tempMetaDataDIV.querySelector(".elements");
@@ -100,7 +87,6 @@ var fmovies: extension = {
                 console.log(err);
             }
 
-
             tempSeasonDIV.remove();
             tempMetaDataDIV.remove();
 
@@ -111,9 +97,7 @@ var fmovies: extension = {
             return { "status": 400, "data": error.toString() };
         }
     },
-
-
-    "getEpisode": async function getEpisode(seasonID: string) {
+    getEpisode: async function getEpisode(seasonID: string) {
         try {
             let r = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/season/episodes/${seasonID}`);
             let temp = document.createElement("div");
@@ -137,8 +121,7 @@ var fmovies: extension = {
             return { "status": 400, "data": error.toString() };
         }
     },
-
-    'getAnimeInfo': async function (url: string): Promise<extensionInfo> {
+    getAnimeInfo: async function (url: string): Promise<extensionInfo> {
         const isInk = url.includes("-full-");
 
         let self = this;
@@ -213,10 +196,7 @@ var fmovies: extension = {
                 if (allReponses[1].status === "fulfilled") {
                     tempMetaData = allReponses[1].value;
                 }
-
             }
-
-
 
             try {
                 for (let i = 0; i < tempMetaData.length; i++) {
@@ -269,8 +249,6 @@ var fmovies: extension = {
                 }
             }
 
-
-
             if (Object.keys(response.data.seasons).length === 0) {
 
 
@@ -305,8 +283,7 @@ var fmovies: extension = {
         }
 
     },
-
-    "getLinkFromStream": async function getLinkFromStream(url: string) {
+    getLinkFromStream: async function getLinkFromStream(url: string) {
         try {
             var option = {
                 'headers': {
@@ -326,7 +303,7 @@ var fmovies: extension = {
             throw err;
         }
     },
-    'getLinkFromUrl': async function (url: string): Promise<extensionVidSource> {
+    getLinkFromUrl: async function (url: string): Promise<extensionVidSource> {
         const isInk = fmoviesBaseURL.includes(".ink");
 
         let self = this;
@@ -485,9 +462,6 @@ var fmovies: extension = {
                 }
             }
 
-
-
-
             data.status = 200;
             data.message = "done";
 
@@ -527,8 +501,7 @@ var fmovies: extension = {
             throw (new Error("Couldn't get the link"));
         }
     },
-
-    "discover": async function (): Promise<Array<extensionDiscoverData>> {
+    discover: async function (): Promise<Array<extensionDiscoverData>> {
         let temp = document.createElement("div");
         temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://fmovies.ink/tv-show`, {}));
         let data = [];

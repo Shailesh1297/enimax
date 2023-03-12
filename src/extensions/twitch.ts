@@ -1,43 +1,63 @@
 
-var twitch : extension = {
-    'searchApi': function (query) {
-        const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
-
-        return (new Promise(function (resolve, reject) {
-            fetch("https://gql.twitch.tv/gql", {
+var twitch: extension = {
+    baseURL: "https://twitch.tv",
+    searchApi: async function (query) {
+        try {
+            const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
+            const response = await MakeFetch("https://gql.twitch.tv/gql", {
                 "headers": {
                     'Client-id': clientId,
                     'Content-Type': 'application/json',
                 },
                 "method": "POST",
                 "body": JSON.stringify(
-                    { "operationName": "SearchResultsPage_SearchResults", "variables": { "query": query, "options": null }, "extensions": { "persistedQuery": { "version": 1, "sha256Hash": "6ea6e6f66006485e41dbe3ebd69d5674c5b22896ce7b595d7fce6411a3790138" } } }
+                    {
+                        "operationName": "SearchResultsPage_SearchResults",
+                        "variables": { "query": query, "options": null },
+                        "extensions": {
+                            "persistedQuery": {
+                                "version": 1,
+                                "sha256Hash": "6ea6e6f66006485e41dbe3ebd69d5674c5b22896ce7b595d7fce6411a3790138"
+                            }
+                        }
+                    }
                 )
-            }).then((x) => x.json()).then((resData) => {
+            });
 
-                const data = [];
-                for (let channels of resData.data.searchFor.channels.edges) {
-                    data.push({ "name": channels.item.login, "id": channels.item.login, "image": channels.item.profileImageURL, "link": "/" + encodeURIComponent(channels.item.login) + "&engine=4" });
-                }
-                resolve({ data, "status": 200 });
-            }).catch((err) => { reject({ data: "error", "status": 400 }) });
+            const responseJSON = JSON.parse(response);
+            const data = [];
+            for (let channels of responseJSON.data.searchFor.channels.edges) {
+                data.push({
+                    "name": channels.item.login,
+                    "id": channels.item.login,
+                    "image": channels.item.profileImageURL,
+                    "link": "/" + encodeURIComponent(channels.item.login) + "&engine=4"
+                });
+            }
 
-
-        }));
-
+            return { data, "status": 200 };
+        } catch (err) {
+            return {
+                data: err.toString(),
+                status: 400
+            };
+        }
     },
-
-
-    'getAnimeInfo': function (url, sibling = false, currentID = -1) {
+    getAnimeInfo: function (url, sibling = false, currentID = -1) {
         url = url.split("&engine")[0];
         let id = url.replace("?watch=/", "");
 
-        let response : extensionInfo = {};
-        response.name = id;
+        let response: extensionInfo = {
+            "name": "",
+            "image": "",
+            "description": "",
+            "episodes": [],
+            "mainName": ""
+        };
 
+        response.name = id;
         response.image = "https://wallpaperaccess.com/full/4487013.jpg";
         response.description = "Twitch VOD";
-
         response.mainName = id;
 
         const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
@@ -94,7 +114,7 @@ var twitch : extension = {
                             "link": "?watch=" + encodeURIComponent(id) + "&id=" + vod.node.id + "&engine=4",
                             "id": id,
                             "title": vod.node.title,
-                            "thumbnail" : vod.node.previewThumbnailURL
+                            "thumbnail": vod.node.previewThumbnailURL
                         });
                     }
                 }
@@ -120,18 +140,16 @@ var twitch : extension = {
 
     },
 
-    'getLinkFromUrl': async function (url) : Promise<extensionVidSource> {
+    'getLinkFromUrl': async function (url): Promise<extensionVidSource> {
         url = "?watch=" + url;
-        let start = performance.now();
-        let params = new URLSearchParams(url);
-        let name = params.get("watch");
-        let ep = params.get("id");
-        let isLive = (ep == "live");
+        const params = new URLSearchParams(url);
+        const name = params.get("watch");
+        const ep = params.get("id");
+        const isLive = (ep == "live");
+        const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
         let title = "";
 
-        const clientId = "kimne78kx3ncx6brgo4mv6wki5h1ko";
-
-        function getAccessToken(id, isVod) {
+        function getAccessToken(id: string, isVod: boolean): Promise<string> {
             const data = JSON.stringify({
                 operationName: "PlaybackAccessToken",
                 extensions: {
@@ -169,11 +187,11 @@ var twitch : extension = {
             });
         }
 
-        function getPlaylist(id, accessToken, vod) {
+        function getPlaylist(id, accessToken, vod): string {
             return `https://usher.ttvnw.net/${vod ? 'vod' : 'api/channel/hls'}/${id}.m3u8?client_id=${clientId}&token=${accessToken.value}&sig=${accessToken.signature}&allow_source=true&allow_audio_only=true`;
         }
 
-        function getStream(channel, raw) {
+        function getStream(channel: string): Promise<string> {
             return new Promise((resolve, reject) => {
                 getAccessToken(channel, false)
                     .then((accessToken) => getPlaylist(channel, accessToken, false))
@@ -182,7 +200,7 @@ var twitch : extension = {
             });
         }
 
-        function getVod(vid, raw) {
+        function getVod(vid: string): Promise<string> {
             return new Promise((resolve, reject) => {
                 getAccessToken(vid, true)
                     .then((accessToken) => getPlaylist(vid, accessToken, true))
@@ -191,11 +209,21 @@ var twitch : extension = {
             });
         }
 
-        let resp : extensionVidSource = {};
+        const resp: extensionVidSource = {
+            sources: [],
+            name: "",
+            title: "",
+            nameWSeason: "",
+            episode: "",
+            status: 400,
+            message: "",
+            next: null,
+            prev: null
+        };
 
         if (!isLive) {
             try {
-                let epList = await this.getAnimeInfo(name, true, parseInt(ep));
+                const epList = await this.getAnimeInfo(name, true, parseInt(ep));
 
                 if (epList.episodes[0]) {
                     resp.prev = epList.episodes[0].link;
@@ -205,23 +233,23 @@ var twitch : extension = {
                     resp.next = epList.episodes[2].link;
                 }
 
-                try{
-                    if(epList.episodes[1]){
+                try {
+                    if (epList.episodes[1]) {
                         title = epList.episodes[1].title;
                     }
-                }catch(err){
+                } catch (err) {
                     title = "";
                 }
             } catch (err) {
 
             }
-        }else{
+        } else {
             title = "Live";
         }
 
         resp.sources = [
             {
-                "url": isLive ? (await getStream(name, false)) : (await getVod(ep, false)),
+                "url": isLive ? (await getStream(name)) : (await getVod(ep)),
                 "name": "VOD",
                 "type": "hls"
             }
@@ -232,6 +260,7 @@ var twitch : extension = {
         resp.subtitles = [];
         resp.status = 200;
         resp.title = title;
+
         return resp;
     },
 };

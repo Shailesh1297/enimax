@@ -1,6 +1,6 @@
 var zoro: extension = {
-    "baseURL": "https://zoro.to",
-    "searchApi": async function (query: string): Promise<extensionSearch> {
+    baseURL: "https://zoro.to",
+    searchApi: async function (query: string): Promise<extensionSearch> {
         let searchHTML = await MakeFetchZoro(`https://zoro.to/search?keyword=${query}`, {});
         let dom = document.createElement("div");
         let orDom = dom;
@@ -21,9 +21,7 @@ var zoro: extension = {
         orDom.remove();
         return ({ data, "status": 200 });
     },
-
-
-    'getAnimeInfo': async function (url, idToFind = null): Promise<extensionInfo> {
+    getAnimeInfo: async function (url, idToFind = null): Promise<extensionInfo> {
         url = url.split("&engine")[0];
         let idSplit = url.replace("?watch=/", "").split("-");
         let id = idSplit[idSplit.length - 1].split("?")[0];
@@ -169,11 +167,8 @@ var zoro: extension = {
         ogDOM.remove();
         response.episodes = data;
         return response;
-
     },
-
-
-    "getEpisodeListFromAnimeId": async function getEpisodeListFromAnimeId(showID: string, episodeId: string) {
+    getEpisodeListFromAnimeId: async function getEpisodeListFromAnimeId(showID: string, episodeId: string) {
         let res = JSON.parse((await MakeFetchZoro(`https://zoro.to/ajax/v2/episode/list/${showID}`, {})));
         res = res.html;
         let dom = document.createElement("div");
@@ -198,11 +193,7 @@ var zoro: extension = {
 
         ogDOM.remove();
         return data;
-
     },
-
-
-
     addSource: async function addSource(type: string, id: string, subtitlesArray: Array<videoSubtitle>, sourceURLs: Array<videoSource>) {
         let sources = await MakeFetchZoro(`https://zoro.to/ajax/v2/episode/sources?id=${id}`, {});
         sources = JSON.parse(sources).link;
@@ -252,7 +243,7 @@ var zoro: extension = {
             console.error(err);
         }
     },
-    'getVideoTitle': async function (url: string): Promise<string> {
+    getVideoTitle: async function (url: string): Promise<string> {
         let showURL = new URLSearchParams(url);
 
         try {
@@ -261,7 +252,7 @@ var zoro: extension = {
             return "";
         }
     },
-    'getLinkFromUrl': async function (url: string): Promise<extensionVidSource> {
+    getLinkFromUrl: async function (url: string): Promise<extensionVidSource> {
         const sourceURLs: Array<videoSource> = [];
         let subtitles: Array<videoSubtitle> = [];
 
@@ -356,7 +347,7 @@ var zoro: extension = {
         return resp;
 
     },
-    "discover": async function (): Promise<Array<extensionDiscoverData>> {
+    discover: async function (): Promise<Array<extensionDiscoverData>> {
         let temp = document.createElement("div");
         temp.innerHTML = DOMPurify.sanitize(await MakeFetchZoro(`https://zoro.to/top-airing`, {}));
         let data = [];
@@ -372,7 +363,6 @@ var zoro: extension = {
                 link
             });
         }
-
         return data;
     }
 };

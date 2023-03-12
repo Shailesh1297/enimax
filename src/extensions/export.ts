@@ -1,3 +1,4 @@
+// @ts-ignore
 const extensionList : Array<extension> = [wco, animixplay, fmovies, zoro, twitch, nineAnime];
 
 // @ts-ignore
