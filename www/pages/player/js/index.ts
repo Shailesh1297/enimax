@@ -895,8 +895,6 @@ function chooseQual(config: sourceConfig) {
 				extensionList[engine].config &&
 				!isChrome &&
 				CustomXMLHttpRequest != (<cordovaWindow>window.parent).XMLHttpRequest) {
-				// @ts-ignore
-				// todo
 				CustomXMLHttpRequest = XMLHttpRequest2;
 			}
 

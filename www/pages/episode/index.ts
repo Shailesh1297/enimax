@@ -116,8 +116,6 @@ scrollDownTopDOM.onclick = function () {
     }
 };
 
-// @ts-ignore
-// todo
 function fix_title(title: string) {
     try {
         let titleArray = title.split("-");
@@ -131,8 +129,7 @@ function fix_title(title: string) {
     }
 }
 
-// @ts-ignore
-// todo
+
 function normalise(url: string) {
     url = url.replace("?watch=", "");
     url = url.split("&engine=")[0];
@@ -156,8 +153,9 @@ function sendNoti(notiConfig: any) {
     });
 }
 
-// @ts-ignore
-// todo
+
+
+
 function checkIfExists(localURL: string, dList: Array<string>, dName: string): Promise<string> {
     return (new Promise(function (resolve, reject) {
         let index = dList.indexOf(dName);
@@ -383,7 +381,7 @@ function ini() {
                 let scrollLastIndex;
                 let tempCatDOM = document.getElementsByClassName("categories");
                 let cusRoomDOM = document.getElementById("custom_rooms");
-                scrollSnapFunc = function () {
+                scrollSnapFunc = function (elem: HTMLElement, event: Event) {
                     let unRoundedIndex = cusRoomDOM.scrollLeft / cusRoomDOM.offsetWidth;
                     let index = Math.round(unRoundedIndex);
 
@@ -412,7 +410,7 @@ function ini() {
                     }
                     scrollLastIndex = index;
                 };
-                cusRoomDOM.addEventListener("scroll", () => { scrollSnapFunc }, { "passive": true });
+                cusRoomDOM.addEventListener("scroll", scrollSnapFunc, { "passive": true });
             }
 
             let toAdd = [];
