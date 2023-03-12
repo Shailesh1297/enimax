@@ -325,8 +325,7 @@ class downloadQueue {
         let currentEngine;
         let engineNum;
         let curQueueElem = self.queue[0];
-        let temp3 = curQueueElem.data.replace("?watch=", "");
-        temp3 = temp3.split("&engine=");
+        let temp3 = curQueueElem.data.replace("?watch=", "").split("&engine=");
         if (temp3.length == 1) {
             currentEngine = wco;
             engineNum = 0;
@@ -351,11 +350,13 @@ class downloadQueue {
                 temp.engine = engineNum;
                 curQueueElem.downloadInstance = new DownloadVid(temp, curQueueElem.anime, () => { self.done(self) }, () => { self.error(self) }, episodes.episodes, self.pause);
             }).catch(function (x) {
+                // @ts-ignore
                 curQueueElem.downloadInstance = {};
                 curQueueElem.downloadInstance.message = "Couldn't get the link";
                 self.error(self);
             });
         }).catch(function (err) {
+            // @ts-ignore
             curQueueElem.downloadInstance = {};
             curQueueElem.downloadInstance.message = "Couldn't get the episode list.";
             self.error(self);

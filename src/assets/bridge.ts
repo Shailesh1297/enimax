@@ -9,7 +9,7 @@ let playerIFrame = document.getElementById("player") as HTMLIFrameElement;
 let mainIFrame = document.getElementById("frame") as HTMLIFrameElement;
 let thisWindow = (window as unknown as cordovaWindow);
 var socket;
-let frameHistory : Array<string> = [];
+let frameHistory: Array<string> = [];
 var token;
 let seekCheck = true;
 
@@ -35,7 +35,7 @@ function setGradient() {
     }
 }
 
-function updateGradient(index : string) {
+function updateGradient(index: string) {
     localStorage.setItem("themegradient", index);
     setGradient();
 }
@@ -49,7 +49,7 @@ function setOpacity() {
     }
 }
 
-function updateOpacity(value : string) {
+function updateOpacity(value: string) {
     localStorage.setItem("bgOpacity", value);
     setOpacity();
 }
@@ -68,17 +68,17 @@ function updateImage() {
     }
 }
 
-function updateBackgroundBlur(){
+function updateBackgroundBlur() {
     if (localStorage.getItem("useImageBack") === "true") {
         let backgroundBlur = parseInt(localStorage.getItem("backgroundBlur"));
         document.getElementById("bgGrad").style.filter = `blur(${isNaN(backgroundBlur) ? 0 : backgroundBlur}px)`;
-    }else{
+    } else {
         document.getElementById("bgGrad").style.filter = `none`;
     }
 }
 
 
-function setURL(url : string) {
+function setURL(url: string) {
     mainIFrame.style.opacity = "0";
     setTimeout(function () {
         mainIFrame.contentWindow.location = url;
@@ -89,13 +89,13 @@ function setURL(url : string) {
 }
 
 
-function saveAsImport(arrayInt : ArrayBuffer) {
+function saveAsImport(arrayInt: ArrayBuffer) {
     try {
         let blob = new Blob([arrayInt]);
         db.close(async function () {
-            thisWindow.resolveLocalFileSystemURL(`${thisWindow.cordova.file.applicationStorageDirectory}${"databases"}`, function (fileSystem : DirectoryEntry) {
+            thisWindow.resolveLocalFileSystemURL(`${thisWindow.cordova.file.applicationStorageDirectory}${"databases"}`, function (fileSystem: DirectoryEntry) {
 
-                fileSystem.getFile("data4.db", { create: true, exclusive: false }, function (file : FileEntry) {
+                fileSystem.getFile("data4.db", { create: true, exclusive: false }, function (file: FileEntry) {
 
                     file.createWriter(function (fileWriter) {
 
@@ -114,14 +114,14 @@ function saveAsImport(arrayInt : ArrayBuffer) {
 
                         fileWriter.write(blob);
 
-                    }, (err : Error) => {
+                    }, (err: Error) => {
                         alert("Couldn't write to the file.");
                         window.location.reload();
 
                     });
 
 
-                }, function (error : Error) {
+                }, function (error: Error) {
                     alert("Error opening the database file.");
 
                     window.location.reload();
@@ -130,12 +130,12 @@ function saveAsImport(arrayInt : ArrayBuffer) {
 
                 });
 
-            }, function (error : Error) {
+            }, function (error: Error) {
                 alert("Error opening the database folder.");
                 window.location.reload();
 
             });
-        }, function (error : Error) {
+        }, function (error: Error) {
             alert("Error closing the database.");
             window.location.reload();
 
@@ -148,13 +148,13 @@ function saveAsImport(arrayInt : ArrayBuffer) {
 
 }
 
-function saveImage(arrayInt : ArrayBuffer) {
+function saveImage(arrayInt: ArrayBuffer) {
     let blob = new Blob([arrayInt]);
-    thisWindow.resolveLocalFileSystemURL(`${thisWindow.cordova.file.externalDataDirectory}`, function (fileSystem : DirectoryEntry) {
+    thisWindow.resolveLocalFileSystemURL(`${thisWindow.cordova.file.externalDataDirectory}`, function (fileSystem: DirectoryEntry) {
 
-        fileSystem.getFile("background.png", { create: true, exclusive: false }, function (file : FileEntry) {
+        fileSystem.getFile("background.png", { create: true, exclusive: false }, function (file: FileEntry) {
 
-            file.createWriter(function (fileWriter : FileWriter) {
+            file.createWriter(function (fileWriter: FileWriter) {
 
                 fileWriter.onwriteend = function (e) {
                     thisWindow.updateImage();
@@ -181,17 +181,17 @@ function saveImage(arrayInt : ArrayBuffer) {
 
         });
 
-    }, function (error : Error) {
+    }, function (error: Error) {
         alert("Error opening the database folder.");
 
     });
 }
 
-function listDir(path : string) {
+function listDir(path: string) {
 
     return (new Promise((resolve, reject) => {
         thisWindow.resolveLocalFileSystemURL(`${thisWindow.cordova.file.externalDataDirectory}${path}`,
-            function (fileSystem : DirectoryEntry) {
+            function (fileSystem: DirectoryEntry) {
                 var reader = fileSystem.createReader();
                 reader.readEntries(
                     function (entries) {
@@ -202,7 +202,7 @@ function listDir(path : string) {
 
                     }
                 );
-            }, function (err : Error) {
+            }, function (err: Error) {
                 reject(err);
             }
         );
@@ -210,19 +210,14 @@ function listDir(path : string) {
 
 }
 
-async function saveAs(fileSys : DirectoryEntry, fileName : string, blob : Blob) {
+async function saveAs(fileSys: DirectoryEntry, fileName: string, blob: Blob) {
     fileSys.getFile(fileName, { create: true, exclusive: false }, function (file) {
 
         file.createWriter(function (fileWriter) {
 
-            fileWriter.onwriteend = function (e) {
-
-            };
-
             fileWriter.onerror = function (e) {
                 console.error(e);
             };
-
 
             fileWriter.write(blob);
 
@@ -230,16 +225,15 @@ async function saveAs(fileSys : DirectoryEntry, fileName : string, blob : Blob) 
             console.error(err);
         });
 
-
     }, function (x) {
         console.error(x);
     });
 }
 
 
-let downloadQueueInstance : downloadQueue;
+let downloadQueueInstance: downloadQueue;
 
-function returnDownloadQueue() : downloadQueue{
+function returnDownloadQueue(): downloadQueue {
     return downloadQueueInstance;
 }
 
@@ -256,7 +250,8 @@ mainIFrame.onload = function () {
     }
 };
 
-
+// todo
+// @ts-ignore
 function sendNoti(x) {
     return new notification(document.getElementById("noti_con"), {
         "perm": x[0],
@@ -265,7 +260,8 @@ function sendNoti(x) {
         "notiData": x[3]
     });
 }
-async function MakeCusReq(url : string, options : RequestOption) {
+
+async function MakeCusReq(url: string, options: RequestOption) {
     return new Promise(function (resolve, reject) {
         (thisWindow.cordova.plugin.http as HTTP).sendRequest(url, options, function (response) {
             resolve(response.data);
@@ -275,9 +271,11 @@ async function MakeCusReq(url : string, options : RequestOption) {
     });
 }
 
-async function MakeFetch(url : string, options = {}) : Promise<string> {
+// @ts-ignore
+// todo
+async function MakeFetch(url: string, options = {}): Promise<string> {
     return new Promise(function (resolve, reject) {
-        fetch(url, options).then(response => response.text()).then((response : string) => {
+        fetch(url, options).then(response => response.text()).then((response: string) => {
             resolve(response);
         }).catch(function (err) {
             reject(new Error(`${err.message}: ${url}`));
@@ -286,7 +284,6 @@ async function MakeFetch(url : string, options = {}) : Promise<string> {
 }
 
 if (config.chrome) {
-
     playerIFrame.onload = function () {
         if ((playerIFrame as HTMLIFrameElement).contentWindow.location.href.includes("www/fallback.html")) {
             playerIFrame.style.display = "none";
@@ -294,8 +291,6 @@ if (config.chrome) {
             mainIFrame.style.display = "block";
         }
     };
-} else {
-
 }
 
 
@@ -303,12 +298,11 @@ function updateTheme() {
     try {
         document.querySelector(`meta[name="theme-color"]`).setAttribute("content", localStorage.getItem("themecolor"));
     } catch (err) {
-
+        console.error(err);
     }
 }
 
-
-function makeLocalRequest(method : string, url : string) : Promise<string> {
+function makeLocalRequest(method: string, url: string): Promise<string> {
     return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest();
         xhr.open(method, url);
@@ -333,46 +327,37 @@ function makeLocalRequest(method : string, url : string) : Promise<string> {
     });
 }
 
-
-function removeDirectory(url : string) {
+function removeDirectory(url: string) {
     return new Promise(function (resolve, reject) {
-        thisWindow.resolveLocalFileSystemURL(thisWindow.cordova.file.externalDataDirectory, function (fs : DirectoryEntry) {
-            fs.getDirectory(url, { create: false, exclusive: false }, function (directory : DirectoryEntry) {
-                    directory.removeRecursively(function () {
-                        resolve("done");
-                    },
-                    function (err : Error) {
+        thisWindow.resolveLocalFileSystemURL(thisWindow.cordova.file.externalDataDirectory, function (fs: DirectoryEntry) {
+            fs.getDirectory(url, { create: false, exclusive: false }, function (directory: DirectoryEntry) {
+                directory.removeRecursively(function () {
+                    resolve("done");
+                },
+                    function (err: Error) {
                         reject(err);
                     });
-            }, function (err : Error) {
+            }, function (err: Error) {
                 reject(err);
             })
-        }, function (err : Error) {
+        }, function (err: Error) {
             reject(err);
         });
     });
 }
 
-function exec_action(x : MessageAction, reqSource : Window) {
+function executeAction(message: MessageAction, reqSource: Window) {
 
-    if (x.action == 1) {
+    if (message.action == 1) {
+        screen.orientation.lock(message.data).then(() => { }).catch(() => { });
+    }
+    else if (message.action == 3) {
+        window.location = message.data;
+    }
+    else if (message.action == 5) {
 
-        screen.orientation.lock(x.data).then(function () {
-
-
-        }).catch(function (error) {
-
-        });
-
-
-    } else if (x.action == 2) {
-
-    } else if (x.action == 3) {
-        window.location = x.data;
-    } else if (x.action == 5) {
-
-        var currentEngine;
-        let temp3 = x.data.split("&engine=");
+        let currentEngine;
+        let temp3 = message.data.split("&engine=");
         if (temp3.length == 1) {
             currentEngine = wco;
         } else {
@@ -388,58 +373,44 @@ function exec_action(x : MessageAction, reqSource : Window) {
             reqSource.postMessage(x, "*");
         }).catch(function (err) {
             sendNoti([0, null, "Message", err.message]);
-            x.action = 1;
+            message.action = 1;
             console.error(err);
             reqSource.postMessage(err, "*");
         });
-    } else if (x.action == 11) {
+
+    }
+    else if (message.action == 11) {
         // @ts-ignore
-        PictureInPicture.enter(480, 270, function () {});
-    } else if (x.action == 15) {
+        PictureInPicture.enter(480, 270, function () { });
+    }
+    else if (message.action == 15) {
         if (!config.chrome) {
             // @ts-ignore
             MusicControls.updateIsPlaying(true);
         }
-
-    } else if (x.action == 400) {
-        screen.orientation.lock("any").then(function () {
-
-        }).catch(function (error) {
-
-        });
-
-
-
+    }
+    else if (message.action == 400) {
+        screen.orientation.lock("any").then(() => { }).catch(() => { });
         playerIFrame.classList.add("pop");
         mainIFrame.style.height = "calc(100% - 200px)";
-
         mainIFrame.style.display = "block";
         playerIFrame.style.display = "block";
-
     }
-
-    else if (x.action == 401) {
-        screen.orientation.lock("landscape").then(function () {
-
-        }).catch(function (error) {
-
-        });
-
-
-
+    else if (message.action == 401) {
+        screen.orientation.lock("landscape").then(() => { }).catch(() => { });
         playerIFrame.classList.remove("pop");
         mainIFrame.style.height = "100%";
-
         mainIFrame.style.display = "none";
         playerIFrame.style.display = "block";
 
-    } else if (x.action == 16) {
+    }
+    else if (message.action == 16) {
         if (!config.chrome) {
             // @ts-ignore
             MusicControls.updateIsPlaying(false);
         }
-    } else if (x.action == 20) {
-
+    }
+    else if (message.action == 20) {
         let toSend;
 
         if (config.chrome) {
@@ -447,76 +418,64 @@ function exec_action(x : MessageAction, reqSource : Window) {
         } else {
             toSend = thisWindow.cordova.plugin.http.getCookieString(config.remoteWOport);
         }
-        reqSource.postMessage(
-            { "action": 200, "data": toSend }
-            , "*");
-
-
-
-    } else if (x.action == 403) {
-        downloadQueueInstance.add(x.data, x.anime, x.mainUrl, x.title);
-
-    } else if (x.action == 21) {
+        reqSource.postMessage({
+            "action": 200,
+            "data": toSend
+        }, "*");
+    }
+    else if (message.action == 403) {
+        downloadQueueInstance.add(
+            message.data,
+            message.anime,
+            message.mainUrl,
+            message.title,
+            downloadQueueInstance
+        );
+    }
+    else if (message.action == 21) {
         window.location.href = "login.html";
-
-
-
-    } else if (x.action == 402) {
+    }
+    else if (message.action == 402) {
         updateTheme();
-
-
-
-    } else if (x.action == 500) {
-
-        setURL(x.data);
-
-
-    } else if (x.action == 22) {
+    }
+    else if (message.action == 500) {
+        setURL(message.data);
+    }
+    else if (message.action == 22) {
         window.location.href = "reset.html";
-
-
-
-    } else if (x.action == 26) {
+    }
+    else if (message.action == 26) {
         window.location.href = "settings.html";
-
-
-
-    } else if (x.action == 301 && config.beta && seekCheck) {
+    }
+    else if (message.action == 301 && config.beta && seekCheck) {
         // @ts-ignore
         MusicControls.updateElapsed({
-            elapsed: x.elapsed * 1000,
-            isPlaying: x.isPlaying
+            elapsed: message.elapsed * 1000,
+            isPlaying: message.isPlaying
         });
-    } else if (x.action == 12) {
+    }
+    else if (message.action == 12) {
         if (!config.chrome) {
 
-            var showName = x.nameShow.split("-");
+            let showName = message.nameShow.split("-");
 
-            for (var i = 0; i < showName.length; i++) {
+            for (let i = 0; i < showName.length; i++) {
                 let temp = showName[i];
                 temp = temp.charAt(0).toUpperCase() + temp.slice(1);
                 showName[i] = temp;
 
             }
             seekCheck = true;
-
-
-            x.nameShow = showName.join(" ");
+            message.nameShow = showName.join(" ");
             const controlOption = {
-                track: x.nameShow,
-                artist: "Episode " + x.episode,
+                track: message.nameShow,
+                artist: "Episode " + message.episode,
                 cover: 'assets/images/anime.png',
-
                 isPlaying: true,							// optional, default : true
                 dismissable: true,							// optional, default : false
-
-
-                hasPrev: x.prev,
-                hasNext: x.next,
+                hasPrev: message.prev,
+                hasNext: message.next,
                 hasClose: true,
-
-
-
                 playIcon: 'media_play',
                 pauseIcon: 'media_pause',
                 prevIcon: 'media_prev',
@@ -527,15 +486,12 @@ function exec_action(x : MessageAction, reqSource : Window) {
 
             if (config.beta) {
                 controlOption["hasScrubbing"] = true;
-                controlOption["duration"] = x.duration ? x.duration * 1000 : 0;
-                controlOption["elapsed"] = x.elapsed ? x.elapsed : 0;
+                controlOption["duration"] = message.duration ? message.duration * 1000 : 0;
+                controlOption["elapsed"] = message.elapsed ? message.elapsed : 0;
             }
 
             // @ts-ignore
-            MusicControls.create(controlOption, function () { }, function () { });
-
-
-
+            MusicControls.create(controlOption, () => { }, () => { });
 
             function events(action) {
 
@@ -543,19 +499,15 @@ function exec_action(x : MessageAction, reqSource : Window) {
                 switch (message) {
                     case 'music-controls-next':
                         playerIFrame.contentWindow.postMessage({ "action": "next" }, "*");
-
                         break;
                     case 'music-controls-previous':
                         playerIFrame.contentWindow.postMessage({ "action": "previous" }, "*");
-
                         break;
                     case 'music-controls-pause':
                         playerIFrame.contentWindow.postMessage({ "action": "pause" }, "*");
-
                         break;
                     case 'music-controls-play':
                         playerIFrame.contentWindow.postMessage({ "action": "play" }, "*");
-
                         break;
                     case 'music-controls-media-button-play':
                         playerIFrame.contentWindow.postMessage({ "action": "play" }, "*");
@@ -571,23 +523,16 @@ function exec_action(x : MessageAction, reqSource : Window) {
                         break;
                     case 'music-controls-destroy':
                         seekCheck = false;
-
                         break;
                     case 'music-controls-toggle-play-pause':
                         playerIFrame.contentWindow.postMessage({ "action": "toggle" }, "*");
-
                         break;
-
                     case 'music-controls-media-button':
-
                         break;
                     case 'music-controls-headset-unplugged':
                         playerIFrame.contentWindow.postMessage({ "action": "pause" }, "*");
-
-
                         break;
                     case 'music-controls-headset-plugged':
-
                         break;
                     case 'music-controls-seek-to':
                         playerIFrame.contentWindow.postMessage({ "action": "elapsed", "elapsed": (JSON.parse(action).position) / 1000 }, "*");
@@ -602,60 +547,52 @@ function exec_action(x : MessageAction, reqSource : Window) {
 
             // @ts-ignore
             MusicControls.listen();
-            
+
             // @ts-ignore
             MusicControls.updateIsPlaying(true);
         }
-    } else if (x.action == 4) {
+    }
+    else if (message.action == 4) {
 
         if (config.chrome && playerIFrame.contentWindow.location.href.includes("/www/fallback.html")) {
-
-            playerIFrame.contentWindow.location = ("pages/player/index.html" + x.data);
-
+            playerIFrame.contentWindow.location = ("pages/player/index.html" + message.data);
         } else if (config.chrome) {
-            playerIFrame.contentWindow.location.replace("pages/player/index.html" + x.data);
-
+            playerIFrame.contentWindow.location.replace("pages/player/index.html" + message.data);
         }
-
 
         if (!config.chrome) {
             let checkLock = 0;
 
             setTimeout(function () {
                 if (checkLock == 0) {
-                    playerIFrame.contentWindow.location.replace("pages/player/index.html" + x.data);
+                    playerIFrame.contentWindow.location.replace("pages/player/index.html" + message.data);
                 }
             }, 100);
-            screen.orientation.lock("landscape").then(function () {
-            }).catch(function (error) {
-            }).finally(function () {
-                checkLock = 1;
-                (playerIFrame as HTMLIFrameElement).contentWindow.location.replace("pages/player/index.html" + x.data);
 
-            });
+            screen.orientation.lock("landscape")
+                .then(() => { })
+                .catch(() => { })
+                .finally(function () {
+                    checkLock = 1;
+                    (playerIFrame as HTMLIFrameElement).contentWindow.location.replace("pages/player/index.html" + message.data);
+                });
         }
 
         mainIFrame.style.display = "none";
         mainIFrame.style.height = "100%";
         playerIFrame.style.display = "block";
         playerIFrame.classList.remove("pop");
-
-
-
-    } else if (x.action == "updateGrad") {
-        updateGradient(parseInt(x.data).toString());
     }
-    else if (x.action == "updateOpacity") {
-        updateOpacity(parseFloat(x.data).toString());
+    else if (message.action == "updateGrad") {
+        updateGradient(parseInt(message.data).toString());
     }
-    else if (x.action == "updateImage") {
+    else if (message.action == "updateOpacity") {
+        updateOpacity(parseFloat(message.data).toString());
+    }
+    else if (message.action == "updateImage") {
         updateImage();
     }
-
 }
-
-
-
 
 window.addEventListener('message', function (x) {
     if (x.data.action == "eval") {
@@ -666,12 +603,9 @@ window.addEventListener('message', function (x) {
         }
         (document.getElementById("evalScript") as HTMLIFrameElement).src = `eval.html?v=${(new Date()).getTime()}`;
     } else {
-        exec_action(x.data, x.source);
+        executeAction(x.data, x.source as WindowProxy);
     }
 });
-
-
-
 
 async function onDeviceReady() {
     await SQLInit();
@@ -688,11 +622,7 @@ async function onDeviceReady() {
     // @ts-ignore
     token = thisWindow.cordova.plugin.http.getCookieString(config.remoteWOport);
     downloadQueueInstance = new downloadQueue();
-
-
     mainIFrame.src = "pages/homepage/index.html";
-
-
 
     function onBackKeyDown() {
         try {
@@ -701,8 +631,9 @@ async function onDeviceReady() {
                 return;
             }
         } catch (err) {
-
+            console.log(err);
         }
+
         let frameLocation = mainIFrame.contentWindow.location.pathname;
         if (frameLocation.indexOf("www/pages/homepage/index.html") > -1 || (playerIFrame.className.indexOf("pop") == -1 && (playerIFrame as HTMLIFrameElement).contentWindow.location.pathname.indexOf("www/pages/player/index.html") > -1)) {
             playerIFrame.contentWindow.location.replace("fallback.html");
@@ -718,42 +649,23 @@ async function onDeviceReady() {
             mainIFrame.style.height = "100%";
 
             // @ts-ignore
-            MusicControls.destroy((x) => { }, (x) => { });
+            MusicControls.destroy(() => { }, () => { });
 
-
-            screen.orientation.lock("any").then(function () {
-
-            }).catch(function (error) {
-
-            });
-
-
-
-
+            screen.orientation.lock("any").then(() => { }).catch(() => { });
         } else {
-
             if (frameHistory.length > 1) {
                 frameHistory.pop();
                 setURL(frameHistory[frameHistory.length - 1]);
             }
-
         }
-
     }
 
-
-
-    if (thisWindow.cordova.plugin.http.getCookieString(config.remoteWOport).indexOf("connect.sid") == -1 && config.local == false && localStorage.getItem("offline") === 'false') {
+    if (thisWindow.cordova.plugin.http.getCookieString(config.remoteWOport).indexOf("connect.sid") == -1 
+        && config.local == false && localStorage.getItem("offline") === 'false') {
         window.location.href = "login.html";
     }
 
     document.addEventListener("backbutton", onBackKeyDown, false);
-
-
-    function nope() {
-
-    }
-
 }
 
 document.addEventListener("deviceready", onDeviceReady, false);
