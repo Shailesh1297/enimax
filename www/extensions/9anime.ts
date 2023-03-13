@@ -1,7 +1,7 @@
 var nineAnime: extension = {
     baseURL: "https://9anime.to",
     searchApi: async function (query) {
-        const vrf = await this.getVRF(query);
+        const vrf = await this.getVRF(query, true);
         const searchHTML = await MakeFetchZoro(`https://9anime.to/filter?keyword=${encodeURIComponent(query)}&vrf=${(vrf)}`);
         const searchDOM = document.createElement("div");
         searchDOM.innerHTML = DOMPurify.sanitize(searchHTML);
@@ -259,20 +259,20 @@ var nineAnime: extension = {
             throw new Error("API keynot set");
         }
     },
-    getVRF: async function (query: string): Promise<string> {
+    getVRF: async function (query: string, isSearch = false): Promise<string> {
         this.checkConfig();
         const nineAnimeURL = localStorage.getItem("9anime").trim();
         const apiKey = localStorage.getItem("apikey").trim();
-        const source = await MakeFetch(`https://${nineAnimeURL}/vrf?query=${encodeURIComponent(query)}&apikey=${apiKey}`);
+        const source = await MakeFetch(`https://${nineAnimeURL}/${isSearch ? "9anime-search" : "vrf"}?query=${encodeURIComponent(query)}&apikey=${apiKey}`);
         try {
             const parsedJSON = JSON.parse(source);
             if (parsedJSON.url) {
                 return parsedJSON.url;
             } else {
-                throw new Error("VRF1: Received an empty URL or the URL was not found.");
+                throw new Error(`${isSearch? "9ANIME-SEARCH-" : ""}VRF1: Received an empty URL or the URL was not found.`);
             }
         } catch (err) {
-            throw new Error("VRF1: Could not parse the JSON correctly.");
+            throw new Error(`${isSearch? "9ANIME-SEARCH-" : ""}VRF1: Could not parse the JSON correctly.`);
         }
     },
     decryptSource: async function (query: string): Promise<string> {
