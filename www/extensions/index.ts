@@ -12,47 +12,47 @@ function setFmoviesBase() {
     fmoviesBaseURL = !localStorage.getItem("fmoviesBaseURL") ? "fmovies.ink" : localStorage.getItem("fmoviesBaseURL");
 }
 
-String.prototype["substringAfter"] = function (toFind : string) {
+String.prototype["substringAfter"] = function (toFind: string) {
     let str = this;
     let index = str.indexOf(toFind);
     return index == -1 ? "" : str.substring(index + toFind.length);
 }
 
-String.prototype["substringBefore"] = function (toFind : string) {
+String.prototype["substringBefore"] = function (toFind: string) {
     let str = this;
     let index = str.indexOf(toFind);
     return index == -1 ? "" : str.substring(0, index);
 }
 
-String.prototype["substringAfterLast"] = function (toFind : string) {
+String.prototype["substringAfterLast"] = function (toFind: string) {
     let str = this;
     let index = str.lastIndexOf(toFind);
     return index == -1 ? "" : str.substring(index + toFind.length);
 }
 
-String.prototype["substringBeforeLast"] = function (toFind : string) {
+String.prototype["substringBeforeLast"] = function (toFind: string) {
     let str = this;
     let index = str.lastIndexOf(toFind);
     return index == -1 ? "" : str.substring(0, index);
 }
 
-String.prototype["onlyOnce"] = function (substring : string) {
+String.prototype["onlyOnce"] = function (substring: string) {
     let str = this;
     return str.lastIndexOf(substring) == str.indexOf(substring);
 }
 
-function extractKey(id : number, url = null, useCached = false) : Promise<string> {
+function extractKey(id: number, url = null, useCached = false): Promise<string> {
     return (new Promise(async function (resolve, reject) {
         if (config.chrome || useCached) {
             try {
-                let gitHTML = (await MakeFetch(`https://github.com/enimax-anime/key/blob/e${id}/key.txt`)) as unknown  as modifiedString;
+                let gitHTML = (await MakeFetch(`https://github.com/enimax-anime/key/blob/e${id}/key.txt`)) as unknown as modifiedString;
                 let key = gitHTML.substringAfter('"blob-code blob-code-inner js-file-line">').substringBefore("</td>");
-                if(!key){
+                if (!key) {
                     key = gitHTML.substringAfter('"rawBlob":"').substringBefore("\"");
                 }
 
-                if(!key){
-                    key = (await MakeFetch(`https://raw.githubusercontent.com/enimax-anime/key/e${id}/key.txt`)) as unknown  as modifiedString;
+                if (!key) {
+                    key = (await MakeFetch(`https://raw.githubusercontent.com/enimax-anime/key/e${id}/key.txt`)) as unknown as modifiedString;
                 }
                 resolve(key);
             } catch (err) {
@@ -89,9 +89,9 @@ function extractKey(id : number, url = null, useCached = false) : Promise<string
 
 }
 
-async function MakeFetch(url : string, options = {}) : Promise<string> {
+async function MakeFetch(url: string, options = {}): Promise<string> {
     return new Promise(function (resolve, reject) {
-        fetch(url, options).then(response => response.text()).then((response : string) => {
+        fetch(url, options).then(response => response.text()).then((response: string) => {
             resolve(response);
         }).catch(function (err) {
             reject(new Error(`${err.message}: ${url}`));
@@ -99,7 +99,7 @@ async function MakeFetch(url : string, options = {}) : Promise<string> {
     });
 }
 
-async function MakeFetchTimeout(url, options = {}, timeout = 5000) : Promise<string> {
+async function MakeFetchTimeout(url, options = {}, timeout = 5000): Promise<string> {
     const controller = new AbortController();
     const signal = controller.signal;
     options["signal"] = signal;
@@ -110,15 +110,15 @@ async function MakeFetchTimeout(url, options = {}, timeout = 5000) : Promise<str
             reject(new Error(`${err.message}: ${url}`));
         });
 
-        setTimeout(function(){
+        setTimeout(function () {
             controller.abort();
             reject(new Error("timeout"));
-        },timeout);
+        }, timeout);
     });
 }
 
 let customHeaders = {};
-var MakeCusReqFmovies = async function (url : string , options : {[key: string]: string | object}) : Promise<string> {
+var MakeCusReqFmovies = async function (url: string, options: { [key: string]: string | object }): Promise<string> {
     return new Promise(function (resolve, reject) {
         // @ts-ignore
         cordova.plugin.http.sendRequest(url, options, function (response) {
@@ -129,28 +129,58 @@ var MakeCusReqFmovies = async function (url : string , options : {[key: string]:
     });
 }
 
-
+// for v2
 if (config && config.chrome) {
 
-    // @ts-ignore
-    chrome.webRequest.onBeforeSendHeaders.addListener(
-        function (details) {
-            details.requestHeaders.push({
-                "name": "referer",
-                "value": wcoRef
-            });
+    if (config.manifest === "v2") {
+        // @ts-ignore
+        chrome.webRequest.onBeforeSendHeaders.addListener(
+            function (details) {
+                details.requestHeaders.push({
+                    "name": "referer",
+                    "value": wcoRef
+                });
 
-            details.requestHeaders.push({
-                "name": "x-requested-with",
-                "value": "XMLHttpRequest"
-            });
-            return { requestHeaders: details.requestHeaders };
-        },
-        { urls: ['https://*.watchanimesub.net/*'] },
-        ['blocking', 'requestHeaders', 'extraHeaders']
-    );
+                details.requestHeaders.push({
+                    "name": "x-requested-with",
+                    "value": "XMLHttpRequest"
+                });
+                return { requestHeaders: details.requestHeaders };
+            },
+            { urls: ['https://*.watchanimesub.net/*'] },
+            ['blocking', 'requestHeaders', 'extraHeaders']
+        );
 
-    MakeCusReqFmovies = async function (url : string , options : {[key: string]: string | object}) : Promise<string> {
+        // @ts-ignore
+        chrome.webRequest.onBeforeSendHeaders.addListener(
+            function (details) {
+                details.requestHeaders.push({
+                    "name": "Referer",
+                    "value": "https://mcloud.to"
+                });
+                return { requestHeaders: details.requestHeaders };
+            },
+            { urls: ['https://*.mcloud.to/*'] },
+            ['blocking', 'requestHeaders', 'extraHeaders']
+        );
+
+
+        // @ts-ignore
+        chrome.webRequest.onBeforeSendHeaders.addListener(
+            function (details) {
+                details.requestHeaders.push({
+                    "name": "Referer",
+                    "value": "https://vizcloud.club"
+                });
+
+                return { requestHeaders: details.requestHeaders };
+            },
+            { urls: ['https://*.vizcloud.club/*'] },
+            ['blocking', 'requestHeaders', 'extraHeaders']
+        );
+    }
+
+    MakeCusReqFmovies = async function (url: string, options: { [key: string]: string | object }): Promise<string> {
         if ("headers" in options) {
             customHeaders = options["headers"];
         }
@@ -158,7 +188,6 @@ if (config && config.chrome) {
         return new Promise(function (resolve, reject) {
             fetch(url, options).then(response => response.text()).then((response) => {
                 customHeaders = {};
-
                 resolve(response);
             }).catch(function (err) {
                 reject(err);
@@ -167,7 +196,8 @@ if (config && config.chrome) {
     }
 }
 
-function getWebviewHTML(url = "https://www.zoro.to", hidden = false){
+
+function getWebviewHTML(url = "https://www.zoro.to", hidden = false) {
     return new Promise((resolve, reject) => {
         // @ts-ignore
         const inappRef = cordova.InAppBrowser.open(url, '_blank', hidden ? "hidden=true" : "");
@@ -178,27 +208,27 @@ function getWebviewHTML(url = "https://www.zoro.to", hidden = false){
                         webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify(resultInApp));`
             });
         });
-    
-        inappRef.addEventListener('loaderror', (err : Error) => {
+
+        inappRef.addEventListener('loaderror', (err: Error) => {
             inappRef.show();
             reject(new Error("Error"));
         });
-    
-        inappRef.addEventListener('message', (result : string) => {
+
+        inappRef.addEventListener('message', (result: string) => {
             resolve(result);
         });
 
-        setTimeout(function(){
+        setTimeout(function () {
             inappRef.close();
             reject("Timeout");
         }, 15000);
     });
 }
 
-async function MakeFetchZoro(url : string, options = {}) : Promise<string> {
+async function MakeFetchZoro(url: string, options = {}): Promise<string> {
     return new Promise(function (resolve, reject) {
         fetch(url, options).then(response => response.text()).then((response) => {
-            if(response.includes("if the site connection is secure") && !config.chrome){
+            if (response.includes("if the site connection is secure") && !config.chrome) {
                 getWebviewHTML(url);
             }
             resolve(response);

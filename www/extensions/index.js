@@ -117,19 +117,38 @@ var MakeCusReqFmovies = async function (url, options) {
         });
     });
 };
+// for v2
 if (config && config.chrome) {
-    // @ts-ignore
-    chrome.webRequest.onBeforeSendHeaders.addListener(function (details) {
-        details.requestHeaders.push({
-            "name": "referer",
-            "value": wcoRef
-        });
-        details.requestHeaders.push({
-            "name": "x-requested-with",
-            "value": "XMLHttpRequest"
-        });
-        return { requestHeaders: details.requestHeaders };
-    }, { urls: ['https://*.watchanimesub.net/*'] }, ['blocking', 'requestHeaders', 'extraHeaders']);
+    if (config.manifest === "v2") {
+        // @ts-ignore
+        chrome.webRequest.onBeforeSendHeaders.addListener(function (details) {
+            details.requestHeaders.push({
+                "name": "referer",
+                "value": wcoRef
+            });
+            details.requestHeaders.push({
+                "name": "x-requested-with",
+                "value": "XMLHttpRequest"
+            });
+            return { requestHeaders: details.requestHeaders };
+        }, { urls: ['https://*.watchanimesub.net/*'] }, ['blocking', 'requestHeaders', 'extraHeaders']);
+        // @ts-ignore
+        chrome.webRequest.onBeforeSendHeaders.addListener(function (details) {
+            details.requestHeaders.push({
+                "name": "Referer",
+                "value": "https://mcloud.to"
+            });
+            return { requestHeaders: details.requestHeaders };
+        }, { urls: ['https://*.mcloud.to/*'] }, ['blocking', 'requestHeaders', 'extraHeaders']);
+        // @ts-ignore
+        chrome.webRequest.onBeforeSendHeaders.addListener(function (details) {
+            details.requestHeaders.push({
+                "name": "Referer",
+                "value": "https://vizcloud.club"
+            });
+            return { requestHeaders: details.requestHeaders };
+        }, { urls: ['https://*.vizcloud.club/*'] }, ['blocking', 'requestHeaders', 'extraHeaders']);
+    }
     MakeCusReqFmovies = async function (url, options) {
         if ("headers" in options) {
             customHeaders = options["headers"];

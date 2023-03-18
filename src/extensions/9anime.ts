@@ -304,6 +304,7 @@ var nineAnime: extension = {
         let fallbackAPI = true;
         let nineAnimeURL = "api.consumet.org/anime/9anime/helper";
         let apiKey = "";
+        
         try{
             this.checkConfig();
             nineAnimeURL = localStorage.getItem("9anime").trim();
@@ -335,6 +336,7 @@ var nineAnime: extension = {
         let fallbackAPI = true;
         let nineAnimeURL = "api.consumet.org/anime/9anime/helper";
         let apiKey = "";
+
         try{
             this.checkConfig();
             nineAnimeURL = localStorage.getItem("9anime").trim();
@@ -367,6 +369,7 @@ var nineAnime: extension = {
         let fallbackAPI = true;
         let nineAnimeURL = "api.consumet.org/anime/9anime/helper";
         let apiKey = "";
+
         try{
             this.checkConfig();
             nineAnimeURL = localStorage.getItem("9anime").trim();
@@ -480,7 +483,7 @@ var nineAnime: extension = {
     config: {
         "referer": "https://9anime.to",
     },
-    getConfig(url){
+    getConfig(url: string){
         if(url.includes("mcloud.to")){
             return {
                 "referer": "https://mcloud.to/"

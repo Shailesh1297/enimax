@@ -276,7 +276,8 @@ interface EnimaxConfig {
     "chrome": boolean,
     "firefox": boolean,
     "beta": boolean,
-    "sockets": boolean
+    "sockets": boolean,
+    "manifest": string
 }
 
 interface downloadMapping {
