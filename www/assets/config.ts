@@ -3,13 +3,13 @@ var config : EnimaxConfig = {
     "remote": localStorage.getItem("remote"),
     "remoteWOport": localStorage.getItem("remoteWOport"),
     "chrome": false,
-    "manifest": "v2",
+    "manifest": "v3",
     "firefox": false,
     "beta": false,
     "sockets": false
 };
 
-localStorage.setItem("version", "1.2.4");
+localStorage.setItem("version", "1.2.6");
 if (localStorage.getItem("lastUpdate") === null) {
     localStorage.setItem("lastUpdate", "0");
 }

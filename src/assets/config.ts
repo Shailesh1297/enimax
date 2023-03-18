@@ -9,7 +9,7 @@ var config : EnimaxConfig = {
     "sockets": false
 };
 
-localStorage.setItem("version", "1.2.4");
+localStorage.setItem("version", "1.2.6");
 if (localStorage.getItem("lastUpdate") === null) {
     localStorage.setItem("lastUpdate", "0");
 }
