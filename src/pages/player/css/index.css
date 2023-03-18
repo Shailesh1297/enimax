@@ -334,7 +334,7 @@ div {
     justify-content: 0;
 }
 
-#pop {
+#pop, #metaData {
     height: 100%;
     width: 100%;
     position: absolute;
@@ -345,6 +345,10 @@ div {
     transition-duration: 0.2s;
     pointer-events: none;
     opacity: 1;
+}
+
+#metaData{
+    background-color: transparent !important;
 }
 
 #epCon{
@@ -654,7 +658,7 @@ select {
     top:0;
     left:0;
     z-index: 11;
-    pointer-events: all;
+    pointer-events: inherit;
 }
 
 .accessTable {

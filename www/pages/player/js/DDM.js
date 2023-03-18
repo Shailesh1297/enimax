@@ -1,38 +1,3 @@
-function createElement(config) {
-    let temp;
-    if ("element" in config) {
-        temp = document.createElement(config.element);
-    }
-    else {
-        temp = document.createElement("div");
-    }
-    let attributes = config.attributes;
-    for (let value in attributes) {
-        temp.setAttribute(value, attributes[value]);
-    }
-    for (let value in config.style) {
-        temp.style[value] = config.style[value];
-    }
-    if ("id" in config) {
-        temp.id = config.id;
-    }
-    if ("class" in config) {
-        temp.className = config.class;
-    }
-    if ("innerText" in config) {
-        temp.textContent = config.innerText;
-    }
-    if ("innerHTML" in config) {
-        temp.innerHTML = config.innerHTML;
-    }
-    let listeners = config.listeners;
-    for (let value in listeners) {
-        temp.addEventListener(value, function () {
-            listeners[value].bind(this)();
-        });
-    }
-    return temp;
-}
 /**
  * A toggle class
  */
@@ -44,17 +9,15 @@ class Toggle {
      * Turns the toggle on if it isn't already on
      */
     turnOn() {
-        if (!this.isOn()) {
+        if (!this.isOn())
             this.element.click();
-        }
     }
     /**
      * Turns the toggle off if it isn't already off
      */
     turnOff() {
-        if (this.isOn()) {
+        if (this.isOn())
             this.element.click();
-        }
     }
     /**
      * Checks if the toggle is on
@@ -67,12 +30,10 @@ class Toggle {
      * Toggles the toggle
      */
     toggle() {
-        if (this.isOn()) {
+        if (this.isOn())
             this.turnOff();
-        }
-        else {
+        else
             this.turnOn();
-        }
     }
 }
 class Selectables {
@@ -99,7 +60,8 @@ class Selectables {
         }
         element.classList.add("selected");
         if (sceneID) {
-            DDMinstance.selectedValues[sceneID] = element.innerText;
+            let selectedValue = element.getAttribute("data-alttext");
+            DDMinstance.selectedValues[sceneID] = selectedValue ? selectedValue : element.innerText;
             DDMinstance.updateSelectVals(sceneID);
         }
     }
@@ -122,19 +84,17 @@ class Scene {
         if (!this.data)
             return;
         let sceneElem = this.element.querySelector(".scene");
-        if (sceneElem) {
-            let item = this.DDMinstance.makeItem(config, isHeading, this.data.id, sceneElem);
-            if (config.selected && config.triggerCallbackIfSelected === true) {
-                item.click();
-            }
-            sceneElem.append(item);
-        }
-        if (this.element.classList.contains("active")) {
+        let item = this.DDMinstance.makeItem(config, isHeading, this.data.id, sceneElem);
+        sceneElem === null || sceneElem === void 0 ? void 0 : sceneElem.append(item);
+        if (config.selected && config.triggerCallbackIfSelected === true)
+            item.click();
+        if (this.element.classList.contains("active"))
             this.DDMinstance.menuCon.style.height = ((_b = (_a = this.element.querySelector(".scene")) === null || _a === void 0 ? void 0 : _a.offsetHeight) !== null && _b !== void 0 ? _b : 100) + "px";
-        }
     }
     delete() {
         this.deleteItems();
+        this.DDMinstance.deleteSceneFromHistory(this.data.id);
+        delete this.DDMinstance.scenes[this.data.id];
         this.data = undefined;
         this.DDMinstance = undefined;
         this.element.remove();
@@ -145,17 +105,13 @@ class Scene {
         if (!this.data)
             return;
         let sceneDOM = this.element.querySelector(".scene");
-        if (sceneDOM) {
+        if (sceneDOM)
             sceneDOM.innerHTML = "";
-        }
-        if (this.data.id in this.DDMinstance.selectedValues) {
+        if (this.data.id in this.DDMinstance.selectedValues)
             this.DDMinstance.selectedValues[this.data.id] = "";
-        }
         this.DDMinstance.updateSelectVals(this.data.id);
-        this.DDMinstance.deleteSceneFromHistory(this.data.id);
-        for (const item of this.data.items) {
+        for (const item of this.data.items)
             this.DDMinstance.deleteItem(item);
-        }
         this.data.items = [];
     }
 }
@@ -168,14 +124,11 @@ class dropDownMenu {
         this.selections = {};
         this.selectedValues = {};
         this.selectedValuesDOM = {};
-        for (const scene of scenes) {
+        for (const scene of scenes)
             this.scenes[scene.id] = new Scene(scene, this);
-        }
-        for (const scene of scenes) {
-            if (!this.scenes[scene.id].element) {
+        for (const scene of scenes)
+            if (!this.scenes[scene.id].element)
                 this.makeScene(scene);
-            }
-        }
         menuCon.onscroll = function () {
             menuCon.scrollLeft = 0;
         };
@@ -186,17 +139,15 @@ class dropDownMenu {
      */
     open(id) {
         if (id && id in this.scenes) {
-            if (!this.history.length || (this.history.length && this.history[this.history.length - 1] != id)) {
+            if (!this.history.length || (this.history.length && this.history[this.history.length - 1] != id))
                 this.history.push(id);
-            }
             for (const sceneID in this.scenes) {
                 if (sceneID === id) {
                     this.scenes[sceneID].element.classList.add("active");
                     this.menuCon.style.height = this.scenes[sceneID].element.querySelector(".scene").offsetHeight + "px";
                 }
-                else {
+                else
                     this.scenes[sceneID].element.classList.remove("active");
-                }
             }
         }
     }
@@ -209,21 +160,22 @@ class dropDownMenu {
             let lastHistory = this.history.pop();
             this.open(this.history.pop());
         }
-        else {
+        else
             this.closeMenu();
-        }
     }
     /**
      * Opens the menu
      */
     openMenu() {
-        this.menuCon.style.display = "block";
+        this.menuCon.style.pointerEvents = "auto";
+        this.menuCon.style.opacity = "1";
     }
     /**
      * Closes the menu
      */
     closeMenu() {
-        this.menuCon.style.display = "none";
+        this.menuCon.style.pointerEvents = "none";
+        this.menuCon.style.opacity = "0";
     }
     /**
      *
@@ -237,17 +189,38 @@ class dropDownMenu {
         let shouldShowValue = false;
         if (item.open) {
             item.selectedValue = this.selectedValues[item.open];
-            if (this.scenes[item.open] instanceof Scene) {
+            if (this.scenes[item.open] instanceof Scene)
                 shouldShowValue = this.scenes[item.open].data.selectableScene === true;
-            }
+        }
+        const tempConfig = {
+            "class": "menuItemText",
+        };
+        if (item.html) {
+            tempConfig.innerHTML = item.html;
+        }
+        else {
+            tempConfig.innerText = item.text;
+        }
+        if (item.altText) {
+            tempConfig.attributes = {
+                "data-alttext": item.altText
+            };
         }
         const menuConfig = {
             "class": isHeading ? "menuHeading" : "menuItem",
         };
-        if (item.attributes) {
+        if (item.attributes)
             menuConfig.attributes = item.attributes;
-        }
         const menuItem = createElement(menuConfig);
+        const menuItemText = createElement(tempConfig);
+        if (item.altText) {
+            menuItem.setAttribute("data-alttext", item.altText);
+        }
+        if (item.classes) {
+            for (let className of item.classes) {
+                menuItem.classList.add(className);
+            }
+        }
         if (!isHeading && "iconID" in item) {
             const menuItemIcon = createElement({
                 "class": "menuItemIcon",
@@ -275,44 +248,59 @@ class dropDownMenu {
                 (_a = item.callback) === null || _a === void 0 ? void 0 : _a.bind(menuItem)();
             });
         }
+        // Should be before selectWithoutCallback is called to make sure
+        // .innerText is not an empty string
+        menuItem.append(menuItemText);
         if (item.selected) {
             if (sceneID) {
                 Selectables.selectWithoutCallback(menuItem, this, sceneID, sceneElem);
-                this.selectedValues[sceneID] = item.text;
                 this.updateSelectVals(sceneID);
             }
         }
         if (item.highlightable) {
-            if (item.id) {
+            if (item.id)
                 this.selections[item.id] = new Selectables(menuItem, this, sceneID, sceneElem);
-            }
             menuItem.setAttribute("highlightable", "true");
             menuItem.addEventListener("click", () => {
                 Selectables.selectWithoutCallback(menuItem, this, sceneID, sceneElem);
             });
         }
-        const menuItemText = createElement({
-            "class": "menuItemText",
-            "innerText": item.text
-        });
-        menuItem.append(menuItemText);
-        if (item.textBox) {
-            const textBox = createElement({
+        if (item.textBox || item.numberBox || item.color || item.slider) {
+            let className = "textBox";
+            let type = "text";
+            if (item.numberBox) {
+                type = "number";
+                className = "numberBox";
+            }
+            else if (item.color) {
+                type = "color";
+                className = "colorBox";
+            }
+            else if (item.slider) {
+                type = "range";
+                className = "sliderBox";
+            }
+            let attributes = {
+                "type": type
+            };
+            if (item.slider) {
+                attributes["max"] = item.sliderConfig.max;
+                attributes["step"] = item.sliderConfig.step;
+                attributes["min"] = item.sliderConfig.min;
+            }
+            const inputBox = createElement({
                 "element": "input",
-                "class": "textBox",
-                "attributes": {
-                    "type": "text"
-                }
+                "class": className,
+                "attributes": attributes
             });
             if (item.value) {
-                textBox.value = item.value;
+                inputBox.value = item.value;
             }
-            textBox.addEventListener("input", function (event) {
-                if (item.onInput) {
+            inputBox.addEventListener("input", function (event) {
+                if (item.onInput)
                     item.onInput(event);
-                }
             });
-            menuItem.append(textBox);
+            menuItem.append(inputBox);
         }
         if (shouldShowValue) {
             const valueDOM = createElement({
@@ -322,16 +310,15 @@ class dropDownMenu {
             menuItem.append(valueDOM);
             item.valueDOM = valueDOM;
             if (item.open) {
-                if (!this.selectedValuesDOM[item.open]) {
-                    this.selectedValuesDOM[item.open] = {};
-                }
+                if (!this.selectedValuesDOM[item.open])
+                    this.selectedValuesDOM[item.open] = {
+                        "elements": []
+                    };
                 const sValue = this.selectedValuesDOM[item.open];
-                if (sValue.elements) {
+                if (sValue.elements)
                     sValue.elements.push(valueDOM);
-                }
-                else {
+                else
                     sValue.elements = [valueDOM];
-                }
             }
         }
         if (item.open) {
@@ -358,9 +345,8 @@ class dropDownMenu {
                     }
                 }
             });
-            if (item.id) {
+            if (item.id)
                 this.toggles[item.id] = new Toggle(toggle);
-            }
             menuItem.append(toggle);
         }
         return menuItem;
@@ -370,11 +356,9 @@ class dropDownMenu {
      * @param {string} sceneID the sceneID of the scene whose selected values will be updated
      */
     updateSelectVals(sceneID) {
-        if (this.selectedValuesDOM[sceneID]) {
-            for (const elems of this.selectedValuesDOM[sceneID].elements) {
+        if (this.selectedValuesDOM[sceneID])
+            for (const elems of this.selectedValuesDOM[sceneID].elements)
                 elems.innerText = this.selectedValues[sceneID];
-            }
-        }
     }
     makeScene(config) {
         const scene = createElement({
@@ -384,7 +368,7 @@ class dropDownMenu {
             "class": "sceneCon"
         });
         const openScene = this.scenes[config.id];
-        if (openScene.element) {
+        if (openScene === null || openScene === void 0 ? void 0 : openScene.element) {
             return;
         }
         if (config.heading) {
@@ -394,9 +378,8 @@ class dropDownMenu {
             let newItemConfig = item;
             if (item.open) {
                 const openScene = this.scenes[item.open];
-                if (!openScene.element && openScene.data.selectableScene) {
+                if (!openScene.element && openScene.data.selectableScene)
                     this.makeScene(this.scenes[item.open].data);
-                }
             }
             scene.append(this.makeItem(newItemConfig, false, config.id, scene));
         }
@@ -406,11 +389,11 @@ class dropDownMenu {
         return sceneCon;
     }
     addScene(config) {
+        this.scenes[config.id] = new Scene(config, this);
         const sceneDIV = this.makeScene(config);
         if (sceneDIV) {
             this.menuCon.append(sceneDIV);
             config.element = sceneDIV;
-            this.scenes[config.id] = config;
         }
     }
     deleteScene(id) {
@@ -420,29 +403,24 @@ class dropDownMenu {
         }
     }
     deleteItem(item) {
-        if (item.id && item.id in this.selections) {
+        if (item.id && item.id in this.selections)
             delete this.selections[item.id];
-        }
-        if (item.id && item.id in this.toggles) {
+        if (item.id && item.id in this.toggles)
             delete this.toggles[item.id];
-        }
         if (item.open) {
             const elem = this.selectedValuesDOM[item.open];
             if (elem) {
                 const elements = elem.elements;
                 let idx = elements.indexOf(item.valueDOM);
-                if (idx > -1) {
+                if (idx > -1)
                     elements.splice(idx, 1);
-                }
             }
         }
     }
     deleteSceneFromHistory(val) {
-        for (let i = this.history.length - 1; i >= 0; i--) {
-            if (this.history[i] == val) {
+        for (let i = this.history.length - 1; i >= 0; i--)
+            if (this.history[i] == val)
                 this.history.splice(i, 1);
-            }
-        }
     }
     /**
      *
@@ -450,9 +428,8 @@ class dropDownMenu {
      * @returns {Toggle | null}
      */
     getToggle(id) {
-        if (id in this.toggles) {
+        if (id in this.toggles)
             return this.toggles[id];
-        }
         return null;
     }
     /**
@@ -461,10 +438,8 @@ class dropDownMenu {
      * @returns {Scene | null}
      */
     getScene(id) {
-        if (id in this.scenes) {
+        if (id in this.scenes)
             return this.scenes[id];
-        }
         return null;
     }
 }
-//# sourceMappingURL=test.js.map

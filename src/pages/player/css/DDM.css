@@ -14,7 +14,17 @@
     transition-duration: 200ms;
     max-height: calc(100% - 20px);
     overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
     z-index: 10;
+}
+
+.inputItem .menuItemText{
+    width: 100%;
+}
+
+.inputItem input{
+   margin: auto;
 }
 
 .menuHeading,
@@ -191,7 +201,7 @@
 }
 
 .sceneCon.active {
-    pointer-events: all;
+    pointer-events: inherit !important;
     opacity: 1;
     left: 0px;
 }
