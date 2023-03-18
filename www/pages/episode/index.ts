@@ -412,7 +412,7 @@ function ini() {
                     }
                     scrollLastIndex = index;
                 };
-                cusRoomDOM.addEventListener("scroll", () => { scrollSnapFunc }, { "passive": true });
+                cusRoomDOM.addEventListener("scroll", () => { scrollSnapFunc() }, { "passive": true });
             }
 
             let toAdd = [];

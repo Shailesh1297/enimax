@@ -5,14 +5,6 @@ class XMLHttpRequest2 {
         this.config = {};
         this.delegate = null;
         this.requestHeaders = {};
-        try {
-            for (let key in extensionList[engine].config) {
-                this.requestHeaders[key] = extensionList[engine].config[key];
-            }
-        }
-        catch (err) {
-            console.error(err);
-        }
         this.responseHeaders = {};
         this.listeners = {};
         this.readyState = 0;
@@ -56,6 +48,12 @@ class XMLHttpRequest2 {
         return this.responseHeaders[name];
     }
     open(method, url, async, user, password) {
+        try {
+            this.requestHeaders = extensionList[engine].getConfig(url);
+        }
+        catch (err) {
+            console.error(err);
+        }
         this.config.method = !method ? "GET" : method.toUpperCase();
         this.config.url = url;
         this.config.async = async === undefined ? true : async;
@@ -86,6 +84,7 @@ class XMLHttpRequest2 {
             self.dispatchReadyStateChangeEvent(2);
             self.dispatchReadyStateChangeEvent(3);
             self.dispatchReadyStateChangeEvent(4);
+            console.log(response);
         }, function (response) {
             console.error(response);
         });

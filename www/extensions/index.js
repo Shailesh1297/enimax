@@ -662,6 +662,13 @@ var fmovies = {
     },
     getAnimeInfo: async function (url) {
         const isInk = url.includes("-full-");
+        // For backwards compatibility
+        if (!url.includes("-online-") && !fmoviesBaseURL.includes(".ink")) {
+            url = url.replace("-full-", "-online-");
+        }
+        else if (url.includes("-online-") && fmoviesBaseURL.includes(".ink")) {
+            url = url.replace("-online-", "-full-");
+        }
         let self = this;
         let urlSplit = url.split("&engine");
         if (urlSplit.length >= 2) {
@@ -1571,7 +1578,7 @@ var nineAnime = {
     baseURL: "https://9anime.to",
     searchApi: async function (query) {
         const vrf = await this.getVRF(query, true);
-        const searchHTML = await MakeFetchZoro(`https://9anime.to/filter?keyword=${encodeURIComponent(query)}&vrf=${(vrf)}`);
+        const searchHTML = await MakeFetchZoro(`https://9anime.to/filter?keyword=${encodeURIComponent(query)}&${vrf[1]}=${vrf[0]}`);
         const searchDOM = document.createElement("div");
         searchDOM.innerHTML = DOMPurify.sanitize(searchHTML);
         const searchElem = searchDOM.querySelector("#list-items");
@@ -1628,7 +1635,7 @@ var nineAnime = {
         let IDVRF = await this.getVRF(nineAnimeID);
         let episodesHTML = "";
         try {
-            const tempResponse = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/episode/list/${nineAnimeID}?vrf=${(IDVRF)}`));
+            const tempResponse = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/episode/list/${nineAnimeID}?${IDVRF[1]}=${IDVRF[0]}`));
             if (tempResponse.result) {
                 episodesHTML = tempResponse.result;
             }
@@ -1680,7 +1687,7 @@ var nineAnime = {
         const sourceEp = searchParams.get("ep");
         const sourceEpVRF = await this.getVRF(sourceEp);
         const promises = [];
-        const serverHTML = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/server/list/${sourceEp}?vrf=${(sourceEpVRF)}`)).result;
+        const serverHTML = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/server/list/${sourceEp}?${sourceEpVRF[1]}=${sourceEpVRF[0]}`)).result;
         const serverDOM = document.createElement("div");
         serverDOM.innerHTML = DOMPurify.sanitize(serverHTML);
         const allServers = serverDOM.querySelectorAll("li");
@@ -1695,20 +1702,45 @@ var nineAnime = {
         response.status = 200;
         let sources = [];
         let vidstreamIDs = [];
+        let mCloudIDs = [];
         let filemoonIDs = [];
         for (let i = 0; i < allServers.length; i++) {
             let currentServer = allServers[i];
+            let type = i.toString();
+            try {
+                const tempType = currentServer.parentElement.previousElementSibling
+                    .innerText
+                    .trim();
+                if (tempType) {
+                    type = tempType;
+                }
+            }
+            catch (err) {
+                console.warn(err);
+            }
             if (currentServer.innerText.toLowerCase() == "vidstream") {
-                vidstreamIDs.push(currentServer.getAttribute("data-link-id"));
+                vidstreamIDs.push({
+                    id: currentServer.getAttribute("data-link-id"),
+                    type
+                });
             }
             else if (currentServer.innerText.toLowerCase() == "filemoon") {
-                filemoonIDs.push(currentServer.getAttribute("data-link-id"));
+                filemoonIDs.push({
+                    id: currentServer.getAttribute("data-link-id"),
+                    type
+                });
+            }
+            else if (currentServer.innerText.toLowerCase() == "mycloud") {
+                mCloudIDs.push({
+                    id: currentServer.getAttribute("data-link-id"),
+                    type
+                });
             }
         }
         async function addSource(ID, self, index, extractor = "vidstream") {
             try {
                 const serverVRF = await self.getVRF(ID);
-                const serverData = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/server/${ID}?vrf=${(serverVRF)}`)).result;
+                const serverData = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/server/${ID}?${serverVRF[1]}=${serverVRF[0]}`)).result;
                 const serverURL = serverData.url;
                 const sourceDecrypted = await self.decryptSource(serverURL);
                 let source = {
@@ -1726,7 +1758,7 @@ var nineAnime = {
                     };
                     sources.push(source);
                 }
-                else {
+                else if (extractor == "filemoon") {
                     const filemoonHTML = await MakeFetch(sourceDecrypted);
                     const m3u8File = await self.getFilemoonLink(filemoonHTML);
                     source = {
@@ -1736,10 +1768,21 @@ var nineAnime = {
                     };
                     sources.push(source);
                 }
+                else {
+                    const mCloudID = sourceDecrypted.split("/").pop();
+                    const m3u8File = await self.getVidstreamLink(mCloudID, false);
+                    source = {
+                        "name": "Mycloud#" + index,
+                        "type": m3u8File.includes(".m3u8") ? "hls" : "mp4",
+                        "url": m3u8File,
+                    };
+                    sources.push(source);
+                }
                 if ("skip_data" in serverData) {
+                    serverData.skip_data = JSON.parse(await self.decryptSource(serverData.skip_data));
                     source.skipIntro = {
-                        start: serverData.skip_data.intro_begin,
-                        end: serverData.skip_data.intro_end
+                        start: serverData.skip_data.intro[0],
+                        end: serverData.skip_data.intro[1]
                     };
                 }
             }
@@ -1748,10 +1791,13 @@ var nineAnime = {
             }
         }
         for (let i = 0; i < vidstreamIDs.length; i++) {
-            promises.push(addSource(vidstreamIDs[i], this, i));
+            promises.push(addSource(vidstreamIDs[i].id, this, vidstreamIDs[i].type));
         }
         for (let i = 0; i < filemoonIDs.length; i++) {
-            promises.push(addSource(filemoonIDs[i], this, i, "filemoon"));
+            promises.push(addSource(filemoonIDs[i].id, this, filemoonIDs[i].type, "filemoon"));
+        }
+        for (let i = 0; i < mCloudIDs.length; i++) {
+            promises.push(addSource(mCloudIDs[i].id, this, mCloudIDs[i].type, "mycloud"));
         }
         let settledSupported = "allSettled" in Promise;
         let epList = [];
@@ -1801,14 +1847,27 @@ var nineAnime = {
         }
     },
     getVRF: async function (query, isSearch = false) {
-        this.checkConfig();
-        const nineAnimeURL = localStorage.getItem("9anime").trim();
-        const apiKey = localStorage.getItem("apikey").trim();
-        const source = await MakeFetch(`https://${nineAnimeURL}/${isSearch ? "9anime-search" : "vrf"}?query=${encodeURIComponent(query)}&apikey=${apiKey}`);
+        let fallbackAPI = true;
+        let nineAnimeURL = "api.consumet.org/anime/9anime/helper";
+        let apiKey = "";
+        try {
+            this.checkConfig();
+            nineAnimeURL = localStorage.getItem("9anime").trim();
+            apiKey = localStorage.getItem("apikey").trim();
+            fallbackAPI = false;
+        }
+        catch (err) {
+            console.warn("Defaulting to Consumet.");
+        }
+        let reqURL = `https://${nineAnimeURL}/${isSearch ? "9anime-search" : "vrf"}?query=${encodeURIComponent(query)}&apikey=${apiKey}`;
+        if (fallbackAPI) {
+            reqURL = `https://${nineAnimeURL}?query=${encodeURIComponent(query)}&action=${isSearch ? "searchVrf" : "vrf"}`;
+        }
+        const source = await MakeFetch(reqURL);
         try {
             const parsedJSON = JSON.parse(source);
             if (parsedJSON.url) {
-                return parsedJSON.url;
+                return [encodeURIComponent(parsedJSON.url), parsedJSON.vrfQuery];
             }
             else {
                 throw new Error(`${isSearch ? "9ANIME-SEARCH-" : ""}VRF1: Received an empty URL or the URL was not found.`);
@@ -1819,10 +1878,23 @@ var nineAnime = {
         }
     },
     decryptSource: async function (query) {
-        this.checkConfig();
-        const nineAnimeURL = localStorage.getItem("9anime").trim();
-        const apiKey = localStorage.getItem("apikey").trim();
-        const source = await MakeFetch(`https://${nineAnimeURL}/decrypt?query=${encodeURIComponent(query)}&apikey=${apiKey}`);
+        let fallbackAPI = true;
+        let nineAnimeURL = "api.consumet.org/anime/9anime/helper";
+        let apiKey = "";
+        try {
+            this.checkConfig();
+            nineAnimeURL = localStorage.getItem("9anime").trim();
+            apiKey = localStorage.getItem("apikey").trim();
+            fallbackAPI = false;
+        }
+        catch (err) {
+            console.warn("Defaulting to Consumet.");
+        }
+        let reqURL = `https://${nineAnimeURL}/decrypt?query=${encodeURIComponent(query)}&apikey=${apiKey}`;
+        if (fallbackAPI) {
+            reqURL = `https://${nineAnimeURL}?query=${encodeURIComponent(query)}&action=decrypt`;
+        }
+        const source = await MakeFetch(reqURL);
         try {
             const parsedJSON = JSON.parse(source);
             if (parsedJSON.url) {
@@ -1836,11 +1908,24 @@ var nineAnime = {
             throw new Error("DECRYPT0: Could not parse the JSON correctly.");
         }
     },
-    getVidstreamLink: async function (query) {
-        this.checkConfig();
-        const nineAnimeURL = localStorage.getItem("9anime").trim();
-        const apiKey = localStorage.getItem("apikey").trim();
-        const source = await MakeFetch(`https://${nineAnimeURL}/vizcloud?query=${encodeURIComponent(query)}&apikey=${apiKey}`);
+    getVidstreamLink: async function (query, isViz = true) {
+        let fallbackAPI = true;
+        let nineAnimeURL = "api.consumet.org/anime/9anime/helper";
+        let apiKey = "";
+        try {
+            this.checkConfig();
+            nineAnimeURL = localStorage.getItem("9anime").trim();
+            apiKey = localStorage.getItem("apikey").trim();
+            fallbackAPI = false;
+        }
+        catch (err) {
+            console.warn("Defaulting to Consumet.");
+        }
+        let reqURL = `https://${nineAnimeURL}/${isViz ? "vizcloud" : "mcloud"}?query=${encodeURIComponent(query)}&apikey=${apiKey}`;
+        if (fallbackAPI) {
+            reqURL = `https://${nineAnimeURL}?query=${encodeURIComponent(query)}&action=${isViz ? "vizcloud" : "mcloud"}`;
+        }
+        const source = await MakeFetch(reqURL);
         try {
             const parsedJSON = JSON.parse(source);
             if (parsedJSON.data &&
@@ -1859,10 +1944,23 @@ var nineAnime = {
         }
     },
     getFilemoonLink: async function (filemoonHTML) {
-        this.checkConfig();
-        const nineAnimeURL = localStorage.getItem("9anime").trim();
-        const apiKey = localStorage.getItem("apikey").trim();
-        const source = await MakeFetch(`https://${nineAnimeURL}/filemoon?apikey=${apiKey}`, {
+        let fallbackAPI = true;
+        let nineAnimeURL = "api.consumet.org/anime/9anime/helper";
+        let apiKey = "";
+        try {
+            this.checkConfig();
+            nineAnimeURL = localStorage.getItem("9anime").trim();
+            apiKey = localStorage.getItem("apikey").trim();
+            fallbackAPI = false;
+        }
+        catch (err) {
+            console.warn("Defaulting to Consumet.");
+        }
+        let reqURL = `https://${nineAnimeURL}/filemoon?apikey=${apiKey}`;
+        if (fallbackAPI) {
+            throw new Error("Not supported");
+        }
+        const source = await MakeFetch(reqURL, {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded"
@@ -1922,6 +2020,16 @@ var nineAnime = {
     },
     config: {
         "referer": "https://9anime.to",
+    },
+    getConfig(url) {
+        if (url.includes("mcloud.to")) {
+            return {
+                "referer": "https://mcloud.to/"
+            };
+        }
+        else {
+            return this.config;
+        }
     }
 };
 

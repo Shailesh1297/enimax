@@ -105,6 +105,13 @@ var fmovies = {
     },
     getAnimeInfo: async function (url) {
         const isInk = url.includes("-full-");
+        // For backwards compatibility
+        if (!url.includes("-online-") && !fmoviesBaseURL.includes(".ink")) {
+            url = url.replace("-full-", "-online-");
+        }
+        else if (url.includes("-online-") && fmoviesBaseURL.includes(".ink")) {
+            url = url.replace("-online-", "-full-");
+        }
         let self = this;
         let urlSplit = url.split("&engine");
         if (urlSplit.length >= 2) {
