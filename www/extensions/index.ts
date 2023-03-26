@@ -228,7 +228,7 @@ function getWebviewHTML(url = "https://www.zoro.to", hidden = false) {
 async function MakeFetchZoro(url: string, options = {}): Promise<string> {
     return new Promise(function (resolve, reject) {
         fetch(url, options).then(response => response.text()).then((response) => {
-            if (response.includes("if the site connection is secure") && !config.chrome) {
+            if ((response.includes("if the site connection is secure") || response.includes("Security checking...")) && !config.chrome) {
                 getWebviewHTML(url);
             }
             resolve(response);

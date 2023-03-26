@@ -607,7 +607,25 @@ window.addEventListener('message', function (x) {
     }
 });
 
+
+function onPause() {
+    let frameLocation = playerIFrame.contentWindow.location.pathname;
+
+    if(frameLocation.includes("pages/player")){
+        playerIFrame.contentWindow.postMessage({action: "pip"}, "*");
+    }
+}
+
+function onResume() {
+    let frameLocation = playerIFrame.contentWindow.location.pathname;
+
+    if(frameLocation.includes("pages/player")){
+        playerIFrame.contentWindow.postMessage({action: "pipout"}, "*");
+    } 
+}
+
 async function onDeviceReady() {
+
     await SQLInit();
     await SQLInitDownloaded();
 
@@ -635,7 +653,9 @@ async function onDeviceReady() {
         }
 
         let frameLocation = mainIFrame.contentWindow.location.pathname;
-        if (frameLocation.indexOf("www/pages/homepage/index.html") > -1 || (playerIFrame.className.indexOf("pop") == -1 && (playerIFrame as HTMLIFrameElement).contentWindow.location.pathname.indexOf("www/pages/player/index.html") > -1)) {
+        if (frameLocation.indexOf("www/pages/homepage/index.html") > -1 || 
+            (playerIFrame.className.indexOf("pop") == -1 && 
+            (playerIFrame as HTMLIFrameElement).contentWindow.location.pathname.indexOf("www/pages/player/index.html") > -1)) {
             playerIFrame.contentWindow.location.replace("fallback.html");
             playerIFrame.classList.remove("pop");
 
@@ -666,6 +686,9 @@ async function onDeviceReady() {
     }
 
     document.addEventListener("backbutton", onBackKeyDown, false);
+    document.addEventListener("pause", onPause, false);
+    document.addEventListener("resume", onResume, false);
+
 }
 
 document.addEventListener("deviceready", onDeviceReady, false);

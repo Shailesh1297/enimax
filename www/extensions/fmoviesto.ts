@@ -1,11 +1,13 @@
-var nineAnime: extension = {
-    baseURL: "https://9anime.to",
+var fmoviesto: extension = {
+    baseURL: "https://fmovies.to",
     searchApi: async function (query) {
-        const vrf = await this.getVRF(query, "9anime-search");
-        const searchHTML = await MakeFetchZoro(`https://9anime.to/filter?keyword=${encodeURIComponent(query)}&${vrf[1]}=${vrf[0]}`);
+        query = query.replace(" ", "+");
+
+        const vrf = await this.getVRF(query, "fmovies-vrf");
+        const searchHTML = await MakeFetchZoro(`https://fmovies.to/search?keyword=${encodeURIComponent(query)}&vrf=${vrf[0]}`);
         const searchDOM = document.createElement("div");
         searchDOM.innerHTML = DOMPurify.sanitize(searchHTML);
-        const searchElem = searchDOM.querySelector("#list-items");
+        const searchElem = searchDOM.querySelector(".filmlist");
         const searchItems = searchElem.querySelectorAll(".item");
         const response: Array<extensionSearchData> = [];
 
@@ -16,10 +18,10 @@ var nineAnime: extension = {
         for (let i = 0; i < searchItems.length; i++) {
             const currentElem = searchItems[i];
             response.push({
-                "name": (currentElem.querySelector(".name") as HTMLElement).innerText,
-                "id": currentElem.querySelector(".name").getAttribute("href").replace("/watch/", ""),
+                "id": (currentElem.querySelector(".title") as HTMLElement).getAttribute('href').slice(1),
+                "name": (currentElem.querySelector(".title") as HTMLElement).innerText,
                 "image": currentElem.querySelector("img").src,
-                "link": "/" + currentElem.querySelector(".name").getAttribute("href").replace("/watch/", "") + "&engine=5"
+                "link": "/" + currentElem.querySelector(".title").getAttribute("href").slice(1).replace("/watch/", "") + "&engine=6"
             } as extensionSearchData);
         }
 
@@ -37,15 +39,22 @@ var nineAnime: extension = {
         };
 
         let id = url.replace("?watch=/", "");
-        let infoHTML = await MakeFetchZoro(`https://9anime.to/watch/${id}`);
+
+        let infoHTML = await MakeFetchZoro(`https://fmovies.to/${id}`);
         let infoDOM = document.createElement("div");
-        infoDOM.innerHTML = DOMPurify.sanitize(infoHTML);
-        let nineAnimeID = infoDOM.querySelector("#watch-main").getAttribute("data-id");
-        let infoMainDOM = infoDOM.querySelector("#w-info").querySelector(".info");
-        response.mainName = id;
-        response.name = (infoMainDOM.querySelector(".title") as HTMLElement).innerText;
-        response.description = (infoMainDOM.querySelector(".content") as HTMLElement).innerText;
-        response.image = infoDOM.querySelector("#w-info").querySelector("img").getAttribute("src");
+        infoDOM.innerHTML = DOMPurify.sanitize(infoHTML, {
+            "ADD_ATTR": ["itemprop"]
+        });
+
+
+        const container = infoDOM.querySelector(".watch-extra");
+        response.mainName = id.replace("series/", "").replace("movie/", "");
+        response.name = (container.querySelector(`h1`) as HTMLElement).innerText;
+        response.image = container.querySelector(`img`).getAttribute("src");
+        response.description = (container.querySelector("div[itemprop=\"description\"]") as HTMLElement).innerText.trim();
+
+        const isMovie = id.split('/')[0] !== "series";
+
 
         try {
             response.genres = [];
@@ -61,16 +70,16 @@ var nineAnime: extension = {
         }
 
         let episodes = [];
-
-        let IDVRF = await this.getVRF(nineAnimeID, "ajax-episode-list");
+        const uid = infoDOM.querySelector("#watch").getAttribute("data-id");
+        let IDVRF = await this.getVRF(uid, "fmovies-vrf");
 
         let episodesHTML = "";
 
         try {
-            const tempResponse = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/episode/list/${nineAnimeID}?${IDVRF[1]}=${IDVRF[0]}`));
+            const tempResponse = JSON.parse(await MakeFetchZoro(`https://fmovies.to/ajax/film/servers?id=${uid}&vrf=${IDVRF[0]}`));
 
-            if (tempResponse.result) {
-                episodesHTML = tempResponse.result;
+            if (tempResponse.html) {
+                episodesHTML = tempResponse.html;
             } else {
                 throw new Error("Couldn't find the result");
             }
@@ -82,19 +91,62 @@ var nineAnime: extension = {
         let episodesDOM = document.createElement("div");
         episodesDOM.innerHTML = DOMPurify.sanitize(episodesHTML);
 
-        let episodeElem = episodesDOM.querySelectorAll("li");
+        let episodeElem = episodesDOM.querySelectorAll(".episode");
+
+        response.totalPages = 0;
+        response.pageInfo = [];
+
+        if (isMovie) {
+            response.totalPages = 1;
+            response.pageInfo.push({
+                pageName: `Movie`,
+                pageSize: 0
+            });
+        }
+
+        let lastSeason = -1;
         for (let i = 0; i < episodeElem.length; i++) {
             let curElem = episodeElem[i];
             let title = "";
+            let episodeNum: number;
+            let season: number;
+
             try {
-                title = curElem.querySelector("span").innerText;
+                if (isMovie) {
+                    title = (curElem as HTMLElement).innerText;
+                } else {
+                    title = curElem.querySelector('a').getAttribute('title');
+                }
             } catch (err) {
                 console.warn("Could not find the title");
             }
+
+
+            if (!isMovie) {
+                episodeNum = parseInt(curElem.querySelector('a').getAttribute('data-kname').split('-')[1]);
+                season = parseInt(curElem.querySelector('a').getAttribute('data-kname').split('-')[0]);
+
+
+                if (response.totalPages == 0 || season != lastSeason) {
+                    response.pageInfo.push({
+                        pageName: `Season ${season}`,
+                        pageSize: 1
+                    });
+
+                    response.totalPages++;
+                } else {
+                    response.pageInfo[response.pageInfo.length - 1].pageSize++;
+                }
+
+                lastSeason = season;
+            } else {
+                response.pageInfo[response.pageInfo.length - 1].pageSize++;
+            }
+
             episodes.push({
-                "link": (nextPrev ? "" : "?watch=") + encodeURIComponent(id) + "&ep=" + curElem.querySelector("a").getAttribute("data-ids") + "&engine=5",
-                "id": curElem.querySelector("a").getAttribute("data-ids"),
-                "title": nextPrev ? title : `Episode ${curElem.querySelector("a").getAttribute("data-num")} - ${title}`
+                "link": (nextPrev ? "" : "?watch=") + encodeURIComponent(id) + "&ep=" + curElem.querySelector("a").getAttribute("data-kname") + "&engine=6",
+                "id": curElem.querySelector("a").getAttribute("data-kname"),
+                "title": (nextPrev || isMovie) ? title : `Season ${season} | Episode ${episodeNum} - ${title}`
             });
         }
 
@@ -122,66 +174,106 @@ var nineAnime: extension = {
 
         const searchParams = new URLSearchParams(url);
         const sourceEp = searchParams.get("ep");
-        const sourceEpVRF = await this.getVRF(sourceEp,"ajax-server-list");
+
+        const isMovie = searchParams.get("watch").split('/')[0] !== "series";
+
         const promises: Array<Promise<any>> = [];
 
-        const serverHTML = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/server/list/${sourceEp}?${sourceEpVRF[1]}=${sourceEpVRF[0]}`)).result;
+        const infoHTML = await MakeFetchZoro(`https://fmovies.to/${searchParams.get("watch")}`);
+        const infoDOM = document.createElement("div");
+        infoDOM.innerHTML = DOMPurify.sanitize(infoHTML);
+
+
+        const uid = infoDOM.querySelector("#watch").getAttribute('data-id');
+        const epsiodeServers = [];
+
+
+        const serverVRF = await this.getVRF(uid, "fmovies-vrf");
+
+        const serverHTML = JSON.parse(await MakeFetchZoro(`https://fmovies.to/ajax/film/servers?id=${uid}&vrf=${serverVRF[0]}`)).html;
         const serverDOM = document.createElement("div");
-        serverDOM.innerHTML = DOMPurify.sanitize(serverHTML);
+        serverDOM.innerHTML = DOMPurify.sanitize(serverHTML, {
+            "ADD_ATTR": ["data-kname", "data-id"]
+        });
 
-        const allServers = serverDOM.querySelectorAll("li");
+        const servers: { [key: string]: string } = {};
+
+        const serverDIVs = serverDOM.querySelectorAll(".server");
+
+        for (let i = 0; i < serverDIVs.length; i++) {
+            const curServer = serverDIVs[i];
+            const serverId = curServer.getAttribute("data-id");
+
+            let serverName = (curServer as HTMLElement).innerText.toLowerCase().split('server')[1].trim();
+            servers[serverId] = serverName;
+
+        }
+
+        const currentEpisode = serverDOM.querySelector(`a[data-kname="${sourceEp}"]`);
         try {
-            response.episode = serverDOM.querySelector("b").innerText.split("Episode")[1];
+            const serverString: { [key: string]: string } = JSON.parse(currentEpisode.getAttribute("data-ep"));
+            for (const serverId in serverString) {
+                console.log(servers, serverId);
+                epsiodeServers.push({
+                    type: servers[serverId],
+                    id: serverString[serverId],
+                });
+            }
         } catch (err) {
-            response.episode = serverDOM.querySelector("b").innerText;
+            console.log(err);
+            throw new Error('Episode not found');
         }
 
-        response.name = searchParams.get("watch");
-        response.nameWSeason = searchParams.get("watch");
-        response.status = 200;
-        let sources: Array<videoSource> = [];
-        let vidstreamIDs = [];
-        let mCloudIDs = [];
-        let filemoonIDs = [];
-        for (let i = 0; i < allServers.length; i++) {
-            let currentServer = allServers[i];
-            let type = i.toString();
 
-            try{
-                const tempType = (currentServer.parentElement.previousElementSibling as HTMLElement)
-                                    .innerText
-                                    .trim();
-                if(tempType){
-                    type = tempType;
+        try {
+            const epTemp = sourceEp.split('-');
+            let ep = epTemp[epTemp.length - 1];
+            if (!isMovie) {
+                response.episode = ep;
+            } else {
+                if (ep == "full") {
+                    response.episode = "1";
+                } else {
+                    response.episode = Math.max(1, ep.charCodeAt(0) - "a".charCodeAt(0) + 1).toString();
                 }
-            }catch(err){
-                console.warn(err);
-            }
 
-            if (currentServer.innerText.toLowerCase() == "vidstream") {
-                vidstreamIDs.push({
-                    id: currentServer.getAttribute("data-link-id"),
-                    type
-                });
-            } else if (currentServer.innerText.toLowerCase() == "filemoon") {
-                filemoonIDs.push({
-                    id: currentServer.getAttribute("data-link-id"),
-                    type
-                });
-            } else if (currentServer.innerText.toLowerCase() == "mycloud") {
-                mCloudIDs.push({
-                    id: currentServer.getAttribute("data-link-id"),
-                    type
-                });
+                if (isNaN(parseInt(response.episode))) {
+                    response.episode = "1";
+                }
             }
+        } catch (err) {
+            response.episode = "1";
         }
 
-        async function addSource(ID, self, index, extractor = "vidstream") {
+        response.name = searchParams.get("watch").replace("series/", "").replace("movie/", "");
+        response.nameWSeason = response.name;
+        response.status = 200;
+
+        let sources: Array<videoSource> = [];
+
+        async function addSource(ID: string, self: extension, index: string, extractor: string) {
             try {
-                const serverVRF = await self.getVRF(ID, "ajax-server");
-                const serverData = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/server/${ID}?${serverVRF[1]}=${serverVRF[0]}`)).result;
+                const serverVRF = await self.getVRF(ID, "fmovies-vrf");
+                const serverData = JSON.parse(await MakeFetchZoro(`https://fmovies.to/ajax/episode/info?id=${ID}&vrf=${serverVRF[0]}`));
                 const serverURL = serverData.url;
                 const sourceDecrypted = await self.decryptSource(serverURL);
+
+
+                if (!response.subtitles) {
+                    try {
+
+                        // Blame Fmovies, not me
+                        const subURL = new URLSearchParams(
+                            (new URLSearchParams(
+                                (new URL(sourceDecrypted)).search)
+                            ).get("h")
+                        ).values().next().value;
+
+                        response.subtitles = JSON.parse(await MakeFetchZoro(subURL));
+                    } catch (err) {
+                        console.warn(err);
+                    }
+                }
 
                 let source: videoSource = {
                     "name": "",
@@ -200,7 +292,7 @@ var nineAnime: extension = {
                     };
 
                     sources.push(source);
-                } else if(extractor == "filemoon"){
+                } else if (extractor == "filemoon") {
                     const filemoonHTML = await MakeFetch(sourceDecrypted);
                     const m3u8File = await self.getFilemoonLink(filemoonHTML);
 
@@ -211,7 +303,7 @@ var nineAnime: extension = {
                     };
 
                     sources.push(source);
-                } else{
+                } else {
                     const mCloudID = sourceDecrypted.split("/").pop();
                     const m3u8File = await self.getVidstreamLink(mCloudID, false);
 
@@ -237,16 +329,11 @@ var nineAnime: extension = {
             }
         }
 
-        for (let i = 0; i < vidstreamIDs.length; i++) {
-            promises.push(addSource(vidstreamIDs[i].id, this, vidstreamIDs[i].type));
-        }
-
-        for (let i = 0; i < filemoonIDs.length; i++) {
-            promises.push(addSource(filemoonIDs[i].id, this, filemoonIDs[i].type, "filemoon"));
-        }
-
-        for (let i = 0; i < mCloudIDs.length; i++) {
-            promises.push(addSource(mCloudIDs[i].id, this, mCloudIDs[i].type, "mycloud"));
+        for (let i = 0; i < epsiodeServers.length; i++) {
+            const type = epsiodeServers[i].type;
+            if (type == "vidstream" || type == "mycloud" || type == "filemoon") {
+                promises.push(addSource(epsiodeServers[i].id, this, epsiodeServers[i].type, epsiodeServers[i].type));
+            }
         }
 
         let settledSupported = "allSettled" in Promise;
@@ -274,7 +361,7 @@ var nineAnime: extension = {
             }
             if (epList[i].id == sourceEp) {
                 check = true;
-                response.title = epList[i].title;
+                response.title = epList[i].title ? epList[i].title.trim() : "";
             }
 
             if (check === false) {
@@ -288,7 +375,7 @@ var nineAnime: extension = {
         }
 
         response.sources = sources;
-        serverDOM.remove();
+        infoDOM.remove();
         return response;
     },
     checkConfig: function () {
@@ -304,19 +391,19 @@ var nineAnime: extension = {
         let fallbackAPI = true;
         let nineAnimeURL = "api.consumet.org/anime/9anime/helper";
         let apiKey = "";
-        
-        try{
+
+        try {
             this.checkConfig();
             nineAnimeURL = localStorage.getItem("9anime").trim();
             apiKey = localStorage.getItem("apikey").trim();
             fallbackAPI = false;
-        }catch(err){
+        } catch (err) {
             console.warn("Defaulting to Consumet.");
         }
 
         let reqURL = `https://${nineAnimeURL}/${action}?query=${encodeURIComponent(query)}&apikey=${apiKey}`;
-        
-        if(fallbackAPI){
+
+        if (fallbackAPI) {
             reqURL = `https://${nineAnimeURL}?query=${encodeURIComponent(query)}&action=${action}`;
         }
 
@@ -337,19 +424,19 @@ var nineAnime: extension = {
         let nineAnimeURL = "api.consumet.org/anime/9anime/helper";
         let apiKey = "";
 
-        try{
+        try {
             this.checkConfig();
             nineAnimeURL = localStorage.getItem("9anime").trim();
             apiKey = localStorage.getItem("apikey").trim();
             fallbackAPI = false;
-        }catch(err){
+        } catch (err) {
             console.warn("Defaulting to Consumet.");
         }
 
-        let reqURL = `https://${nineAnimeURL}/decrypt?query=${encodeURIComponent(query)}&apikey=${apiKey}`;
-        
-        if(fallbackAPI){
-            reqURL = `https://${nineAnimeURL}?query=${encodeURIComponent(query)}&action=decrypt`;
+        let reqURL = `https://${nineAnimeURL}/fmovies-decrypt?query=${encodeURIComponent(query)}&apikey=${apiKey}`;
+
+        if (fallbackAPI) {
+            reqURL = `https://${nineAnimeURL}?query=${encodeURIComponent(query)}&action=fmovies-decrypt`;
         }
 
         const source = await MakeFetch(reqURL);
@@ -370,18 +457,18 @@ var nineAnime: extension = {
         let nineAnimeURL = "api.consumet.org/anime/9anime/helper";
         let apiKey = "";
 
-        try{
+        try {
             this.checkConfig();
             nineAnimeURL = localStorage.getItem("9anime").trim();
             apiKey = localStorage.getItem("apikey").trim();
             fallbackAPI = false;
-        }catch(err){
+        } catch (err) {
             console.warn("Defaulting to Consumet.");
         }
 
         let reqURL = `https://${nineAnimeURL}/${isViz ? "vizcloud" : "mcloud"}?query=${encodeURIComponent(query)}&apikey=${apiKey}`;
-        
-        if(fallbackAPI){
+
+        if (fallbackAPI) {
             reqURL = `https://${nineAnimeURL}?query=${encodeURIComponent(query)}&action=${isViz ? "vizcloud" : "mcloud"}`;
         }
 
@@ -407,18 +494,18 @@ var nineAnime: extension = {
         let fallbackAPI = true;
         let nineAnimeURL = "api.consumet.org/anime/9anime/helper";
         let apiKey = "";
-        try{
+        try {
             this.checkConfig();
             nineAnimeURL = localStorage.getItem("9anime").trim();
             apiKey = localStorage.getItem("apikey").trim();
             fallbackAPI = false;
-        }catch(err){
+        } catch (err) {
             console.warn("Defaulting to Consumet.");
         }
 
         let reqURL = `https://${nineAnimeURL}/filemoon?apikey=${apiKey}`;
-        
-        if(fallbackAPI){
+
+        if (fallbackAPI) {
             throw new Error("Not supported");
         }
 
@@ -445,10 +532,11 @@ var nineAnime: extension = {
     },
     fixTitle: function (title: string) {
         try {
-            const tempTitle = title.split(".");
+            const tempTitle = title.split("-");
+
             if (tempTitle.length > 1) {
                 tempTitle.pop();
-                title = tempTitle.join(".");
+                title = tempTitle.join("-").toLowerCase().replace("series/", "").replace("movie/", "");
                 return title;
             } else {
                 return title;
@@ -477,18 +565,17 @@ var nineAnime: extension = {
             });
         }
 
-
         return data;
     },
     config: {
-        "referer": "https://9anime.to",
+        "referer": "https://fmovies.to",
     },
-    getConfig(url: string){
-        if(url.includes("mcloud.to")){
+    getConfig(url: string) {
+        if (url.includes("mcloud.to")) {
             return {
                 "referer": "https://mcloud.to/"
             }
-        }else{
+        } else {
             return this.config;
         }
     }

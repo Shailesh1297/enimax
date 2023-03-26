@@ -576,14 +576,15 @@ function ini() {
                 }
             }
             try {
-                if (!downloaded && localStorage.getItem("scrollBool") !== "false") {
-                    scrollToDOM.scrollIntoView();
-                }
                 if (scrollSnapFunc) {
                     scrollSnapFunc();
                 }
+                if (!downloaded && scrollToDOM && localStorage.getItem("scrollBool") !== "false") {
+                    scrollToDOM.scrollIntoView();
+                }
             }
             catch (err) {
+                console.error(err);
             }
             if (scrollToDOM && !config.chrome) {
                 document.getElementById("downloadNext").style.display = "inline-block";

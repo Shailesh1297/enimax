@@ -32,6 +32,7 @@ class vid {
         this.fullscreenCheck = 0;
         this.open = 1;
         this.type = 0;
+        this.wasLocked = false;
         this.vid = document.querySelector("#v");
         this.windowSize = window.innerWidth;
         this.updateTimeout();
@@ -193,9 +194,14 @@ class vid {
             }
         }
     }
-    lockVid() {
+    lockVid(opacity = 1) {
         this.con.style.pointerEvents = "none";
-        this.lock2.style.opacity = "1";
+        if (opacity === 1) {
+            this.lock2.style.opacity = "1";
+        }
+        else {
+            this.lock2.style.opacity = "0";
+        }
         this.lock2.style.pointerEvents = "auto";
         this.locked = true;
         this.close_controls();
@@ -609,17 +615,20 @@ class vid {
         this.open = 1;
     }
     togglePictureInPicture() {
-        try {
+        if (this.config.chrome) {
+            if (document.pictureInPictureElement) {
+                document.exitPictureInPicture();
+            }
+            else if (document.pictureInPictureEnabled) {
+                this.vid.requestPictureInPicture();
+            }
+        }
+        else {
             window.parent.postMessage({ "action": 11, data: "landscape" }, "*");
-        }
-        catch (err) {
-            console.error(err);
-        }
-        if (document.pictureInPictureElement) {
-            document.exitPictureInPicture();
-        }
-        else if (document.pictureInPictureEnabled) {
-            this.vid.requestPictureInPicture();
+            if (localStorage.getItem("autopip") === "true") {
+                this.wasLocked = this.locked;
+                this.lockVid(0);
+            }
         }
         this.close_controls();
     }

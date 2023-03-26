@@ -171,6 +171,7 @@ class DownloadVid {
     }
     ini() {
         let self = this;
+        alert(self.name);
         window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory, function (fs) {
             fs.getDirectory(`${self.name}`, { create: true, exclusive: false }, function (nameDir) {
                 self.nameDir = nameDir;

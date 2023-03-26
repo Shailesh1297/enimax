@@ -1,7 +1,7 @@
 var nineAnime: extension = {
     baseURL: "https://9anime.to",
     searchApi: async function (query) {
-        const vrf = await this.getVRF(query, true);
+        const vrf = await this.getVRF(query, "9anime-search");
         const searchHTML = await MakeFetchZoro(`https://9anime.to/filter?keyword=${encodeURIComponent(query)}&${vrf[1]}=${vrf[0]}`);
         const searchDOM = document.createElement("div");
         searchDOM.innerHTML = DOMPurify.sanitize(searchHTML);
@@ -62,7 +62,7 @@ var nineAnime: extension = {
 
         let episodes = [];
 
-        let IDVRF = await this.getVRF(nineAnimeID);
+        let IDVRF = await this.getVRF(nineAnimeID, "ajax-episode-list");
 
         let episodesHTML = "";
 
@@ -122,7 +122,7 @@ var nineAnime: extension = {
 
         const searchParams = new URLSearchParams(url);
         const sourceEp = searchParams.get("ep");
-        const sourceEpVRF = await this.getVRF(sourceEp);
+        const sourceEpVRF = await this.getVRF(sourceEp,"ajax-server-list");
         const promises: Array<Promise<any>> = [];
 
         const serverHTML = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/server/list/${sourceEp}?${sourceEpVRF[1]}=${sourceEpVRF[0]}`)).result;
@@ -178,7 +178,7 @@ var nineAnime: extension = {
 
         async function addSource(ID, self, index, extractor = "vidstream") {
             try {
-                const serverVRF = await self.getVRF(ID);
+                const serverVRF = await self.getVRF(ID, "ajax-server");
                 const serverData = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/server/${ID}?${serverVRF[1]}=${serverVRF[0]}`)).result;
                 const serverURL = serverData.url;
                 const sourceDecrypted = await self.decryptSource(serverURL);
@@ -300,7 +300,7 @@ var nineAnime: extension = {
             throw new Error("API keynot set");
         }
     },
-    getVRF: async function (query: string, isSearch = false): Promise<[string, string]> {
+    getVRF: async function (query: string, action: string): Promise<[string, string]> {
         let fallbackAPI = true;
         let nineAnimeURL = "api.consumet.org/anime/9anime/helper";
         let apiKey = "";
@@ -314,10 +314,10 @@ var nineAnime: extension = {
             console.warn("Defaulting to Consumet.");
         }
 
-        let reqURL = `https://${nineAnimeURL}/${isSearch ? "9anime-search" : "vrf"}?query=${encodeURIComponent(query)}&apikey=${apiKey}`;
+        let reqURL = `https://${nineAnimeURL}/${action}?query=${encodeURIComponent(query)}&apikey=${apiKey}`;
         
         if(fallbackAPI){
-            reqURL = `https://${nineAnimeURL}?query=${encodeURIComponent(query)}&action=${isSearch ? "searchVrf" : "vrf"}`;
+            reqURL = `https://${nineAnimeURL}?query=${encodeURIComponent(query)}&action=${action}`;
         }
 
         const source = await MakeFetch(reqURL);
@@ -326,10 +326,10 @@ var nineAnime: extension = {
             if (parsedJSON.url) {
                 return [encodeURIComponent(parsedJSON.url), parsedJSON.vrfQuery];
             } else {
-                throw new Error(`${isSearch? "9ANIME-SEARCH-" : ""}VRF1: Received an empty URL or the URL was not found.`);
+                throw new Error(`${action}-VRF1: Received an empty URL or the URL was not found.`);
             }
         } catch (err) {
-            throw new Error(`${isSearch? "9ANIME-SEARCH-" : ""}VRF1: Could not parse the JSON correctly.`);
+            throw new Error(`${action}-VRF1: Could not parse the JSON correctly.`);
         }
     },
     decryptSource: async function (query: string): Promise<string> {
