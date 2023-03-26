@@ -2,7 +2,7 @@ var fmovies = {
     baseURL: fmoviesBaseURL,
     searchApi: async function (query) {
         query = decodeURIComponent(query);
-        let response = await MakeFetch(`https://${fmoviesBaseURL}/search/${query.replace(" ", "-")}`, {});
+        let response = await MakeFetchZoro(`https://${fmoviesBaseURL}/search/${query.replace(" ", "-")}`, {});
         let tempDOM = document.createElement("div");
         tempDOM.innerHTML = DOMPurify.sanitize(response);
         let data = [];

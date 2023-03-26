@@ -578,7 +578,7 @@ var fmovies = {
     baseURL: fmoviesBaseURL,
     searchApi: async function (query) {
         query = decodeURIComponent(query);
-        let response = await MakeFetch(`https://${fmoviesBaseURL}/search/${query.replace(" ", "-")}`, {});
+        let response = await MakeFetchZoro(`https://${fmoviesBaseURL}/search/${query.replace(" ", "-")}`, {});
         let tempDOM = document.createElement("div");
         tempDOM.innerHTML = DOMPurify.sanitize(response);
         let data = [];
@@ -1205,47 +1205,52 @@ var zoro = {
         return data;
     },
     addSource: async function addSource(type, id, subtitlesArray, sourceURLs) {
-        let sources = await MakeFetchZoro(`https://zoro.to/ajax/v2/episode/sources?id=${id}`, {});
-        sources = JSON.parse(sources).link;
-        let urlHost = (new URL(sources)).origin;
-        let sourceIdArray = sources.split("/");
-        let sourceId = sourceIdArray[sourceIdArray.length - 1];
-        sourceId = sourceId.split("?")[0];
-        let sourceJSON = JSON.parse((await MakeFetchZoro(`${urlHost}/ajax/embed-6/getSources?id=${sourceId}&sId=lihgfedcba-abcde`, {})));
         try {
-            for (let j = 0; j < sourceJSON.tracks.length; j++) {
-                sourceJSON.tracks[j].label += " - " + type;
-                if (sourceJSON.tracks[j].kind == "captions") {
-                    subtitlesArray.push(sourceJSON.tracks[j]);
-                }
-            }
-        }
-        catch (err) {
-        }
-        try {
-            if (sourceJSON.encrypted && typeof sourceJSON.sources == "string") {
-                let encryptedURL = sourceJSON.sources;
-                let decryptKey, tempFile;
-                try {
-                    decryptKey = await extractKey(6, null, true);
-                    sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
-                }
-                catch (err) {
-                    if (err.message == "Malformed UTF-8 data") {
-                        decryptKey = await extractKey(6);
-                        try {
-                            sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
-                        }
-                        catch (err) {
-                        }
+            let sources = await MakeFetchZoro(`https://zoro.to/ajax/v2/episode/sources?id=${id}`, {});
+            sources = JSON.parse(sources).link;
+            let urlHost = (new URL(sources)).origin;
+            let sourceIdArray = sources.split("/");
+            let sourceId = sourceIdArray[sourceIdArray.length - 1];
+            sourceId = sourceId.split("?")[0];
+            let sourceJSON = JSON.parse((await MakeFetchZoro(`${urlHost}/ajax/embed-6/getSources?id=${sourceId}&sId=lihgfedcba-abcde`, {})));
+            try {
+                for (let j = 0; j < sourceJSON.tracks.length; j++) {
+                    sourceJSON.tracks[j].label += " - " + type;
+                    if (sourceJSON.tracks[j].kind == "captions") {
+                        subtitlesArray.push(sourceJSON.tracks[j]);
                     }
                 }
             }
-            let tempSrc = { "url": sourceJSON.sources[0].file, "name": "HLS#" + type, "type": "hls" };
-            if ("intro" in sourceJSON && "start" in sourceJSON.intro && "end" in sourceJSON.intro) {
-                tempSrc.skipIntro = sourceJSON.intro;
+            catch (err) {
             }
-            sourceURLs.push(tempSrc);
+            try {
+                if (sourceJSON.encrypted && typeof sourceJSON.sources == "string") {
+                    let encryptedURL = sourceJSON.sources;
+                    let decryptKey, tempFile;
+                    try {
+                        decryptKey = await extractKey(6, null, true);
+                        sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                    }
+                    catch (err) {
+                        if (err.message == "Malformed UTF-8 data") {
+                            decryptKey = await extractKey(6);
+                            try {
+                                sourceJSON.sources = JSON.parse(CryptoJS.AES.decrypt(encryptedURL, decryptKey).toString(CryptoJS.enc.Utf8));
+                            }
+                            catch (err) {
+                            }
+                        }
+                    }
+                }
+                let tempSrc = { "url": sourceJSON.sources[0].file, "name": "HLS#" + type, "type": "hls" };
+                if ("intro" in sourceJSON && "start" in sourceJSON.intro && "end" in sourceJSON.intro) {
+                    tempSrc.skipIntro = sourceJSON.intro;
+                }
+                sourceURLs.push(tempSrc);
+            }
+            catch (err) {
+                console.error(err);
+            }
         }
         catch (err) {
             console.error(err);
@@ -1290,11 +1295,9 @@ var zoro = {
             hasSource = true;
             promises.push(this.addSource(tempDom[i].getAttribute("data-type"), tempDom[i].getAttribute('data-id'), subtitles, sourceURLs));
         }
-        if (!hasSource) {
-            tempDom = dom.querySelectorAll('[data-server-id="1"]');
-            for (var i = 0; i < tempDom.length; i++) {
-                promises.push(this.addSource(tempDom[i].getAttribute("data-type"), tempDom[i].getAttribute('data-id'), subtitles, sourceURLs));
-            }
+        tempDom = dom.querySelectorAll('[data-server-id="1"]');
+        for (var i = 0; i < tempDom.length; i++) {
+            promises.push(this.addSource(tempDom[i].getAttribute("data-type"), tempDom[i].getAttribute('data-id'), subtitles, sourceURLs));
         }
         let promRes = await Promise.all(promises);
         let links = promRes[0];
@@ -1381,7 +1384,7 @@ var twitch = {
                 data.push({
                     "name": channels.item.login,
                     "id": channels.item.login,
-                    "image": channels.item.profileImageURL,
+                    "image": channels.item.profileImageURL.replace("150x150.png", "300x300.png"),
                     "link": "/" + encodeURIComponent(channels.item.login) + "&engine=4"
                 });
             }
@@ -1453,7 +1456,7 @@ var twitch = {
                 }
                 else {
                     for (let vod of items) {
-                        response.image = vod.node.owner.profileImageURL;
+                        response.image = vod.node.owner.profileImageURL.replace("50x50.png", "300x300.png");
                         data.unshift({
                             "link": "?watch=" + encodeURIComponent(id) + "&id=" + vod.node.id + "&engine=4",
                             "id": id,

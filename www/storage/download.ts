@@ -248,7 +248,6 @@ class DownloadVid {
     ini() {
 
         let self = this;
-        alert(self.name);
         (window as unknown as cordovaWindow).resolveLocalFileSystemURL(cordova.file.externalDataDirectory, function (fs: DirectoryEntry) {
             fs.getDirectory(`${self.name}`, { create: true, exclusive: false }, function (nameDir) {
                 self.nameDir = nameDir;
