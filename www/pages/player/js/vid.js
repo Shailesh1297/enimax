@@ -665,20 +665,12 @@ class vid {
         }
     }
     timeToString(timeInSeconds) {
-        let minutes = "0";
-        let seconds = "0";
-        if (Math.floor(timeInSeconds / 60) < 10) {
-            minutes = "0".concat(Math.floor(timeInSeconds / 60).toString());
-        }
-        else {
-            minutes = Math.floor(timeInSeconds / 60).toString();
-        }
-        if (timeInSeconds % 60 < 10) {
-            seconds = "0".concat(Math.floor(timeInSeconds % 60).toString());
-        }
-        else {
-            seconds = Math.floor(timeInSeconds % 60).toString();
-        }
-        return (minutes + ":" + seconds);
+        var h = Math.floor(timeInSeconds / 3600);
+        var m = Math.floor(timeInSeconds % 3600 / 60);
+        var s = Math.floor(timeInSeconds % 3600 % 60);
+        var hDisplay = h > 0 ? (h < 10 ? "0" : "") + h + ":" : "";
+        var mDisplay = (m < 10 ? "0" : "") + m + ":";
+        var sDisplay = (s < 10 ? "0" : "") + s;
+        return hDisplay + mDisplay + sDisplay;
     }
 }
