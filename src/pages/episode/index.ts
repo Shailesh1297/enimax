@@ -383,7 +383,7 @@ function ini() {
                 let scrollLastIndex;
                 let tempCatDOM = document.getElementsByClassName("categories");
                 let cusRoomDOM = document.getElementById("custom_rooms");
-                scrollSnapFunc = function () {
+                scrollSnapFunc = function (shouldScroll = true) {
                     let unRoundedIndex = cusRoomDOM.scrollLeft / cusRoomDOM.offsetWidth;
                     let index = Math.round(unRoundedIndex);
 
@@ -391,7 +391,9 @@ function ini() {
                         for (let i = 0; i < tempCatDOM.length; i++) {
                             if (i == index) {
                                 tempCatDOM[i].classList.add("activeCat");
-                                tempCatDOM[i].scrollIntoView();
+                                if (shouldScroll) {
+                                    tempCatDOM[i].scrollIntoView();
+                                }
                                 lastScrollElem = document.getElementById(tempCatDOM[i].getAttribute("data-id"));
                             } else {
                                 tempCatDOM[i].classList.remove("activeCat");
@@ -444,9 +446,20 @@ function ini() {
                 };
 
                 let tempDiv3 = document.createElement("div");
+                let tempTitle = animeEps[i].title;
                 tempDiv3.className = 'episodesTitle';
-                tempDiv3.innerText = animeEps[i].title;
+                tempDiv3.innerText = tempTitle;
 
+                if (animeEps[i].date) {
+                    tempDiv3.append(createElement({
+                        element: "div",
+                        style: {
+                            "fontSize": "13px",
+                            "marginTop": "6px"
+                        },
+                        innerText: animeEps[i].date.toLocaleString()
+                    }));
+                }
 
                 let check = false;
                 if (!config.chrome) {
@@ -710,7 +723,7 @@ function ini() {
             try {
 
                 if (scrollSnapFunc) {
-                    scrollSnapFunc();
+                    scrollSnapFunc(false);
                 }
 
                 if (!downloaded && scrollToDOM && localStorage.getItem("scrollBool") !== "false") {

@@ -203,7 +203,8 @@ interface extensionInfoEpisode {
     title: string,
     id?: string,
     thumbnail?: string,
-    description?: string
+    description?: string,
+    date?: Date
 }
 
 interface extensionVidSource {

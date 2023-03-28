@@ -103,7 +103,8 @@ var twitch = {
                             "link": "?watch=" + encodeURIComponent(id) + "&id=" + vod.node.id + "&engine=4",
                             "id": id,
                             "title": vod.node.title,
-                            "thumbnail": vod.node.previewThumbnailURL
+                            "thumbnail": vod.node.previewThumbnailURL,
+                            "date": new Date(vod.node.publishedAt)
                         });
                     }
                 }
