@@ -68,6 +68,8 @@ if (config.local || localStorage.getItem("offline") === 'true') {
 let lastScrollPos: number;
 let scrollDownTopDOM = document.getElementById("scrollDownTop");
 let scrollSnapFunc: undefined | Function;
+let showMainName = null;
+let showImage = null;
 // @ts-ignore
 let pullTabArray = [];
 
@@ -203,7 +205,8 @@ function ini() {
 
 
         async function processEpisodeData(data: extensionInfo, downloaded, main_url) {
-
+            showMainName = data.mainName;
+            showImage = data.image;
             let currentLink = '';
             if (localStorage.getItem("currentLink")) {
                 currentLink = localStorage.getItem("currentLink");
@@ -231,7 +234,6 @@ function ini() {
             document.getElementById("updateLink").onclick = function () {
                 (<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 14, "name": data.mainName, "url": location.search }, (x) => {
                     sendNoti([2, "", "Alert", "Done!"]);
-
                 });
             };
 
@@ -862,5 +864,70 @@ function ini() {
         }
     }
 }
+
+
+const addToLibrary = document.getElementById("addToLibrary");
+const playIcon = document.getElementById("play");
+
+playIcon.onclick = function () {
+    const selectedExists = document.querySelector(".episodesSelected");
+    if(selectedExists){
+        (selectedExists.querySelector(".episodesPlaySmall") as HTMLElement).click();
+    }else{
+        (document.querySelector(".episodesCon").querySelector(".episodesPlaySmall") as HTMLElement).click();
+    }
+};
+
+addToLibrary.onclick = function () {
+    if (showMainName) {
+        addToLibrary.classList.add("isWaiting");
+
+        if (addToLibrary.classList.contains("notInLib")) {
+            (<cordovaWindow>window.parent).apiCall("POST", {
+                "username": "",
+                "action": 5,
+                "name": showMainName,
+                "img": showImage,
+                "url": location.search
+            }, () => { });
+
+            (<cordovaWindow>window.parent).apiCall("POST",
+                {
+                    "username": "",
+                    "action": 2,
+                    "name": showMainName,
+                    "cur": document.querySelector(".episodesCon").getAttribute("data-url"),
+                    "ep": 1
+                }, (response) => {
+                    addToLibrary.classList.remove("isWaiting");
+                    addToLibrary.classList.remove("notInLib");
+                    addToLibrary.classList.add("isInLib");
+                });
+        } else {
+            const shouldDelete = confirm("Are you sure that you want to remove this show from your library?");
+            if (shouldDelete) {
+                (<cordovaWindow>window.parent).apiCall("POST", { "username": "", "action": 6, "name": showMainName }, () => {
+                    addToLibrary.classList.remove("isWaiting");
+                    addToLibrary.classList.remove("isInLib");
+                    addToLibrary.classList.add("notInLib");
+                });
+            }else{
+                addToLibrary.classList.remove("isWaiting");
+            }
+        }
+    } else {
+        alert("Try again after the page has loaded.");
+    }
+};
+
+(<cordovaWindow>window.parent).apiCall("POST", { "username": "", "action": 4 }, (response) => {
+    const doesExist = response.data[0].find(elem => elem[5] === location.search);
+    if (doesExist) {
+        addToLibrary.classList.add("isInLib");
+    } else {
+        addToLibrary.classList.add("notInLib");
+    }
+
+});
 
 applyTheme();

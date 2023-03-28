@@ -49,6 +49,8 @@ else {
 let lastScrollPos;
 let scrollDownTopDOM = document.getElementById("scrollDownTop");
 let scrollSnapFunc;
+let showMainName = null;
+let showImage = null;
 // @ts-ignore
 let pullTabArray = [];
 pullTabArray.push(new pullToRefresh(document.getElementById("con_11")));
@@ -161,6 +163,8 @@ function ini() {
             currentEngine = extensionList[parseInt(temp3[1])];
         }
         async function processEpisodeData(data, downloaded, main_url) {
+            showMainName = data.mainName;
+            showImage = data.image;
             let currentLink = '';
             if (localStorage.getItem("currentLink")) {
                 currentLink = localStorage.getItem("currentLink");
@@ -712,4 +716,65 @@ function ini() {
         }
     }
 }
+const addToLibrary = document.getElementById("addToLibrary");
+const playIcon = document.getElementById("play");
+playIcon.onclick = function () {
+    const selectedExists = document.querySelector(".episodesSelected");
+    if (selectedExists) {
+        selectedExists.querySelector(".episodesPlaySmall").click();
+    }
+    else {
+        document.querySelector(".episodesCon").querySelector(".episodesPlaySmall").click();
+    }
+};
+addToLibrary.onclick = function () {
+    if (showMainName) {
+        addToLibrary.classList.add("isWaiting");
+        if (addToLibrary.classList.contains("notInLib")) {
+            window.parent.apiCall("POST", {
+                "username": "",
+                "action": 5,
+                "name": showMainName,
+                "img": showImage,
+                "url": location.search
+            }, () => { });
+            window.parent.apiCall("POST", {
+                "username": "",
+                "action": 2,
+                "name": showMainName,
+                "cur": document.querySelector(".episodesCon").getAttribute("data-url"),
+                "ep": 1
+            }, (response) => {
+                addToLibrary.classList.remove("isWaiting");
+                addToLibrary.classList.remove("notInLib");
+                addToLibrary.classList.add("isInLib");
+            });
+        }
+        else {
+            const shouldDelete = confirm("Are you sure that you want to remove this show from your library?");
+            if (shouldDelete) {
+                window.parent.apiCall("POST", { "username": "", "action": 6, "name": showMainName }, () => {
+                    addToLibrary.classList.remove("isWaiting");
+                    addToLibrary.classList.remove("isInLib");
+                    addToLibrary.classList.add("notInLib");
+                });
+            }
+            else {
+                addToLibrary.classList.remove("isWaiting");
+            }
+        }
+    }
+    else {
+        alert("Try again after the page has loaded.");
+    }
+};
+window.parent.apiCall("POST", { "username": "", "action": 4 }, (response) => {
+    const doesExist = response.data[0].find(elem => elem[5] === location.search);
+    if (doesExist) {
+        addToLibrary.classList.add("isInLib");
+    }
+    else {
+        addToLibrary.classList.add("notInLib");
+    }
+});
 applyTheme();
