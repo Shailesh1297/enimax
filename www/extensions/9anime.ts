@@ -1,30 +1,37 @@
 var nineAnime: extension = {
     baseURL: "https://9anime.to",
     searchApi: async function (query) {
-        const vrf = await this.getVRF(query, "9anime-search");
-        const searchHTML = await MakeFetchZoro(`https://9anime.to/filter?keyword=${encodeURIComponent(query)}&${vrf[1]}=${vrf[0]}`);
+
         const searchDOM = document.createElement("div");
-        searchDOM.innerHTML = DOMPurify.sanitize(searchHTML);
-        const searchElem = searchDOM.querySelector("#list-items");
-        const searchItems = searchElem.querySelectorAll(".item");
-        const response: Array<extensionSearchData> = [];
 
-        if (searchItems.length === 0) {
-            throw new Error("No results found.");
+        try {
+            const vrf = await this.getVRF(query, "9anime-search");
+            const searchHTML = await MakeFetchZoro(`https://9anime.to/filter?keyword=${encodeURIComponent(query)}&${vrf[1]}=${vrf[0]}`);
+            searchDOM.innerHTML = DOMPurify.sanitize(searchHTML);
+            const searchElem = searchDOM.querySelector("#list-items");
+            const searchItems = searchElem.querySelectorAll(".item");
+            const response: Array<extensionSearchData> = [];
+
+            if (searchItems.length === 0) {
+                throw new Error("No results found.");
+            }
+
+            for (let i = 0; i < searchItems.length; i++) {
+                const currentElem = searchItems[i];
+                response.push({
+                    "name": (currentElem.querySelector(".name") as HTMLElement).innerText,
+                    "id": currentElem.querySelector(".name").getAttribute("href").replace("/watch/", ""),
+                    "image": currentElem.querySelector("img").src,
+                    "link": "/" + currentElem.querySelector(".name").getAttribute("href").replace("/watch/", "") + "&engine=5"
+                } as extensionSearchData);
+            }
+
+            return { "data": response, "status": 200 } as extensionSearch;
+        } catch (err) {
+            throw err;
+        } finally {
+            removeDOM(searchDOM);
         }
-
-        for (let i = 0; i < searchItems.length; i++) {
-            const currentElem = searchItems[i];
-            response.push({
-                "name": (currentElem.querySelector(".name") as HTMLElement).innerText,
-                "id": currentElem.querySelector(".name").getAttribute("href").replace("/watch/", ""),
-                "image": currentElem.querySelector("img").src,
-                "link": "/" + currentElem.querySelector(".name").getAttribute("href").replace("/watch/", "") + "&engine=5"
-            } as extensionSearchData);
-        }
-
-        searchDOM.remove();
-        return { "data": response, "status": 200 } as extensionSearch;
     },
     getAnimeInfo: async function (url: string, nextPrev: Boolean = false): Promise<extensionInfo> {
         url = url.split("&engine")[0];
@@ -38,10 +45,11 @@ var nineAnime: extension = {
 
         let id = url.replace("?watch=/", "");
         const rawURL = `https://9anime.to/watch/${id}`;
+        const episodesDOM = document.createElement("div");
+        const infoDOM = document.createElement("div");
 
         try {
             let infoHTML = await MakeFetchZoro(`https://9anime.to/watch/${id}`);
-            let infoDOM = document.createElement("div");
             infoDOM.innerHTML = DOMPurify.sanitize(infoHTML);
             let nineAnimeID = infoDOM.querySelector("#watch-main").getAttribute("data-id");
             let infoMainDOM = infoDOM.querySelector("#w-info").querySelector(".info");
@@ -82,7 +90,6 @@ var nineAnime: extension = {
             }
 
 
-            let episodesDOM = document.createElement("div");
             episodesDOM.innerHTML = DOMPurify.sanitize(episodesHTML);
 
             let episodeElem = episodesDOM.querySelectorAll("li");
@@ -102,13 +109,13 @@ var nineAnime: extension = {
             }
 
             response.episodes = episodes;
-            episodesDOM.remove();
-            infoDOM.remove();
-
             return response;
         } catch (err) {
             err.url = rawURL;
             throw err;
+        } finally {
+            removeDOM(episodesDOM);
+            removeDOM(infoDOM);
         }
     },
     getLinkFromUrl: async function (url: string) {
@@ -125,177 +132,183 @@ var nineAnime: extension = {
             prev: null
         };
 
-
-        const searchParams = new URLSearchParams(url);
-        const sourceEp = searchParams.get("ep");
-        const sourceEpVRF = await this.getVRF(sourceEp, "ajax-server-list");
-        const promises: Array<Promise<any>> = [];
-
-        const serverHTML = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/server/list/${sourceEp}?${sourceEpVRF[1]}=${sourceEpVRF[0]}`)).result;
         const serverDOM = document.createElement("div");
-        serverDOM.innerHTML = DOMPurify.sanitize(serverHTML);
 
-        const allServers = serverDOM.querySelectorAll("li");
         try {
-            response.episode = serverDOM.querySelector("b").innerText.split("Episode")[1];
+
+            const searchParams = new URLSearchParams(url);
+            const sourceEp = searchParams.get("ep");
+            const sourceEpVRF = await this.getVRF(sourceEp, "ajax-server-list");
+            const promises: Array<Promise<any>> = [];
+
+            const serverHTML = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/server/list/${sourceEp}?${sourceEpVRF[1]}=${sourceEpVRF[0]}`)).result;
+            serverDOM.innerHTML = DOMPurify.sanitize(serverHTML);
+
+            const allServers = serverDOM.querySelectorAll("li");
+            try {
+                response.episode = serverDOM.querySelector("b").innerText.split("Episode")[1];
+            } catch (err) {
+                response.episode = serverDOM.querySelector("b").innerText;
+            }
+
+            response.name = searchParams.get("watch");
+            response.nameWSeason = searchParams.get("watch");
+            response.status = 200;
+            let sources: Array<videoSource> = [];
+            let vidstreamIDs = [];
+            let mCloudIDs = [];
+            let filemoonIDs = [];
+            for (let i = 0; i < allServers.length; i++) {
+                let currentServer = allServers[i];
+                let type = i.toString();
+
+                try {
+                    const tempType = (currentServer.parentElement.previousElementSibling as HTMLElement)
+                        .innerText
+                        .trim();
+                    if (tempType) {
+                        type = tempType;
+                    }
+                } catch (err) {
+                    console.warn(err);
+                }
+
+                if (currentServer.innerText.toLowerCase() == "vidstream") {
+                    vidstreamIDs.push({
+                        id: currentServer.getAttribute("data-link-id"),
+                        type
+                    });
+                } else if (currentServer.innerText.toLowerCase() == "filemoon") {
+                    filemoonIDs.push({
+                        id: currentServer.getAttribute("data-link-id"),
+                        type
+                    });
+                } else if (currentServer.innerText.toLowerCase() == "mycloud") {
+                    mCloudIDs.push({
+                        id: currentServer.getAttribute("data-link-id"),
+                        type
+                    });
+                }
+            }
+
+            async function addSource(ID, self, index, extractor = "vidstream") {
+                try {
+                    const serverVRF = await self.getVRF(ID, "ajax-server");
+                    const serverData = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/server/${ID}?${serverVRF[1]}=${serverVRF[0]}`)).result;
+                    const serverURL = serverData.url;
+                    const sourceDecrypted = await self.decryptSource(serverURL);
+
+                    let source: videoSource = {
+                        "name": "",
+                        "type": "",
+                        "url": "",
+                    };
+
+                    if (extractor == "vidstream") {
+                        const vidstreamID = sourceDecrypted.split("/").pop();
+                        const m3u8File = await self.getVidstreamLink(vidstreamID);
+
+                        source = {
+                            "name": "HLS#" + index,
+                            "type": "hls",
+                            "url": m3u8File,
+                        };
+
+                        sources.push(source);
+                    } else if (extractor == "filemoon") {
+                        const filemoonHTML = await MakeFetch(sourceDecrypted);
+                        const m3u8File = await self.getFilemoonLink(filemoonHTML);
+
+                        source = {
+                            "name": "Filemoon#" + index,
+                            "type": m3u8File.includes(".m3u8") ? "hls" : "mp4",
+                            "url": m3u8File,
+                        };
+
+                        sources.push(source);
+                    } else {
+                        const mCloudID = sourceDecrypted.split("/").pop();
+                        const m3u8File = await self.getVidstreamLink(mCloudID, false);
+
+                        source = {
+                            "name": "Mycloud#" + index,
+                            "type": m3u8File.includes(".m3u8") ? "hls" : "mp4",
+                            "url": m3u8File,
+                        };
+
+                        sources.push(source);
+                    }
+
+
+                    if ("skip_data" in serverData) {
+                        serverData.skip_data = JSON.parse(await self.decryptSource(serverData.skip_data));
+                        source.skipIntro = {
+                            start: serverData.skip_data.intro[0],
+                            end: serverData.skip_data.intro[1]
+                        };
+                    }
+                } catch (err) {
+                    console.warn(err);
+                }
+            }
+
+            for (let i = 0; i < vidstreamIDs.length; i++) {
+                promises.push(addSource(vidstreamIDs[i].id, this, vidstreamIDs[i].type));
+            }
+
+            for (let i = 0; i < filemoonIDs.length; i++) {
+                promises.push(addSource(filemoonIDs[i].id, this, filemoonIDs[i].type, "filemoon"));
+            }
+
+            for (let i = 0; i < mCloudIDs.length; i++) {
+                promises.push(addSource(mCloudIDs[i].id, this, mCloudIDs[i].type, "mycloud"));
+            }
+
+            let settledSupported = "allSettled" in Promise;
+            let epList = [];
+            if (settledSupported) {
+                promises.unshift(this.getAnimeInfo(`?watch=/${searchParams.get("watch")}`, true));
+                const promiseResult = await Promise.allSettled(promises);
+                if (promiseResult[0].status === "fulfilled") {
+                    epList = promiseResult[0].value.episodes;
+                }
+            } else {
+                try {
+                    await Promise.all(promises);
+                    epList = (await this.getAnimeInfo(`?watch=/${searchParams.get("watch")}`, true)).episodes;
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
+            let check = false;
+            for (var i = 0; i < epList.length; i++) {
+                if (check === true) {
+                    response.next = epList[i].link;
+                    break;
+                }
+                if (epList[i].id == sourceEp) {
+                    check = true;
+                    response.title = epList[i].title;
+                }
+
+                if (check === false) {
+                    response.prev = epList[i].link;
+                }
+            }
+
+
+            if (!sources.length) {
+                throw new Error("No sources were found. Try again later or contact the developer.");
+            }
+
+            response.sources = sources;
+            return response;
         } catch (err) {
-            response.episode = serverDOM.querySelector("b").innerText;
+            throw err;
+        } finally {
+            removeDOM(serverDOM);
         }
-
-        response.name = searchParams.get("watch");
-        response.nameWSeason = searchParams.get("watch");
-        response.status = 200;
-        let sources: Array<videoSource> = [];
-        let vidstreamIDs = [];
-        let mCloudIDs = [];
-        let filemoonIDs = [];
-        for (let i = 0; i < allServers.length; i++) {
-            let currentServer = allServers[i];
-            let type = i.toString();
-
-            try {
-                const tempType = (currentServer.parentElement.previousElementSibling as HTMLElement)
-                    .innerText
-                    .trim();
-                if (tempType) {
-                    type = tempType;
-                }
-            } catch (err) {
-                console.warn(err);
-            }
-
-            if (currentServer.innerText.toLowerCase() == "vidstream") {
-                vidstreamIDs.push({
-                    id: currentServer.getAttribute("data-link-id"),
-                    type
-                });
-            } else if (currentServer.innerText.toLowerCase() == "filemoon") {
-                filemoonIDs.push({
-                    id: currentServer.getAttribute("data-link-id"),
-                    type
-                });
-            } else if (currentServer.innerText.toLowerCase() == "mycloud") {
-                mCloudIDs.push({
-                    id: currentServer.getAttribute("data-link-id"),
-                    type
-                });
-            }
-        }
-
-        async function addSource(ID, self, index, extractor = "vidstream") {
-            try {
-                const serverVRF = await self.getVRF(ID, "ajax-server");
-                const serverData = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/server/${ID}?${serverVRF[1]}=${serverVRF[0]}`)).result;
-                const serverURL = serverData.url;
-                const sourceDecrypted = await self.decryptSource(serverURL);
-
-                let source: videoSource = {
-                    "name": "",
-                    "type": "",
-                    "url": "",
-                };
-
-                if (extractor == "vidstream") {
-                    const vidstreamID = sourceDecrypted.split("/").pop();
-                    const m3u8File = await self.getVidstreamLink(vidstreamID);
-
-                    source = {
-                        "name": "HLS#" + index,
-                        "type": "hls",
-                        "url": m3u8File,
-                    };
-
-                    sources.push(source);
-                } else if (extractor == "filemoon") {
-                    const filemoonHTML = await MakeFetch(sourceDecrypted);
-                    const m3u8File = await self.getFilemoonLink(filemoonHTML);
-
-                    source = {
-                        "name": "Filemoon#" + index,
-                        "type": m3u8File.includes(".m3u8") ? "hls" : "mp4",
-                        "url": m3u8File,
-                    };
-
-                    sources.push(source);
-                } else {
-                    const mCloudID = sourceDecrypted.split("/").pop();
-                    const m3u8File = await self.getVidstreamLink(mCloudID, false);
-
-                    source = {
-                        "name": "Mycloud#" + index,
-                        "type": m3u8File.includes(".m3u8") ? "hls" : "mp4",
-                        "url": m3u8File,
-                    };
-
-                    sources.push(source);
-                }
-
-
-                if ("skip_data" in serverData) {
-                    serverData.skip_data = JSON.parse(await self.decryptSource(serverData.skip_data));
-                    source.skipIntro = {
-                        start: serverData.skip_data.intro[0],
-                        end: serverData.skip_data.intro[1]
-                    };
-                }
-            } catch (err) {
-                console.warn(err);
-            }
-        }
-
-        for (let i = 0; i < vidstreamIDs.length; i++) {
-            promises.push(addSource(vidstreamIDs[i].id, this, vidstreamIDs[i].type));
-        }
-
-        for (let i = 0; i < filemoonIDs.length; i++) {
-            promises.push(addSource(filemoonIDs[i].id, this, filemoonIDs[i].type, "filemoon"));
-        }
-
-        for (let i = 0; i < mCloudIDs.length; i++) {
-            promises.push(addSource(mCloudIDs[i].id, this, mCloudIDs[i].type, "mycloud"));
-        }
-
-        let settledSupported = "allSettled" in Promise;
-        let epList = [];
-        if (settledSupported) {
-            promises.unshift(this.getAnimeInfo(`?watch=/${searchParams.get("watch")}`, true));
-            const promiseResult = await Promise.allSettled(promises);
-            if (promiseResult[0].status === "fulfilled") {
-                epList = promiseResult[0].value.episodes;
-            }
-        } else {
-            try {
-                await Promise.all(promises);
-                epList = (await this.getAnimeInfo(`?watch=/${searchParams.get("watch")}`, true)).episodes;
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        let check = false;
-        for (var i = 0; i < epList.length; i++) {
-            if (check === true) {
-                response.next = epList[i].link;
-                break;
-            }
-            if (epList[i].id == sourceEp) {
-                check = true;
-                response.title = epList[i].title;
-            }
-
-            if (check === false) {
-                response.prev = epList[i].link;
-            }
-        }
-
-
-        if (!sources.length) {
-            throw new Error("No sources were found. Try again later or contact the developer.");
-        }
-
-        response.sources = sources;
-        serverDOM.remove();
-        return response;
     },
     checkConfig: function () {
         if (!localStorage.getItem("9anime")) {
