@@ -209,14 +209,13 @@ function makeRequest(method, url, form, timeout, shouldRedirect) {
             }
             else if (shouldRedirect && "errorCode" in x && x["errorCode"] == 70001) {
                 window.parent.postMessage({ "action": 21, data: "" }, "*");
-                reject(x.message);
+                reject(new Error(x.message));
             }
             else {
-                reject(x.message);
+                reject(new Error(x.message));
             }
         }).catch(function (error) {
-            console.error(error);
-            reject(error);
+            reject(new Error(error.message + " : " + url));
         });
     });
 }
@@ -258,7 +257,8 @@ async function apiCall(method, form, callback, args = [], timeout = false, shoul
         catch (err) {
         }
         if (!isAbort) {
-            sendNoti([2, null, "Alert", err]);
+            throw err;
+            // sendNoti([2, null, "Alert", err]);
         }
     }
 }

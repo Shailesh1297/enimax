@@ -42,9 +42,11 @@ var wco : extension = {
     },
     getAnimeInfo: function (url : string) : Promise<extensionInfo> {
         let baseURL = this.baseURL;
+        let rawURL = "";
         return (new Promise(function (resolve, reject) {
             url = url.split("&engine")[0];
             url = baseURL + "/" + url;
+            rawURL = url;
             fetch(url).then(response => response.text()).then(function (response) {
                 let temp = document.createElement("div");
                 temp.innerHTML = DOMPurify.sanitize(response);
@@ -137,6 +139,7 @@ var wco : extension = {
                 temp.remove();
                 resolve(data);
             }).catch(function (err) {
+                err.url = rawURL;
                 reject(err);
             });
 

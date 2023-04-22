@@ -142,3 +142,80 @@ function createCat(dataId, dataText, mode = 0) {
         }, "innerText": dataText
     });
 }
+// https://github.com/dysfunc/ascii-emoji
+// http://asciimoji.com/
+// const moji = "(╯°□°）╯︵ ┻━┻";
+// const array = [];
+// for(let i = 0; i < moji.length; i++){
+//     array.push(moji.charCodeAt(i));
+// }
+const unicodeMojiCodes = [
+    [123, 8226, 771, 95, 8226, 771, 125],
+    [40, 9583, 176, 9633, 176, 65289, 9583, 65077, 32, 9531, 9473, 9531],
+    [40, 9573, 65103, 9573, 41],
+    [40, 12678, 32, 95, 32, 12678, 41],
+    [40, 32, 48, 32, 95, 32, 48, 32, 41]
+];
+const unicodeMojis = [];
+for (let uniCount = 0; uniCount < unicodeMojiCodes.length; uniCount++) {
+    const codes = unicodeMojiCodes[uniCount];
+    let emoji = "";
+    for (let i = 0; i < codes.length; i++) {
+        let hex = codes[i].toString(16);
+        emoji += String.fromCodePoint(parseInt("0x" + hex));
+    }
+    unicodeMojis.push(emoji);
+}
+function constructErrorPage(errorCon, message, config) {
+    const container = createElement({
+        "id": "errorPageCon"
+    });
+    if (config.customConClass) {
+        container.className = config.customConClass;
+    }
+    const errorMessage = createElement({});
+    const icons = createElement({});
+    container.append(errorMessage);
+    container.append(icons);
+    if (config.hasLink) {
+        icons.append(createElement({
+            "class": `icon ${config.linkClass ? config.linkClass : "webview"}`,
+            listeners: {
+                click: config.clickEvent,
+            }
+        }));
+    }
+    if (config.hasReload) {
+        icons.append(createElement({
+            "class": "icon reload",
+            listeners: {
+                click: function () {
+                    window.location.reload();
+                },
+            }
+        }));
+    }
+    errorMessage.append(createElement({
+        innerText: `${unicodeMojis[Math.floor(Math.random() * unicodeMojis.length)]}`,
+        style: {
+            "fontSize": "30px",
+            "marginBottom": "20px"
+        }
+    }));
+    errorMessage.append(createElement({
+        innerText: config.isError ? `Something went wrong: ${message}` : message,
+        style: {
+            "marginBottom": "20px",
+        }
+    }));
+    errorCon.append(container);
+}
+function openWebview(url) {
+    if (config.chrome) {
+        window.open(url, "_blank");
+    }
+    else {
+        // @ts-ignore
+        window.parent.getWebviewHTML(url, false, null, "console.log()");
+    }
+}

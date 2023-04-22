@@ -8,15 +8,15 @@ const extensionDisabled = (<cordovaWindow>window.parent).returnExtensionDisabled
 let sourcesNames = extensionNames;
 
 // @ts-ignore
-let pullTabArray : Array<pullToRefresh> = [];
+let pullTabArray: Array<pullToRefresh> = [];
 
 pullTabArray.push(new pullToRefresh(document.getElementById("mainConSearch")));
 
 for (var i = 0; i < extensionList.length; i++) {
-    if(extensionDisabled[i]){
+    if (extensionDisabled[i]) {
         continue;
     }
-    let atr : any = {
+    let atr: any = {
         "value": i.toString(),
     };
 
@@ -51,11 +51,6 @@ searchClose.onclick = function (event) {
 
 }
 
-searchInput.onkeydown = function (event) {
-    if (event.keyCode == 13) {
-        search();
-    }
-}
 
 function openSearch() {
     searchInput.style.width = 'calc(100% - 90px)';
@@ -64,7 +59,7 @@ function openSearch() {
     searchInput.style.paddingLeft = '40px';
     searchButton.onclick = function () { search(); }
 }
-function close_search(event : Event) {
+function close_search(event: Event) {
     searchClose.style.display = 'none';
     searchInput.style.width = '0';
     searchInput.style.paddingLeft = '0';
@@ -98,11 +93,20 @@ function search() {
         localStorage.setItem("devmode", "true");
     }
     currentEngine.searchApi(searchInput.value).then(function (x) {
-
         let main_div = x.data;
 
         if (main_div.length == 0) {
-            document.getElementById("mainConSearch").innerHTML = "<div style='margin:auto;'>No results :(</div>";
+            document.getElementById("mainConSearch").innerHTML = "";
+            constructErrorPage(
+                document.getElementById("mainConSearch"),
+                "No results",
+                {
+                    hasLink: false,
+                    hasReload: false,
+                    isError: false,
+                    customConClass: "absolute"
+                }
+            )
         } else {
             document.getElementById("mainConSearch").innerHTML = "";
         }
@@ -135,10 +139,22 @@ function search() {
 
         }
 
-    }).catch(function (error) {
-        console.error(error);
-        document.getElementById("mainConSearch").innerHTML = "Error";
-        sendNoti([0, null, "Message", error.data]);
+    }).catch(function (error: searchError) {
+        document.getElementById("mainConSearch").innerHTML = "";
+
+        constructErrorPage(
+            document.getElementById("mainConSearch"),
+            error.toString(),
+            {
+                hasLink: true,
+                hasReload: false,
+                isError: false,             // It already has the "Error:" prefix, so this is not needed
+                customConClass: "absolute",
+                clickEvent: () => {
+                    openWebview(error.url)
+                }
+            }
+        )
     });
 }
 

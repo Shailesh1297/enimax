@@ -52,4 +52,12 @@ class notification {
         this.elem.prepend(newElem);
         this.noti = newElem;
     }
+    remove() {
+        try {
+            this.noti.remove();
+        }
+        catch (err) {
+            console.error(err);
+        }
+    }
 }

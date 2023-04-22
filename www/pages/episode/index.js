@@ -53,6 +53,7 @@ let showMainName = null;
 let showImage = null;
 // @ts-ignore
 let pullTabArray = [];
+let webviewLink = "";
 pullTabArray.push(new pullToRefresh(document.getElementById("con_11")));
 function collapseDesc() {
     const descDOM = document.getElementById("imageDesc");
@@ -710,8 +711,17 @@ function ini() {
             currentEngine.getAnimeInfo(main_url).then(function (data) {
                 processEpisodeData(data, false, main_url);
             }).catch(function (err) {
-                console.error(err);
-                alert(err);
+                const epCon = document.getElementById("epListCon");
+                constructErrorPage(epCon, err.message, {
+                    hasLink: true,
+                    hasReload: true,
+                    clickEvent: () => {
+                        openWebview(webviewLink);
+                    }
+                });
+                epCon.style.marginTop = "0";
+                webviewLink = err.url;
+                document.querySelector(".infoCon").style.display = "none";
             });
         }
     }

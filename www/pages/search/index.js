@@ -38,11 +38,6 @@ searchBox.onclick = function () {
 searchClose.onclick = function (event) {
     close_search(event);
 };
-searchInput.onkeydown = function (event) {
-    if (event.keyCode == 13) {
-        search();
-    }
-};
 function openSearch() {
     searchInput.style.width = 'calc(100% - 90px)';
     searchBox.style.width = 'calc(100% - 40px)';
@@ -84,7 +79,13 @@ function search() {
     currentEngine.searchApi(searchInput.value).then(function (x) {
         let main_div = x.data;
         if (main_div.length == 0) {
-            document.getElementById("mainConSearch").innerHTML = "<div style='margin:auto;'>No results :(</div>";
+            document.getElementById("mainConSearch").innerHTML = "";
+            constructErrorPage(document.getElementById("mainConSearch"), "No results", {
+                hasLink: false,
+                hasReload: false,
+                isError: false,
+                customConClass: "absolute"
+            });
         }
         else {
             document.getElementById("mainConSearch").innerHTML = "";
@@ -114,9 +115,16 @@ function search() {
             document.getElementById("mainConSearch").append(tempDiv1);
         }
     }).catch(function (error) {
-        console.error(error);
-        document.getElementById("mainConSearch").innerHTML = "Error";
-        sendNoti([0, null, "Message", error.data]);
+        document.getElementById("mainConSearch").innerHTML = "";
+        constructErrorPage(document.getElementById("mainConSearch"), error.toString(), {
+            hasLink: true,
+            hasReload: false,
+            isError: false,
+            customConClass: "absolute",
+            clickEvent: () => {
+                openWebview(error.url);
+            }
+        });
     });
 }
 applyTheme();

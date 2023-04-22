@@ -46,6 +46,7 @@ var twitch: extension = {
     getAnimeInfo: function (url, sibling = false, currentID = -1) {
         url = url.split("&engine")[0];
         let id = url.replace("?watch=/", "");
+        const rawURL = `${this.baseURL}/${url}`;
 
         let response: extensionInfo = {
             "name": "",
@@ -135,7 +136,10 @@ var twitch: extension = {
                 response.episodes = data;
 
                 resolve(response);
-            }).catch((error) => reject(error));
+            }).catch((error) => {
+                error.url = rawURL;
+                reject(error);
+            });
 
         });
 

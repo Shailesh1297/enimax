@@ -193,6 +193,30 @@ interface extensionInfo {
     genres?: Array<string>
 }
 
+interface infoError extends Error{
+    url: string,
+    message: string
+}
+
+interface searchError extends Error{
+    url: string,
+}
+
+type ErrorPageConfig = {
+    hasLink: false,
+    hasReload: Boolean,
+    customConClass? : string,
+    linkClass? : string,
+    isError?: Boolean
+} | {
+    hasLink: true,
+    hasReload: Boolean,
+    clickEvent: Function,
+    customConClass? : string,
+    linkClass? : string,
+    isError?: Boolean
+}
+
 interface PageInfo{
     pageSize : number,
     pageName : string

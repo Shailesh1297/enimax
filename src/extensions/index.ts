@@ -247,3 +247,13 @@ async function MakeFetchZoro(url: string, options = {}): Promise<string> {
         });
     });
 }
+
+function removeDOM(domElem: HTMLElement) {
+    console.log("Removing", domElem);
+    try {
+        domElem.innerHTML = "";
+        domElem.remove();
+    } catch (err) {
+
+    }
+}

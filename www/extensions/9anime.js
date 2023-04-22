@@ -33,66 +33,72 @@ var nineAnime = {
             "mainName": ""
         };
         let id = url.replace("?watch=/", "");
-        let infoHTML = await MakeFetchZoro(`https://9anime.to/watch/${id}`);
-        let infoDOM = document.createElement("div");
-        infoDOM.innerHTML = DOMPurify.sanitize(infoHTML);
-        let nineAnimeID = infoDOM.querySelector("#watch-main").getAttribute("data-id");
-        let infoMainDOM = infoDOM.querySelector("#w-info").querySelector(".info");
-        response.mainName = id;
-        response.name = infoMainDOM.querySelector(".title").innerText;
-        response.description = infoMainDOM.querySelector(".content").innerText;
-        response.image = infoDOM.querySelector("#w-info").querySelector("img").getAttribute("src");
+        const rawURL = `https://9anime.to/watch/${id}`;
         try {
-            response.genres = [];
-            const metaCon = infoDOM.querySelector(".bmeta").querySelector(".meta");
-            for (const genreAnchor of metaCon.querySelectorAll("a")) {
-                const href = genreAnchor.getAttribute("href");
-                if (href && href.includes("/genre/")) {
-                    response.genres.push(genreAnchor.innerText);
+            let infoHTML = await MakeFetchZoro(`https://9anime.to/watch/${id}`);
+            let infoDOM = document.createElement("div");
+            infoDOM.innerHTML = DOMPurify.sanitize(infoHTML);
+            let nineAnimeID = infoDOM.querySelector("#watch-main").getAttribute("data-id");
+            let infoMainDOM = infoDOM.querySelector("#w-info").querySelector(".info");
+            response.mainName = id;
+            response.name = infoMainDOM.querySelector(".title").innerText;
+            response.description = infoMainDOM.querySelector(".content").innerText;
+            response.image = infoDOM.querySelector("#w-info").querySelector("img").getAttribute("src");
+            try {
+                response.genres = [];
+                const metaCon = infoDOM.querySelector(".bmeta").querySelector(".meta");
+                for (const genreAnchor of metaCon.querySelectorAll("a")) {
+                    const href = genreAnchor.getAttribute("href");
+                    if (href && href.includes("/genre/")) {
+                        response.genres.push(genreAnchor.innerText);
+                    }
                 }
             }
-        }
-        catch (err) {
-            console.log(err);
-        }
-        let episodes = [];
-        let IDVRF = await this.getVRF(nineAnimeID, "ajax-episode-list");
-        let episodesHTML = "";
-        try {
-            const tempResponse = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/episode/list/${nineAnimeID}?${IDVRF[1]}=${IDVRF[0]}`));
-            if (tempResponse.result) {
-                episodesHTML = tempResponse.result;
+            catch (err) {
+                console.log(err);
             }
-            else {
-                throw new Error("Couldn't find the result");
-            }
-        }
-        catch (err) {
-            throw new Error(`Error 9ANIME_INFO_JSON: The JSON could be be parsed. ${err.message}`);
-        }
-        let episodesDOM = document.createElement("div");
-        episodesDOM.innerHTML = DOMPurify.sanitize(episodesHTML);
-        let episodeElem = episodesDOM.querySelectorAll("li");
-        for (let i = 0; i < episodeElem.length; i++) {
-            let curElem = episodeElem[i];
-            let title = "";
+            let episodes = [];
+            let IDVRF = await this.getVRF(nineAnimeID, "ajax-episode-list");
+            let episodesHTML = "";
             try {
-                title = curElem.querySelector("span").innerText;
+                const tempResponse = JSON.parse(await MakeFetchZoro(`https://9anime.to/ajax/episode/list/${nineAnimeID}?${IDVRF[1]}=${IDVRF[0]}`));
+                if (tempResponse.result) {
+                    episodesHTML = tempResponse.result;
+                }
+                else {
+                    throw new Error("Couldn't find the result");
+                }
             }
             catch (err) {
-                console.warn("Could not find the title");
+                throw new Error(`Error 9ANIME_INFO_JSON: The JSON could be be parsed. ${err.message}`);
             }
-            episodes.push({
-                "link": (nextPrev ? "" : "?watch=") + encodeURIComponent(id) + "&ep=" + curElem.querySelector("a").getAttribute("data-ids") + "&engine=5",
-                "id": curElem.querySelector("a").getAttribute("data-ids"),
-                "title": nextPrev ? title : `Episode ${curElem.querySelector("a").getAttribute("data-num")} - ${title}`
-            });
+            let episodesDOM = document.createElement("div");
+            episodesDOM.innerHTML = DOMPurify.sanitize(episodesHTML);
+            let episodeElem = episodesDOM.querySelectorAll("li");
+            for (let i = 0; i < episodeElem.length; i++) {
+                let curElem = episodeElem[i];
+                let title = "";
+                try {
+                    title = curElem.querySelector("span").innerText;
+                }
+                catch (err) {
+                    console.warn("Could not find the title");
+                }
+                episodes.push({
+                    "link": (nextPrev ? "" : "?watch=") + encodeURIComponent(id) + "&ep=" + curElem.querySelector("a").getAttribute("data-ids") + "&engine=5",
+                    "id": curElem.querySelector("a").getAttribute("data-ids"),
+                    "title": nextPrev ? title : `Episode ${curElem.querySelector("a").getAttribute("data-num")} - ${title}`
+                });
+            }
+            response.episodes = episodes;
+            episodesDOM.remove();
+            infoDOM.remove();
+            return response;
         }
-        response.episodes = episodes;
-        episodesDOM.remove();
-        infoDOM.remove();
-        console.log(response);
-        return response;
+        catch (err) {
+            err.url = rawURL;
+            throw err;
+        }
     },
     getLinkFromUrl: async function (url) {
         url = "watch=" + url;

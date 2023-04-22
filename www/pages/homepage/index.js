@@ -1031,7 +1031,19 @@ if (true) {
         },
         get_userinfo: () => {
             permNoti = sendNoti([0, null, "Message", "Syncing with the server..."]);
-            window.parent.apiCall("POST", { "username": username, "action": 4 }, get_userinfo_callback, []);
+            window.parent
+                .apiCall("POST", { "username": username, "action": 4 }, get_userinfo_callback, [])
+                .then(() => {
+                console.log("Success.");
+            })
+                .catch((err) => {
+                const errorCon = document.getElementById("custom_rooms");
+                constructErrorPage(errorCon, err.message, {
+                    "hasReload": true,
+                    "hasLink": false
+                });
+            });
+            permNoti.remove();
         }
     };
     function change_image_callback(x, y, z) {
@@ -1220,6 +1232,7 @@ if (true) {
             else {
                 domToAppend = document.getElementById('room_recently');
             }
+            domToAppend.setAttribute("data-empty", "false");
             if (parseInt(data[i][4]) == -1) {
                 findUnwatched = true;
             }
@@ -1415,6 +1428,18 @@ if (true) {
             if (catMainDOM[i].id == "discoverCon") {
                 continue;
             }
+            if (catMainDOM[i].getAttribute("data-empty") !== "false") {
+                constructErrorPage(catMainDOM[i], "So empty. Try searching things and adding it to the library!", {
+                    hasLink: true,
+                    hasReload: false,
+                    customConClass: "absolute",
+                    isError: false,
+                    linkClass: "search",
+                    clickEvent: () => {
+                        window.parent.postMessage({ "action": 500, data: "pages/search/index.html" }, "*");
+                    }
+                });
+            }
             catMainDOM[i].append(createElement({
                 "style": {
                     "width": "100%",
@@ -1456,7 +1481,8 @@ if (true) {
     else if (config.chrome) {
         verURL = "https://raw.githubusercontent.com/enimax-anime/enimax-chrome-extension/main/version.json";
     }
-    fetch(verURL).then((x) => x.json())
+    fetch(verURL)
+        .then((x) => x.json())
         .then(function (x) {
         let curTime = Math.floor((new Date()).getTime() / 1000);
         let lastUpdate = parseInt(localStorage.getItem("lastUpdate"));
@@ -1471,6 +1497,8 @@ if (true) {
             sendNoti([0, "", "New update!", x.message]);
             localStorage.setItem("lastUpdate", curTime.toString());
         }
+    }).catch((err) => {
+        console.error(err);
     });
 }
 function changeEngine() {

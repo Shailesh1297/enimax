@@ -126,121 +126,128 @@ var fmovies = {
         };
         let showIdSplit = url.split("-");
         let showId = showIdSplit[showIdSplit.length - 1].split(".")[0];
-        let response = await self.getSeason(showId, url);
-        if (response.status == 200) {
-            data.name = response.data.meta.name;
-            data.image = response.data.meta.image;
-            data.description = response.data.meta.des;
-            data.mainName = url.split("/watch-")[1].split(isInk ? "-full" : "-online")[0] + "-" + showId + "-";
-            data.episodes = [];
-            if (response.data.meta.genres && response.data.meta.genres.length > 0) {
-                data.genres = response.data.meta.genres;
-            }
-            let allAwaits = [];
-            let seasonNames = [];
-            let metaDataPromises = [];
-            let metaData = {};
-            for (let season in response.data.seasons) {
-                seasonNames.push(season);
-                try {
-                    // metaDataPromises.push(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/tv/season?id=${showId}&season=${season.split(" ")[1].trim()}`, {}, 1000));
+        const rawURL = `https://${fmoviesBaseURL}/${url}`;
+        try {
+            let response = await self.getSeason(showId, url);
+            if (response.status == 200) {
+                data.name = response.data.meta.name;
+                data.image = response.data.meta.image;
+                data.description = response.data.meta.des;
+                data.mainName = url.split("/watch-")[1].split(isInk ? "-full" : "-online")[0] + "-" + showId + "-";
+                data.episodes = [];
+                if (response.data.meta.genres && response.data.meta.genres.length > 0) {
+                    data.genres = response.data.meta.genres;
                 }
-                catch (err) {
-                }
-                allAwaits.push(self.getEpisode(response.data.seasons[season]));
-            }
-            let values;
-            let tempMetaData = [];
-            let isSettleSupported = "allSettled" in Promise;
-            if (!isSettleSupported) {
-                try {
-                    tempMetaData = await Promise.all(metaDataPromises);
-                }
-                catch (err) {
-                }
-                values = await Promise.all(allAwaits);
-            }
-            else {
-                let allReponses = await Promise.allSettled([Promise.all(allAwaits), Promise.all(metaDataPromises)]);
-                if (allReponses[0].status === "fulfilled") {
-                    values = allReponses[0].value;
-                    console.log(values);
-                }
-                else {
-                    throw Error("Could not get the seasons. Try again.");
-                }
-                if (allReponses[1].status === "fulfilled") {
-                    tempMetaData = allReponses[1].value;
-                }
-            }
-            try {
-                for (let i = 0; i < tempMetaData.length; i++) {
-                    let metaJSON = JSON.parse(tempMetaData[i]);
-                    let episodeData = {};
-                    for (let j = 0; j < metaJSON.episodes.length; j++) {
-                        let curEpisode = metaJSON.episodes[j];
-                        episodeData[curEpisode.episode_number] = {};
-                        episodeData[curEpisode.episode_number].thumbnail = `https://image.tmdb.org/t/p/w300${curEpisode.still_path}`,
-                            episodeData[curEpisode.episode_number].description = curEpisode.overview;
-                    }
-                    metaData[metaJSON.season_number] = episodeData;
-                }
-            }
-            catch (err) {
-                console.error(err);
-            }
-            data.totalPages = values.length;
-            data.pageInfo = [];
-            for (let key = 0; key < values.length; key++) {
-                let seasonData = values[key];
-                data.pageInfo.push({
-                    "pageName": seasonNames[key],
-                    "pageSize": seasonData.data.length
-                });
-                for (let i = 0; i < seasonData.data.length; i++) {
-                    let tempData = {
-                        title: `${seasonNames[key]} | ${seasonData.data[i].title}`,
-                        link: `?watch=${url}.${seasonData.data[i].id}&engine=2`,
-                    };
+                let allAwaits = [];
+                let seasonNames = [];
+                let metaDataPromises = [];
+                let metaData = {};
+                for (let season in response.data.seasons) {
+                    seasonNames.push(season);
                     try {
-                        let ep = parseInt(seasonData.data[i].title.split("Eps ")[1]);
-                        let season = seasonNames[key].split(" ")[1].trim();
-                        if (season in metaData && ep in metaData[season]) {
-                            tempData.thumbnail = metaData[season][ep].thumbnail;
-                            tempData.description = metaData[season][ep].description;
-                        }
+                        // metaDataPromises.push(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/tv/season?id=${showId}&season=${season.split(" ")[1].trim()}`, {}, 1000));
                     }
                     catch (err) {
-                        console.error(err);
                     }
-                    data.episodes.push(tempData);
+                    allAwaits.push(self.getEpisode(response.data.seasons[season]));
                 }
-            }
-            if (Object.keys(response.data.seasons).length === 0) {
-                let thumbnail = null;
+                let values;
+                let tempMetaData = [];
+                let isSettleSupported = "allSettled" in Promise;
+                if (!isSettleSupported) {
+                    try {
+                        tempMetaData = await Promise.all(metaDataPromises);
+                    }
+                    catch (err) {
+                    }
+                    values = await Promise.all(allAwaits);
+                }
+                else {
+                    let allReponses = await Promise.allSettled([Promise.all(allAwaits), Promise.all(metaDataPromises)]);
+                    if (allReponses[0].status === "fulfilled") {
+                        values = allReponses[0].value;
+                        console.log(values);
+                    }
+                    else {
+                        throw Error("Could not get the seasons. Try again.");
+                    }
+                    if (allReponses[1].status === "fulfilled") {
+                        tempMetaData = allReponses[1].value;
+                    }
+                }
                 try {
-                    // thumbnail = `https://image.tmdb.org/t/p/w300${JSON.parse(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/movies?id=${showId}`, {}, 1000)).backdrop_path}`;
+                    for (let i = 0; i < tempMetaData.length; i++) {
+                        let metaJSON = JSON.parse(tempMetaData[i]);
+                        let episodeData = {};
+                        for (let j = 0; j < metaJSON.episodes.length; j++) {
+                            let curEpisode = metaJSON.episodes[j];
+                            episodeData[curEpisode.episode_number] = {};
+                            episodeData[curEpisode.episode_number].thumbnail = `https://image.tmdb.org/t/p/w300${curEpisode.still_path}`,
+                                episodeData[curEpisode.episode_number].description = curEpisode.overview;
+                        }
+                        metaData[metaJSON.season_number] = episodeData;
+                    }
                 }
                 catch (err) {
+                    console.error(err);
                 }
-                let tempData = {
-                    title: `Watch`,
-                    link: `?watch=${url}&engine=2`
-                };
-                if (thumbnail) {
-                    tempData.thumbnail = thumbnail;
+                data.totalPages = values.length;
+                data.pageInfo = [];
+                for (let key = 0; key < values.length; key++) {
+                    let seasonData = values[key];
+                    data.pageInfo.push({
+                        "pageName": seasonNames[key],
+                        "pageSize": seasonData.data.length
+                    });
+                    for (let i = 0; i < seasonData.data.length; i++) {
+                        let tempData = {
+                            title: `${seasonNames[key]} | ${seasonData.data[i].title}`,
+                            link: `?watch=${url}.${seasonData.data[i].id}&engine=2`,
+                        };
+                        try {
+                            let ep = parseInt(seasonData.data[i].title.split("Eps ")[1]);
+                            let season = seasonNames[key].split(" ")[1].trim();
+                            if (season in metaData && ep in metaData[season]) {
+                                tempData.thumbnail = metaData[season][ep].thumbnail;
+                                tempData.description = metaData[season][ep].description;
+                            }
+                        }
+                        catch (err) {
+                            console.error(err);
+                        }
+                        data.episodes.push(tempData);
+                    }
                 }
-                data.episodes.push(tempData);
-                data.totalPages = 1;
-                data.pageInfo = [{
-                        "pageName": "Movie",
-                        "pageSize": 1
-                    }];
+                if (Object.keys(response.data.seasons).length === 0) {
+                    let thumbnail = null;
+                    try {
+                        // thumbnail = `https://image.tmdb.org/t/p/w300${JSON.parse(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/movies?id=${showId}`, {}, 1000)).backdrop_path}`;
+                    }
+                    catch (err) {
+                    }
+                    let tempData = {
+                        title: `Watch`,
+                        link: `?watch=${url}&engine=2`
+                    };
+                    if (thumbnail) {
+                        tempData.thumbnail = thumbnail;
+                    }
+                    data.episodes.push(tempData);
+                    data.totalPages = 1;
+                    data.pageInfo = [{
+                            "pageName": "Movie",
+                            "pageSize": 1
+                        }];
+                }
+                return data;
             }
-            return data;
+            else {
+                throw Error("Could not get the seasons.");
+            }
         }
-        else {
-            throw Error("Could not get the seasons.");
+        catch (err) {
+            err.url = rawURL;
+            throw err;
         }
     },
     getLinkFromStream: async function getLinkFromStream(url) {
