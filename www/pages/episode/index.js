@@ -380,7 +380,7 @@ function ini() {
                             "fontSize": "13px",
                             "marginTop": "6px"
                         },
-                        innerText: animeEps[i].date.toLocaleString()
+                        innerText: animeEps[i].date.toUTCString()
                     }));
                 }
                 let check = false;
@@ -737,17 +737,18 @@ addToLibrary.onclick = function () {
                 "name": showMainName,
                 "img": showImage,
                 "url": location.search
-            }, () => { });
-            window.parent.apiCall("POST", {
-                "username": "",
-                "action": 2,
-                "name": showMainName,
-                "cur": document.querySelector(".episodesCon").getAttribute("data-url"),
-                "ep": 1
-            }, (response) => {
-                addToLibrary.classList.remove("isWaiting");
-                addToLibrary.classList.remove("notInLib");
-                addToLibrary.classList.add("isInLib");
+            }, () => {
+                window.parent.apiCall("POST", {
+                    "username": "",
+                    "action": 2,
+                    "name": showMainName,
+                    "cur": document.querySelector(".episodesCon").getAttribute("data-url"),
+                    "ep": 1
+                }, (response) => {
+                    addToLibrary.classList.remove("isWaiting");
+                    addToLibrary.classList.remove("notInLib");
+                    addToLibrary.classList.add("isInLib");
+                });
             });
         }
         else {

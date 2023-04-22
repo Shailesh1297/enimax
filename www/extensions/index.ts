@@ -197,15 +197,15 @@ if (config && config.chrome) {
 }
 
 
-function getWebviewHTML(url = "https://www.zoro.to", hidden = false) {
+function getWebviewHTML(url = "https://www.zoro.to", hidden = false, timeout: number | undefined = 15000, code: boolean | string = false) {
     return new Promise((resolve, reject) => {
         // @ts-ignore
         const inappRef = cordova.InAppBrowser.open(url, '_blank', hidden ? "hidden=true" : "");
 
         inappRef.addEventListener('loadstop', () => {
             inappRef.executeScript({
-                'code': `let resultInApp={'status':200,'data':document.body.innerText};
-                        webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify(resultInApp));`
+                'code': code === false ? `let resultInApp={'status':200,'data':document.body.innerText};
+                        webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify(resultInApp));` : code
             });
         });
 
@@ -215,13 +215,23 @@ function getWebviewHTML(url = "https://www.zoro.to", hidden = false) {
         });
 
         inappRef.addEventListener('message', (result: string) => {
+            console.log(result);
+            inappRef.close();
             resolve(result);
         });
 
-        setTimeout(function () {
-            inappRef.close();
-            reject("Timeout");
-        }, 15000);
+        inappRef.addEventListener('exit', (result: string) => {
+            setTimeout(() => {
+                resolve("closed");
+            }, 500);
+        });
+
+        if (timeout) {
+            setTimeout(function () {
+                inappRef.close();
+                reject("Timeout");
+            }, timeout);
+        }
     });
 }
 

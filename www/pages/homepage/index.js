@@ -1516,6 +1516,11 @@ for (let themeElem of document.getElementsByClassName("themesContainer")) {
     themeCount++;
 }
 document.getElementById("opSlider").value = isNaN(parseFloat(localStorage.getItem("bgOpacity"))) ? "0.6" : parseFloat(localStorage.getItem("bgOpacity")).toString();
+document.getElementById("token").onclick = function () {
+    const url = prompt("Enter the URL", "https://www.zoro.to");
+    // @ts-ignore
+    window.parent.getWebviewHTML(url, false, undefined, "console.log()");
+};
 document.getElementById("opSlider").oninput = function () {
     let elem = document.getElementById("opSlider");
     window.parent.postMessage({ "action": "updateOpacity", data: elem.value }, "*");

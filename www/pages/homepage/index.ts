@@ -15,12 +15,12 @@ if (config.chrome) {
 }
 
 let rooms2;
-let downloadedFolders : any= {};
+let downloadedFolders: any = {};
 // @ts-ignore
-let pullTabArray : Array<pullToRefresh> = [];
-let flaggedShow : Array<flaggedShows> = [];
+let pullTabArray: Array<pullToRefresh> = [];
+let flaggedShow: Array<flaggedShows> = [];
 
-let errDOM : HTMLElement = document.getElementById("errorCon");
+let errDOM: HTMLElement = document.getElementById("errorCon");
 let firstLoad = true;
 
 
@@ -38,7 +38,7 @@ async function populateDownloadedArray() {
     }
 }
 
-async function testIt(idx = -1) : Promise<void> {
+async function testIt(idx = -1): Promise<void> {
     let extensionList = (<cordovaWindow>window.parent).returnExtensionList();
     let extensionNames = (<cordovaWindow>window.parent).returnExtensionNames();
     let searchQuery = "odd";
@@ -87,7 +87,7 @@ async function testIt(idx = -1) : Promise<void> {
 }
 
 
-async function testKey() : Promise<void> {
+async function testKey(): Promise<void> {
     try {
         alert(await (<cordovaWindow>window.parent).extractKey(4));
     } catch (err) {
@@ -131,7 +131,7 @@ if (localStorage.getItem("devmode") === "true") {
     document.getElementById("testExtensions").style.display = "block";
     for (let elem of document.getElementsByClassName("testExt")) {
         (elem as HTMLElement).style.display = "block";
-        (elem  as HTMLElement).onclick = function () {
+        (elem as HTMLElement).onclick = function () {
             testIt(parseInt((this as HTMLElement).getAttribute("data-exId")));
         }
     }
@@ -161,7 +161,7 @@ function resetOfflineQual() {
     }
 }
 
-function readImage(file : File) : Promise<ArrayBuffer>{
+function readImage(file: File): Promise<ArrayBuffer> {
     return (new Promise((resolve, reject) => {
 
         const reader = new FileReader();
@@ -183,7 +183,7 @@ function exportDataSQL() {
         files: [(<cordovaWindow>window.parent).cordova.file.applicationStorageDirectory + "databases/data4.db"],
     };
 
-    (<cordovaWindow>window.parent).plugins.socialsharing.shareWithOptions(options, () => {}, () => {
+    (<cordovaWindow>window.parent).plugins.socialsharing.shareWithOptions(options, () => { }, () => {
         alert("Something went wrong");
     });
 
@@ -282,7 +282,7 @@ if (config.chrome) {
 }
 
 // todo
-function addQueue(queue : Array<queueElement>, queueDOM : HTMLElement, downloadQueue : downloadQueue, isDone : boolean) {
+function addQueue(queue: Array<queueElement>, queueDOM: HTMLElement, downloadQueue: downloadQueue, isDone: boolean) {
 
 
     if (!isDone && queue.length == 0) {
@@ -653,7 +653,7 @@ document.getElementById("9animeAPIKey").oninput = function () {
     localStorage.setItem("apikey", (this as HTMLInputElement).value);
 }
 
-function switchOption(value : string) {
+function switchOption(value: string) {
     if (value === "true") {
         document.getElementById("themeMainCon").style.display = "none";
         document.getElementById("imageInput").style.display = "table-row";
@@ -671,7 +671,7 @@ document.getElementById("useImageBack").onchange = function () {
     (<cordovaWindow>window.parent).updateImage();
 }
 
-document.getElementById("rangeCon").addEventListener("touchmove", function (event : TouchEvent) {
+document.getElementById("rangeCon").addEventListener("touchmove", function (event: TouchEvent) {
     event.stopPropagation();
 });
 
@@ -773,9 +773,9 @@ window.onmessage = function (x) {
 };
 
 
-var rooms : Array<string | number>;
+var rooms: Array<string | number>;
 var token;
-var rooms_order : Array<number>;
+var rooms_order: Array<number>;
 var selectedShow = null;
 var permNoti = null;
 var check_sort = 0;
@@ -785,7 +785,7 @@ var last_order;
 
 // todo
 // @ts-ignore
-function toFormData(formObject : { [key: string]: string } ) {
+function toFormData(formObject: { [key: string]: string }) {
     const form = new FormData();
     for (const value in formObject) {
         form.append(value, formObject[value]);
@@ -827,10 +827,10 @@ function watched_card(y) {
 
 }
 
-function makeRoomElem(roomID, roomName, add = false){
+function makeRoomElem(roomID, roomName, add = false) {
     let className = "room_card_delete";
 
-    if(add){
+    if (add) {
         className = "draggable_room add_to_room";
     }
 
@@ -840,18 +840,18 @@ function makeRoomElem(roomID, roomName, add = false){
     let tempDiv4 = createElement({
         "class": className, "attributes": { "data-roomid": roomID }, "listeners": {
             "click": function () {
-                if(add){
+                if (add) {
                     ini_api.change_state(this);
-                }else{
+                } else {
                     ini_api.delete_room(this);
                 }
             }
         }
     });
-    
+
     tempDiv2.append(tempDiv3);
     tempDiv2.append(tempDiv4);
-    if(!add){
+    if (!add) {
         tempDiv2.append(createElement({ "class": "draggable_room", "attributes": {}, "listeners": {} }));
     }
     tempDiv.append(tempDiv2);
@@ -1029,7 +1029,7 @@ async function populateDiscover() {
     for (let i = 0; i < extensionList.length; i++) {
         let engine = i;
         try {
-            extensionList[engine]["discover"]().then(function (data : extensionDiscoverData[]) {
+            extensionList[engine]["discover"]().then(function (data: extensionDiscoverData[]) {
                 console.log("here", data);
                 let parentDiscover = parents[engine];
                 let titleDiscover = exTitle[engine];
@@ -1188,7 +1188,7 @@ function getUserInfo() {
 
 
 
-function fix_title(title : string) {
+function fix_title(title: string) {
     try {
         let titleArray = title.split("-");
         let temp = "";
@@ -1201,10 +1201,10 @@ function fix_title(title : string) {
     }
 }
 
-function img_url(url : string | undefined) {
-    try{
+function img_url(url: string | undefined) {
+    try {
         return url.replace("file:", "https:");
-    }catch(err){
+    } catch (err) {
         return url;
     }
 }
@@ -1252,7 +1252,7 @@ if (true) {
 
 
 
-    function getCurrentOrder() : string {
+    function getCurrentOrder(): string {
         let elems = document.getElementById("room_dis_child").getElementsByClassName("room_card_con");
         let room_temp = [];
 
@@ -1600,7 +1600,7 @@ if (true) {
             let tempDiv = createElement({ "class": "s_card", "attributes": {}, "listeners": {} });
 
             tempDiv.append(createElement({
-                element : "img",
+                element: "img",
                 class: "cardImage",
                 attributes: {
                     "src": img_url(data[i][2]),
@@ -1735,24 +1735,24 @@ if (true) {
             tempDiv1.append(tempDivEx);
             tempDiv.append(tempDiv1);
 
-            try{
-                if(data[i].length >= 7 && JSON.parse(data[i][6])[1] > 0){
+            try {
+                if (data[i].length >= 7 && JSON.parse(data[i][6])[1] > 0) {
                     let progData = JSON.parse(data[i][6]);
                     let tempProgDiv = createElement({
-                        "class" : "episodesProgressCon",
+                        "class": "episodesProgressCon",
                     });
 
                     tempProgDiv.append(createElement({
-                        "class" : "episodesProgress",
-                        "style" : {
-                            "width" : `${100*(parseInt(progData[0])/parseInt(progData[1]))}%`
+                        "class": "episodesProgress",
+                        "style": {
+                            "width": `${100 * (parseInt(progData[0]) / parseInt(progData[1]))}%`
                         }
                     }));
 
-                    tempDiv1.append(tempProgDiv);             
+                    tempDiv1.append(tempProgDiv);
 
                 }
-            }catch(err){
+            } catch (err) {
 
             }
             domToAppend.append(tempDiv);
@@ -1889,7 +1889,7 @@ if (true) {
             let curTime = Math.floor((new Date()).getTime() / 1000);
             let lastUpdate = parseInt(localStorage.getItem("lastUpdate"));
 
-            let bool : boolean;
+            let bool: boolean;
             if (isNaN(lastUpdate)) {
                 bool = true;
             } else {
@@ -1929,7 +1929,7 @@ switchOption(localStorage.getItem("useImageBack"));
 
 let bgGradientIndex = parseInt(localStorage.getItem("themegradient"));
 
-function selectTheme(index : number) {
+function selectTheme(index: number) {
     window.parent.postMessage({ "action": "updateGrad", data: index }, "*");
     let themeCount = 0;
     for (let themeElem of document.getElementsByClassName("themesContainer")) {
@@ -1963,7 +1963,11 @@ for (let themeElem of (document.getElementsByClassName("themesContainer") as HTM
 }
 
 (document.getElementById("opSlider") as HTMLInputElement).value = isNaN(parseFloat(localStorage.getItem("bgOpacity"))) ? "0.6" : parseFloat(localStorage.getItem("bgOpacity")).toString();
-
+(document.getElementById("token") as HTMLElement).onclick = function(){
+    const url = prompt("Enter the URL", "https://www.zoro.to");
+    // @ts-ignore
+    window.parent.getWebviewHTML(url, false, undefined, "console.log()");
+}
 document.getElementById("opSlider").oninput = function () {
     let elem = document.getElementById("opSlider") as HTMLInputElement;
     window.parent.postMessage({ "action": "updateOpacity", data: elem.value }, "*");

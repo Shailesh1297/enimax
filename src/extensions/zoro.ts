@@ -195,6 +195,7 @@ var zoro: extension = {
         return data;
     },
     addSource: async function addSource(type: string, id: string, subtitlesArray: Array<videoSubtitle>, sourceURLs: Array<videoSource>) {
+        let shouldThrow = false;
         try {
             let sources = await MakeFetchZoro(`https://zoro.to/ajax/v2/episode/sources?id=${id}`, {});
             sources = JSON.parse(sources).link;
@@ -205,8 +206,12 @@ var zoro: extension = {
             let sourceId = sourceIdArray[sourceIdArray.length - 1];
             sourceId = sourceId.split("?")[0];
 
+            let token = localStorage.getItem("rapidToken");
 
-            let sourceJSON = JSON.parse((await MakeFetchZoro(`${urlHost}/ajax/embed-6/getSources?id=${sourceId}&sId=lihgfedcba-abcde`, {})));
+            let sourceJSON = JSON.parse((await MakeFetchZoro(`${urlHost}/ajax/embed-6/getSources?id=${sourceId}&token=${token}`, {})));
+            if (sourceJSON.status === false) {
+                shouldThrow = true;
+            }
             try {
                 for (let j = 0; j < sourceJSON.tracks.length; j++) {
                     sourceJSON.tracks[j].label += " - " + type;
@@ -243,8 +248,12 @@ var zoro: extension = {
             } catch (err) {
                 console.error(err);
             }
-        }catch(err){
+        } catch (err) {
             console.error(err);
+        }
+
+        if (shouldThrow) {
+            throw new Error("Token not found");
         }
     },
     getVideoTitle: async function (url: string): Promise<string> {
@@ -302,7 +311,13 @@ var zoro: extension = {
             promises.push(this.addSource(tempDom[i].getAttribute("data-type"), tempDom[i].getAttribute('data-id'), subtitles, sourceURLs));
         }
 
-        let promRes = await Promise.all(promises);
+        let promRes;
+
+        try {
+            promRes = await Promise.all(promises);
+        } catch (err) {
+            this.genToken();
+        }
 
         let links = promRes[0];
         let prev = null;
@@ -366,5 +381,31 @@ var zoro: extension = {
             });
         }
         return data;
+    },
+    genToken: async function genToken() {
+
+        await getWebviewHTML("https://rapid-cloud.co/", false, 15000, `let resultInApp={'status':200,'data':localStorage.setItem("v1.1_getSourcesCount", "40")};webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify(resultInApp));`) as any;
+
+        await new Promise(r => setTimeout(r, 500));
+
+        try {
+            alert("Close the inAppBrowser when the video has started playing.")
+            await getWebviewHTML("https://zoro.to/watch/eighty-six-2nd-season-17760?ep=84960", false, 120000, '');
+        } catch (err) {
+
+        }
+
+        await new Promise(r => setTimeout(r, 500));
+
+        try {
+            const token = await getWebviewHTML("https://rapid-cloud.co/", false, 15000, `let resultInApp={'status':200,'data':localStorage.getItem("v1.1_token")};webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify(resultInApp));`) as any;
+
+            localStorage.setItem("rapidToken", token.data.data);
+
+            alert("Token extracted. You can now refresh the page.")
+        } catch (err) {
+            alert("Could not extract the token. Try again or Contact the developer.");
+        }
+
     }
 };

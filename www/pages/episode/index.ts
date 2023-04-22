@@ -459,7 +459,7 @@ function ini() {
                             "fontSize": "13px",
                             "marginTop": "6px"
                         },
-                        innerText: animeEps[i].date.toLocaleString()
+                        innerText: animeEps[i].date.toUTCString()
                     }));
                 }
 
@@ -871,9 +871,9 @@ const playIcon = document.getElementById("play");
 
 playIcon.onclick = function () {
     const selectedExists = document.querySelector(".episodesSelected");
-    if(selectedExists){
+    if (selectedExists) {
         (selectedExists.querySelector(".episodesPlaySmall") as HTMLElement).click();
-    }else{
+    } else {
         (document.querySelector(".episodesCon").querySelector(".episodesPlaySmall") as HTMLElement).click();
     }
 };
@@ -889,20 +889,24 @@ addToLibrary.onclick = function () {
                 "name": showMainName,
                 "img": showImage,
                 "url": location.search
-            }, () => { });
+            }, () => {
 
-            (<cordovaWindow>window.parent).apiCall("POST",
-                {
-                    "username": "",
-                    "action": 2,
-                    "name": showMainName,
-                    "cur": document.querySelector(".episodesCon").getAttribute("data-url"),
-                    "ep": 1
-                }, (response) => {
-                    addToLibrary.classList.remove("isWaiting");
-                    addToLibrary.classList.remove("notInLib");
-                    addToLibrary.classList.add("isInLib");
-                });
+                (<cordovaWindow>window.parent).apiCall("POST",
+                    {
+                        "username": "",
+                        "action": 2,
+                        "name": showMainName,
+                        "cur": document.querySelector(".episodesCon").getAttribute("data-url"),
+                        "ep": 1
+                    }, (response) => {
+                        addToLibrary.classList.remove("isWaiting");
+                        addToLibrary.classList.remove("notInLib");
+                        addToLibrary.classList.add("isInLib");
+                    });
+
+            });
+
+
         } else {
             const shouldDelete = confirm("Are you sure that you want to remove this show from your library?");
             if (shouldDelete) {
@@ -911,7 +915,7 @@ addToLibrary.onclick = function () {
                     addToLibrary.classList.remove("isInLib");
                     addToLibrary.classList.add("notInLib");
                 });
-            }else{
+            } else {
                 addToLibrary.classList.remove("isWaiting");
             }
         }
