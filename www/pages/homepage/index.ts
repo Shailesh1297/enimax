@@ -22,7 +22,44 @@ let flaggedShow: Array<flaggedShows> = [];
 
 let errDOM: HTMLElement = document.getElementById("errorCon");
 let firstLoad = true;
+let states: string = "";
+let stateAction = {
+    access: () => {
+        document.getElementById("accessabilityCon").style.display = "none";
+    },
+    themes: () => {
+        document.getElementById("themesCon").style.display = "none";
+    },
+    menu: () => {
+        toggleMenu("1");
+    },
+    movecat: () => {
+        document.getElementById("room_add_show").style.display = "none";
+    },
+    addcat: () => {
+        document.getElementById("room_con").style.display = "none";
+    },
+    reordercat: () => {
+        document.getElementById("room_dis").style.display = "none";
+    },
+    queue: () => {
+        document.getElementById("queueCon").style.display = "none";
+        document.getElementById("queueCon").setAttribute("data-conopen", "false");
+    }
 
+};
+
+
+function addState(id: string) {
+    states = id;
+    const currentAction = new URLSearchParams(location.search);
+
+    if (!currentAction.get("action")) {
+        window.history.pushState({}, "", `?action=${id}`);
+    } else {
+        window.history.replaceState({}, "", `?action=${id}`);
+    }
+}
 
 async function populateDownloadedArray() {
     try {
@@ -229,6 +266,7 @@ document.getElementById("exportData").onclick = function () {
 }
 
 document.getElementById("accessability").onclick = function () {
+    addState("access");
     document.getElementById("accessabilityCon").style.display = "flex";
 }
 
@@ -443,12 +481,13 @@ function reloadQueue(mode = 0) {
 
 document.getElementById("queueOpen").onclick = function () {
     document.getElementById("queueCon").setAttribute("data-conopen", "true");
-
     document.getElementById("queueCon").style.display = "block";
+    addState("queue");
     reloadQueue();
 }
 
 document.getElementById("themes").onclick = function () {
+    addState("themes");
     document.getElementById("themesCon").setAttribute("data-conopen", "true");
     document.getElementById("themesCon").style.display = "flex";
 }
@@ -707,12 +746,15 @@ function changeServer() {
 }
 
 
-function toggleMenu() {
+function toggleMenu(state?: string) {
     let menuI = document.getElementById("menuIcon");
     let menuElem = document.getElementById("menu");
-    menuI.classList.toggle("change");
     let conElem = document.getElementById("con_11");
-    if (menuElem.getAttribute("data-open") == "0") {
+
+    if (state) {
+        menuElem.setAttribute("data-open", state);
+    }
+    if (menuElem.getAttribute("data-open") === "0") {
         conElem.style.transform = "scale(0.8) translateX(300px)";
         conElem.style.opacity = "0.6";
         conElem.style.pointerEvents = "none";
@@ -721,6 +763,9 @@ function toggleMenu() {
         menuElem.style.transform = "translateX(0px)";
         menuElem.style.opacity = "1";
         menuElem.style.pointerEvents = "auto";
+        menuI.classList.add("change");
+
+        addState("menu");
     } else {
         conElem.style.transform = "scale(1) translateX(0)";
         conElem.style.opacity = "1";
@@ -731,6 +776,8 @@ function toggleMenu() {
         menuElem.style.transform = "translateX(-200px)";
         menuElem.style.opacity = "0";
         menuElem.style.pointerEvents = "none";
+        menuI.classList.remove("change");
+
     }
 }
 
@@ -824,6 +871,7 @@ function watched_card(y) {
     var x = y.getAttribute("data-showname");
     selectedShow = x;
     document.getElementById("room_add_show").style.display = "flex";
+    addState("movecat")
 
 }
 
@@ -1266,6 +1314,7 @@ if (true) {
 
     function add_room_open() {
         document.getElementById("room_con").style.display = "flex";
+        addState("addcat");
     }
 
 
@@ -1275,7 +1324,7 @@ if (true) {
         updateRoomDis();
         last_order = getCurrentOrder();
         document.getElementById("room_dis").style.display = "flex";
-
+        addState("reordercat");
     }
 
 
@@ -1309,7 +1358,7 @@ if (true) {
         change_state: (domelem) => {
             let state = domelem.getAttribute("data-roomid");
             (<cordovaWindow>window.parent).apiCall("POST", { "username": username, "action": 7, "name": selectedShow, "state": state }, getUserInfo);
-
+            document.getElementById("room_add_show").style.display = "none";
         },
 
         change_image_card: (name, domelem) => {
@@ -1954,7 +2003,7 @@ function changeEngine() {
 }
 
 for (let element of document.getElementsByClassName("menuItem")) {
-    element.addEventListener("click", toggleMenu);
+    element.addEventListener("click", () => { toggleMenu() });
 }
 
 
@@ -1977,7 +2026,7 @@ function selectTheme(index: number) {
 }
 
 let menuP = new menuPull(document.getElementById("con_11"), toggleMenu);
-document.getElementById("toggleMenuOpen").addEventListener("click", toggleMenu);
+document.getElementById("toggleMenuOpen").addEventListener("click", () => { toggleMenu() });
 
 
 let themeCount = 0;
@@ -2000,9 +2049,18 @@ for (let themeElem of (document.getElementsByClassName("themesContainer") as HTM
 (document.getElementById("token") as HTMLElement).onclick = function () {
     const url = prompt("Enter the URL", "https://www.zoro.to");
     // @ts-ignore
-    window.parent.getWebviewHTML(url, false, undefined, "console.log()");
+    window.parent.getWebviewHTML(url, false, null, "console.log()");
 }
 document.getElementById("opSlider").oninput = function () {
     let elem = document.getElementById("opSlider") as HTMLInputElement;
     window.parent.postMessage({ "action": "updateOpacity", data: elem.value }, "*");
 };
+
+window.addEventListener("popstate", function (event) {
+    console.log(states);
+    try {
+        stateAction[states]();
+    } catch (err) {
+        console.error(err);
+    }
+});

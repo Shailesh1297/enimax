@@ -441,6 +441,11 @@ function executeAction(message: MessageAction, reqSource: Window) {
     else if (message.action == 500) {
         setURL(message.data);
     }
+    else if (message.action == 501) {
+        if (frameHistory[frameHistory.length - 1] != mainIFrame.contentWindow.location.href) {
+            frameHistory.push(mainIFrame.contentWindow.location.href);
+        }
+    }
     else if (message.action == 22) {
         window.location.href = "reset.html";
     }
@@ -611,17 +616,17 @@ window.addEventListener('message', function (x) {
 function onPause() {
     let frameLocation = playerIFrame.contentWindow.location.pathname;
 
-    if(frameLocation.includes("pages/player")){
-        playerIFrame.contentWindow.postMessage({action: "pip"}, "*");
+    if (frameLocation.includes("pages/player")) {
+        playerIFrame.contentWindow.postMessage({ action: "pip" }, "*");
     }
 }
 
 function onResume() {
     let frameLocation = playerIFrame.contentWindow.location.pathname;
 
-    if(frameLocation.includes("pages/player")){
-        playerIFrame.contentWindow.postMessage({action: "pipout"}, "*");
-    } 
+    if (frameLocation.includes("pages/player")) {
+        playerIFrame.contentWindow.postMessage({ action: "pipout" }, "*");
+    }
 }
 
 async function onDeviceReady() {
@@ -652,18 +657,24 @@ async function onDeviceReady() {
             console.log(err);
         }
 
-        let frameLocation = mainIFrame.contentWindow.location.pathname;
-        if (frameLocation.indexOf("www/pages/homepage/index.html") > -1 || 
-            (playerIFrame.className.indexOf("pop") == -1 && 
-            (playerIFrame as HTMLIFrameElement).contentWindow.location.pathname.indexOf("www/pages/player/index.html") > -1)) {
+        let frameLocation = mainIFrame.contentWindow.location;
+        if (frameLocation.pathname.indexOf("www/pages/homepage/index.html") > -1 ||
+            (playerIFrame.className.indexOf("pop") == -1 &&
+                (playerIFrame as HTMLIFrameElement).contentWindow.location.pathname.indexOf("www/pages/player/index.html") > -1)) {
             playerIFrame.contentWindow.location.replace("fallback.html");
             playerIFrame.classList.remove("pop");
 
             playerIFrame.style.display = "none";
             mainIFrame.style.display = "block";
 
-            if (frameLocation.indexOf("www/pages/homepage/index.html") > -1) {
-                setURL((mainIFrame as HTMLIFrameElement).contentWindow.location.href);
+            if (frameLocation.pathname.indexOf("www/pages/homepage/index.html") > -1) {
+
+                if (frameLocation.search.includes("action=")) {
+                    history.back();
+                } else if(!(playerIFrame as HTMLIFrameElement).contentWindow.location.pathname.includes("www/pages/player/index.html")){
+                    // @ts-ignore
+                    navigator.app.exitApp();
+                }
             }
 
             mainIFrame.style.height = "100%";
@@ -680,7 +691,7 @@ async function onDeviceReady() {
         }
     }
 
-    if (thisWindow.cordova.plugin.http.getCookieString(config.remoteWOport).indexOf("connect.sid") == -1 
+    if (thisWindow.cordova.plugin.http.getCookieString(config.remoteWOport).indexOf("connect.sid") == -1
         && config.local == false && localStorage.getItem("offline") === 'false') {
         window.location.href = "login.html";
     }

@@ -207,14 +207,16 @@ type ErrorPageConfig = {
     hasReload: Boolean,
     customConClass? : string,
     linkClass? : string,
-    isError?: Boolean
+    isError?: Boolean,
+    positive? : Boolean
 } | {
     hasLink: true,
     hasReload: Boolean,
     clickEvent: Function,
     customConClass? : string,
     linkClass? : string,
-    isError?: Boolean
+    isError?: Boolean,
+    positive? : Boolean
 }
 
 interface PageInfo{

@@ -187,7 +187,12 @@ const unicodeMojiCodes = [
     [40, 32, 48, 32, 95, 32, 48, 32, 41]
 ];
 
+const unicodeMojiCodesPos = [
+    [8834, 40, 9673, 8255, 9673, 41, 12388]
+];
+
 const unicodeMojis: string[] = [];
+const unicodeMojisPos: string[] = [];
 
 for (let uniCount = 0; uniCount < unicodeMojiCodes.length; uniCount++) {
 
@@ -201,6 +206,19 @@ for (let uniCount = 0; uniCount < unicodeMojiCodes.length; uniCount++) {
     unicodeMojis.push(emoji);
 }
 
+
+for (let uniCount = 0; uniCount < unicodeMojiCodesPos.length; uniCount++) {
+
+    const codes = unicodeMojiCodesPos[uniCount];
+    let emoji = "";
+    for (let i = 0; i < codes.length; i++) {
+        let hex = codes[i].toString(16);
+        emoji += String.fromCodePoint(parseInt("0x" + hex));
+    }
+
+    unicodeMojisPos.push(emoji);
+}
+
 function constructErrorPage(errorCon: HTMLElement, message: string, config: ErrorPageConfig) {
     const container = createElement({
         "id": "errorPageCon"
@@ -211,7 +229,7 @@ function constructErrorPage(errorCon: HTMLElement, message: string, config: Erro
     }
     const errorMessage = createElement({});
     const icons = createElement({});
-
+    const emojiVar = config.positive === true ? unicodeMojisPos : unicodeMojis; 
     container.append(errorMessage);
     container.append(icons);
 
@@ -236,7 +254,7 @@ function constructErrorPage(errorCon: HTMLElement, message: string, config: Erro
     }
 
     errorMessage.append(createElement({
-        innerText: `${unicodeMojis[Math.floor(Math.random() * unicodeMojis.length)]}`,
+        innerText: `${emojiVar[Math.floor(Math.random() * emojiVar.length)]}`,
         style: {
             "fontSize": "30px",
             "marginBottom": "20px"

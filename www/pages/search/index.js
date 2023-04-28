@@ -5,8 +5,11 @@ const extensionList = window.parent.returnExtensionList();
 // @ts-ignore
 const extensionDisabled = window.parent.returnExtensionDisabled();
 let sourcesNames = extensionNames;
+const queries = (new URLSearchParams(location.search));
 // @ts-ignore
 let pullTabArray = [];
+let engineID = queries.get("engine") || localStorage.getItem("currentEngine");
+const searchQuery = queries.get("search");
 pullTabArray.push(new pullToRefresh(document.getElementById("mainConSearch")));
 for (var i = 0; i < extensionList.length; i++) {
     if (extensionDisabled[i]) {
@@ -15,7 +18,7 @@ for (var i = 0; i < extensionList.length; i++) {
     let atr = {
         "value": i.toString(),
     };
-    if (i == parseInt(localStorage.getItem("currentEngine")) || (isNaN(parseInt(localStorage.getItem("currentEngine"))) && i == 0)) {
+    if (i == parseInt(engineID) || (isNaN(parseInt(engineID)) && i == 0)) {
         atr["selected"] = "";
     }
     let tempDiv = createElement({
@@ -30,7 +33,11 @@ let searchBox = document.querySelector('.searchBox');
 let searchButton = document.querySelector('.searchButton');
 let searchClose = document.getElementById('s_c');
 document.getElementById("sources").onchange = function () {
-    localStorage.setItem("currentEngine", this.value);
+    engineID = this.value;
+    localStorage.setItem("currentEngine", engineID);
+};
+document.getElementById("back").onclick = function () {
+    window.parent.postMessage({ "action": 500, data: `pages/homepage/index.html` }, "*");
 };
 searchBox.onclick = function () {
     openSearch();
@@ -38,9 +45,16 @@ searchBox.onclick = function () {
 searchClose.onclick = function (event) {
     close_search(event);
 };
+constructErrorPage(document.getElementById("mainConSearch"), "Start searching by clicking on the search icon above!", {
+    hasLink: false,
+    hasReload: false,
+    isError: false,
+    customConClass: "absolute",
+    positive: true
+});
 function openSearch() {
-    searchInput.style.width = 'calc(100% - 90px)';
-    searchBox.style.width = 'calc(100% - 40px)';
+    searchInput.style.width = 'calc(100% - 50px)';
+    searchBox.style.width = 'calc(100% - 70px)';
     searchClose.style.display = 'flex';
     searchInput.style.paddingLeft = '40px';
     searchButton.onclick = function () { search(); };
@@ -55,17 +69,17 @@ function close_search(event) {
 }
 document.getElementById("searchForm").onsubmit = function (event) {
     event.preventDefault();
-    search();
+    window.parent.postMessage({ "action": 500, data: `pages/search/index.html?search=${searchInput.value}&engine=${engineID}` }, "*");
 };
 function search() {
     document.getElementById("mainConSearch").innerHTML = "<div style='margin:auto;'>Loading...</div>";
     let currentEngine;
-    if (localStorage.getItem("currentEngine") == null) {
+    if (!engineID) {
         localStorage.setItem("currentEngine", "0");
         currentEngine = extensionList[0];
     }
     else {
-        currentEngine = parseInt(localStorage.getItem("currentEngine"));
+        currentEngine = parseInt(engineID);
         if (currentEngine == 0) {
             currentEngine = extensionList[0];
         }
@@ -77,6 +91,8 @@ function search() {
         localStorage.setItem("devmode", "true");
     }
     currentEngine.searchApi(searchInput.value).then(function (x) {
+        searchInput.value = searchQuery;
+        document.getElementById("sources").value = engineID;
         let main_div = x.data;
         if (main_div.length == 0) {
             document.getElementById("mainConSearch").innerHTML = "";
@@ -117,14 +133,16 @@ function search() {
     }).catch(function (error) {
         document.getElementById("mainConSearch").innerHTML = "";
         constructErrorPage(document.getElementById("mainConSearch"), error.toString(), {
-            hasLink: true,
+            hasLink: false,
             hasReload: false,
             isError: false,
             customConClass: "absolute",
-            clickEvent: () => {
-                openWebview(error.url);
-            }
         });
     });
 }
 applyTheme();
+if (searchQuery) {
+    searchInput.value = searchQuery;
+    openSearch();
+    search();
+}
