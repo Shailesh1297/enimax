@@ -658,26 +658,32 @@ async function onDeviceReady() {
         }
 
         let frameLocation = mainIFrame.contentWindow.location;
-        if (frameLocation.pathname.indexOf("www/pages/homepage/index.html") > -1 ||
-            (playerIFrame.className.indexOf("pop") == -1 &&
-                (playerIFrame as HTMLIFrameElement).contentWindow.location.pathname.indexOf("www/pages/player/index.html") > -1)) {
+
+        const frameWasOpen = playerIFrame.className.indexOf("pop") == -1 && (playerIFrame as HTMLIFrameElement).contentWindow.location.pathname.indexOf("www/pages/player/index.html") > -1;
+        const homePageOpen = frameLocation.pathname.indexOf("www/pages/homepage/index.html") > -1;
+        if (homePageOpen || frameWasOpen) {
             playerIFrame.contentWindow.location.replace("fallback.html");
             playerIFrame.classList.remove("pop");
-
             playerIFrame.style.display = "none";
             mainIFrame.style.display = "block";
+            mainIFrame.style.height = "100%";
 
-            if (frameLocation.pathname.indexOf("www/pages/homepage/index.html") > -1) {
+            if (frameWasOpen) {
+                if (homePageOpen) {
+                    (mainIFrame as HTMLIFrameElement).contentWindow.location.reload();
+                }
+            } else {
+                if (frameLocation.pathname.indexOf("www/pages/homepage/index.html") > -1) {
 
-                if (frameLocation.search.includes("action=")) {
-                    history.back();
-                } else if(!(playerIFrame as HTMLIFrameElement).contentWindow.location.pathname.includes("www/pages/player/index.html")){
-                    // @ts-ignore
-                    navigator.app.exitApp();
+                    if (frameLocation.search.includes("action=")) {
+                        history.back();
+                    } else if (!(playerIFrame as HTMLIFrameElement).contentWindow.location.pathname.includes("www/pages/player/index.html")) {
+                        // @ts-ignore
+                        navigator.app.exitApp();
+                    }
                 }
             }
 
-            mainIFrame.style.height = "100%";
 
             // @ts-ignore
             MusicControls.destroy(() => { }, () => { });

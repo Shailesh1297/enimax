@@ -301,11 +301,17 @@ function ini() {
                         scroll: function () {
                             lastScrollElem = this;
                             if (lastScrollPos) {
-                                if (lastScrollPos - this.scrollTop > 0) {
-                                    scrollDownTopDOM.className = "scrollTopDOM";
+                                if (2 * this.offsetHeight + this.scrollTop < this.scrollHeight) {
+                                    scrollDownTopDOM.style.display = "block !important";
+                                    if (lastScrollPos - this.scrollTop > 0) {
+                                        scrollDownTopDOM.className = "scrollTopDOM";
+                                    }
+                                    else {
+                                        scrollDownTopDOM.className = "scrollBottomDOM";
+                                    }
                                 }
                                 else {
-                                    scrollDownTopDOM.className = "scrollBottomDOM";
+                                    scrollDownTopDOM.className = "scrollHidden";
                                 }
                             }
                             lastScrollPos = this.scrollTop;
