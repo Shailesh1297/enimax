@@ -1,6 +1,7 @@
 var gogo = {
     baseURL: "https://gogoanime.gr",
     ajaxURL: "https://ajax.gogo-load.com/ajax",
+    keys: [],
     searchApi: async function (query) {
         let dom = document.createElement("div");
         try {
@@ -84,11 +85,6 @@ var gogo = {
         try {
             const params = new URLSearchParams("?watch=" + url);
             const sourceURLs = [];
-            const subtitles = [];
-            const keys = JSON.parse(await MakeFetchZoro(`https://raw.githubusercontent.com/enimax-anime/gogo/main/index.json`));
-            for (let i = 0; i <= 2; i++) {
-                keys[i] = CryptoJS.enc.Utf8.parse(keys[i]);
-            }
             watchDOM.style.display = "none";
             embedDOM.style.display = "none";
             const resp = {
@@ -132,13 +128,13 @@ var gogo = {
             const embedHTML = await MakeFetchZoro(videoURLTemp);
             const videoURL = new URL(videoURLTemp);
             embedDOM.innerHTML = DOMPurify.sanitize(embedHTML);
-            const encyptedParams = this.generateEncryptedAjaxParams(embedHTML.split("data-value")[1].split("\"")[1], (_a = videoURL.searchParams.get('id')) !== null && _a !== void 0 ? _a : '', keys);
+            const encyptedParams = this.generateEncryptedAjaxParams(embedHTML.split("data-value")[1].split("\"")[1], (_a = videoURL.searchParams.get('id')) !== null && _a !== void 0 ? _a : '', this.keys);
             const encryptedData = JSON.parse(await MakeFetch(`${videoURL.protocol}//${videoURL.hostname}/encrypt-ajax.php?${encyptedParams}`, {
                 "headers": {
                     "X-Requested-With": "XMLHttpRequest"
                 }
             }));
-            const decryptedData = await this.decryptAjaxData(encryptedData.data, keys);
+            const decryptedData = await this.decryptAjaxData(encryptedData.data, this.keys);
             if (!decryptedData.source)
                 throw new Error('No source found.');
             for (const source of decryptedData.source) {
@@ -188,3 +184,19 @@ var gogo = {
         return JSON.parse(decryptedData);
     },
 };
+try {
+    (async function () {
+        const keys = JSON.parse(await MakeFetchZoro(`https://raw.githubusercontent.com/enimax-anime/gogo/main/index.json`));
+        for (let i = 0; i <= 2; i++) {
+            keys[i] = CryptoJS.enc.Utf8.parse(keys[i]);
+        }
+        gogo.baseURL = keys[3];
+        gogo.keys = keys;
+        // CryptoJS.enc.Utf8.parse("37911490979715163134003223491201"), 
+        // CryptoJS.enc.Utf8.parse("54674138327930866480207815084989"), 
+        // CryptoJS.enc.Utf8.parse("3134003223491201")
+    })();
+}
+catch (err) {
+    console.error(err);
+}

@@ -1,6 +1,11 @@
 var gogo: extension = {
     baseURL: "https://gogoanime.gr",
     ajaxURL: "https://ajax.gogo-load.com/ajax",
+    keys: [
+        CryptoJS.enc.Utf8.parse("37911490979715163134003223491201"), 
+        CryptoJS.enc.Utf8.parse("54674138327930866480207815084989"), 
+        CryptoJS.enc.Utf8.parse("3134003223491201") 
+    ],
     searchApi: async function (query: string): Promise<extensionSearch> {
         let dom = document.createElement("div");
 
@@ -45,7 +50,7 @@ var gogo: extension = {
             const animeHTML = await MakeFetchZoro(`${this.baseURL}/${url}`, {});
             const id = url.replace("category/", "gogo-");
 
-            
+
             animeDOM.innerHTML = DOMPurify.sanitize(animeHTML);
             response.mainName = id;
             response.image = (animeDOM.querySelector(".anime_info_body_bg img") as HTMLElement).getAttribute("src");
@@ -98,12 +103,6 @@ var gogo: extension = {
         try {
             const params = new URLSearchParams("?watch=" + url);
             const sourceURLs: Array<videoSource> = [];
-            const subtitles: Array<videoSubtitle> = [];
-            const keys: Array<any> = JSON.parse(await MakeFetchZoro(`https://raw.githubusercontent.com/enimax-anime/gogo/main/index.json`));
-
-            for (let i = 0; i <= 2; i++) {
-                keys[i] = CryptoJS.enc.Utf8.parse(keys[i]);
-            }
 
             watchDOM.style.display = "none";
             embedDOM.style.display = "none";
@@ -122,30 +121,30 @@ var gogo: extension = {
             const watchHTML = await MakeFetchZoro(`${this.baseURL}/${params.get("watch").replace("gogo-", "")}-episode-${params.get("ep")}`);
             watchDOM.innerHTML = DOMPurify.sanitize(watchHTML, { ADD_TAGS: ["iframe"] });
 
-            try{
+            try {
                 const prevTemp = watchDOM.querySelector(".anime_video_body_episodes_l a").getAttribute("href");
                 let ep = parseFloat(prevTemp.split("-episode-")[1]);
 
-                if(ep == 0){
+                if (ep == 0) {
                     ep = 0.1;
                 }
                 resp.prev = `${params.get("watch")}&ep=${ep}&engine=7`;
-                                
-            }catch(err){
+
+            } catch (err) {
                 console.error(err);
             }
 
 
-            try{
+            try {
                 const nextTemp = watchDOM.querySelector(".anime_video_body_episodes_r a").getAttribute("href");
                 let ep = parseFloat(nextTemp.split("-episode-")[1]);
 
-                if(ep == 0){
+                if (ep == 0) {
                     ep = 0.1;
                 }
                 resp.next = `${params.get("watch")}&ep=${ep}&engine=7`;
-                                
-            }catch(err){
+
+            } catch (err) {
                 console.error(err);
             }
 
@@ -162,7 +161,7 @@ var gogo: extension = {
             const encyptedParams = this.generateEncryptedAjaxParams(
                 embedHTML.split("data-value")[1].split("\"")[1],
                 videoURL.searchParams.get('id') ?? '',
-                keys
+                this.keys
             );
 
             const encryptedData = JSON.parse(await MakeFetch(
@@ -174,7 +173,7 @@ var gogo: extension = {
                 }
             ));
 
-            const decryptedData = await this.decryptAjaxData(encryptedData.data, keys);
+            const decryptedData = await this.decryptAjaxData(encryptedData.data, this.keys);
             if (!decryptedData.source) throw new Error('No source found.');
 
             for (const source of decryptedData.source) {
@@ -219,7 +218,7 @@ var gogo: extension = {
 
         return `id=${encryptedKey}&alias=${id}&${decryptedToken}`;
     },
-    decryptAjaxData: function(encryptedData: string, keys: Array<string>) {
+    decryptAjaxData: function (encryptedData: string, keys: Array<string>) {
         const decryptedData = CryptoJS.enc.Utf8.stringify(
             CryptoJS.AES.decrypt(encryptedData, keys[1], {
                 iv: keys[2] as any,
@@ -228,3 +227,18 @@ var gogo: extension = {
         return JSON.parse(decryptedData);
     },
 };
+
+try {
+    (async function() {
+        const keys: Array<any> = JSON.parse(await MakeFetchZoro(`https://raw.githubusercontent.com/enimax-anime/gogo/main/index.json`));
+        for (let i = 0; i <= 2; i++) {
+            keys[i] = CryptoJS.enc.Utf8.parse(keys[i]);
+        }
+
+        gogo.baseURL = keys[3];
+        gogo.ajaxURL = keys[4];
+        gogo.keys = keys;
+    })();
+} catch (err) {
+    console.error(err);
+}
