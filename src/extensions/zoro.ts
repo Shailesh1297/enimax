@@ -434,5 +434,9 @@ var zoro: extension = {
             alert("Could not extract the token. Try again or Contact the developer.");
         }
 
+    },
+    getMetaData: async function (search: URLSearchParams) {
+        const id = search.get("watch").split("-").pop()
+        return await getAnilistInfo("Zoro", id);
     }
 };

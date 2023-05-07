@@ -502,7 +502,7 @@ var nineAnime: extension = {
     config: {
         "referer": "https://9anime.to",
     },
-    getConfig(url: string) {
+    getConfig: function (url: string) {
         if (url.includes("mcloud.to")) {
             return {
                 "referer": "https://mcloud.to/"
@@ -510,5 +510,9 @@ var nineAnime: extension = {
         } else {
             return this.config;
         }
+    },
+    getMetaData: async function (search: URLSearchParams) {
+        const id = search.get("watch").split(".").pop();
+        return await getAnilistInfo("9anime", id);
     }
 }

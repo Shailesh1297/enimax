@@ -1,7 +1,11 @@
 var gogo = {
     baseURL: "https://gogoanime.gr",
     ajaxURL: "https://ajax.gogo-load.com/ajax",
-    keys: [],
+    keys: [
+        CryptoJS.enc.Utf8.parse("37911490979715163134003223491201"),
+        CryptoJS.enc.Utf8.parse("54674138327930866480207815084989"),
+        CryptoJS.enc.Utf8.parse("3134003223491201")
+    ],
     searchApi: async function (query) {
         let dom = document.createElement("div");
         try {
@@ -183,6 +187,10 @@ var gogo = {
         }));
         return JSON.parse(decryptedData);
     },
+    getMetaData: async function (search) {
+        const id = search.get("watch").replace("/category/", "");
+        return await getAnilistInfo("Gogoanime", id);
+    }
 };
 try {
     (async function () {
@@ -191,10 +199,8 @@ try {
             keys[i] = CryptoJS.enc.Utf8.parse(keys[i]);
         }
         gogo.baseURL = keys[3];
+        gogo.ajaxURL = keys[4];
         gogo.keys = keys;
-        // CryptoJS.enc.Utf8.parse("37911490979715163134003223491201"), 
-        // CryptoJS.enc.Utf8.parse("54674138327930866480207815084989"), 
-        // CryptoJS.enc.Utf8.parse("3134003223491201")
     })();
 }
 catch (err) {

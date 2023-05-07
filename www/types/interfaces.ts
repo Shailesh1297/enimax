@@ -1,6 +1,7 @@
 type ExitFullscreen = typeof document.exitFullscreen
 type RequestFullscreen = typeof document.documentElement.requestFullscreen
 type TypeFunc = (res : Response) => Promise<string>
+type anilistType = "9anime" | "Zoro" | "Gogoanime" 
 
 interface Document {
     webkitExitFullscreen: ExitFullscreen;

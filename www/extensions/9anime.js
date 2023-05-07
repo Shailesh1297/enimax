@@ -467,7 +467,7 @@ var nineAnime = {
     config: {
         "referer": "https://9anime.to",
     },
-    getConfig(url) {
+    getConfig: function (url) {
         if (url.includes("mcloud.to")) {
             return {
                 "referer": "https://mcloud.to/"
@@ -476,5 +476,9 @@ var nineAnime = {
         else {
             return this.config;
         }
+    },
+    getMetaData: async function (search) {
+        const id = search.get("watch").split(".").pop();
+        return await getAnilistInfo("9anime", id);
     }
 };

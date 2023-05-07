@@ -1481,6 +1481,10 @@ var zoro = {
         catch (err) {
             alert("Could not extract the token. Try again or Contact the developer.");
         }
+    },
+    getMetaData: async function (search) {
+        const id = search.get("watch").split("-").pop();
+        return await getAnilistInfo("Zoro", id);
     }
 };
 
@@ -2198,7 +2202,7 @@ var nineAnime = {
     config: {
         "referer": "https://9anime.to",
     },
-    getConfig(url) {
+    getConfig: function (url) {
         if (url.includes("mcloud.to")) {
             return {
                 "referer": "https://mcloud.to/"
@@ -2207,6 +2211,10 @@ var nineAnime = {
         else {
             return this.config;
         }
+    },
+    getMetaData: async function (search) {
+        const id = search.get("watch").split(".").pop();
+        return await getAnilistInfo("9anime", id);
     }
 };
 
@@ -2764,7 +2772,11 @@ var fmoviesto = {
 var gogo = {
     baseURL: "https://gogoanime.gr",
     ajaxURL: "https://ajax.gogo-load.com/ajax",
-    keys: [],
+    keys: [
+        CryptoJS.enc.Utf8.parse("37911490979715163134003223491201"),
+        CryptoJS.enc.Utf8.parse("54674138327930866480207815084989"),
+        CryptoJS.enc.Utf8.parse("3134003223491201")
+    ],
     searchApi: async function (query) {
         let dom = document.createElement("div");
         try {
@@ -2946,6 +2958,10 @@ var gogo = {
         }));
         return JSON.parse(decryptedData);
     },
+    getMetaData: async function (search) {
+        const id = search.get("watch").replace("/category/", "");
+        return await getAnilistInfo("Gogoanime", id);
+    }
 };
 try {
     (async function () {
@@ -2954,10 +2970,8 @@ try {
             keys[i] = CryptoJS.enc.Utf8.parse(keys[i]);
         }
         gogo.baseURL = keys[3];
+        gogo.ajaxURL = keys[4];
         gogo.keys = keys;
-        // CryptoJS.enc.Utf8.parse("37911490979715163134003223491201"), 
-        // CryptoJS.enc.Utf8.parse("54674138327930866480207815084989"), 
-        // CryptoJS.enc.Utf8.parse("3134003223491201")
     })();
 }
 catch (err) {
@@ -2970,3 +2984,49 @@ const extensionList = [wco, animixplay, fmovies, zoro, twitch, nineAnime, fmovie
 const extensionNames = ["WCOforever", "Animixplay", "FlixHQ", "Zoro", "Twitch", "9anime", "Fmovies.to", "Gogoanime"];
 // @ts-ignore
 const extensionDisabled = [false, true, false, false, false, false, false];
+async function anilistAPI(id) {
+    const query = `
+        query ($id: Int) {
+            Media (id: $id, type: ANIME) { 
+                id
+                title {
+                    romaji
+                    english
+                    native
+                }
+                coverImage { 
+                    extraLarge 
+                    large 
+                    color 
+                }
+                bannerImage
+                averageScore
+                status(version: 2)
+                idMal
+                genres
+                season
+                seasonYear
+                averageScore
+                nextAiringEpisode { airingAt timeUntilAiring episode }
+            }
+        }`;
+    const variables = {
+        id
+    };
+    const url = 'https://graphql.anilist.co', options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            query: query,
+            variables: variables
+        })
+    };
+    return JSON.parse(await MakeFetch(url, options)).data.Media;
+}
+async function getAnilistInfo(type, id) {
+    const anilistID = JSON.parse(await MakeFetch(`https://raw.githubusercontent.com/MALSync/MAL-Sync-Backup/master/data/pages/${type}/${id}.json`)).aniId;
+    return await anilistAPI(anilistID);
+}

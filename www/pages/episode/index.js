@@ -54,6 +54,8 @@ let showImage = null;
 // @ts-ignore
 let pullTabArray = [];
 let webviewLink = "";
+let averageColor = "";
+const imageDOM = document.getElementById("imageMain");
 pullTabArray.push(new pullToRefresh(document.getElementById("con_11")));
 function collapseDesc() {
     const descDOM = document.getElementById("imageDesc");
@@ -164,6 +166,7 @@ function ini() {
             currentEngine = extensionList[parseInt(temp3[1])];
         }
         async function processEpisodeData(data, downloaded, main_url) {
+            var _a;
             showMainName = data.mainName;
             showImage = data.image;
             let currentLink = '';
@@ -217,11 +220,11 @@ function ini() {
                 document.getElementById("descReadMore").style.display = "none";
                 document.getElementById("epListCon").style.marginTop = "0";
             }
-            const imageDOM = document.getElementById("imageMain");
             imageDOM.src = data.image;
             imageDOM.onload = function () {
                 let color = getAverageRGB(imageDOM);
-                document.documentElement.style.setProperty('--theme-color', rgbToHex(color.r, color.g, color.b));
+                averageColor = rgbToHex(color.r, color.g, color.b);
+                document.documentElement.style.setProperty('--theme-color', averageColor);
             };
             let animeEps = data.episodes;
             let epCon = document.getElementById("epListCon");
@@ -259,6 +262,89 @@ function ini() {
                 totalCats = 0;
             }
             else {
+                function fixStatus(status) {
+                    try {
+                        return status.split("_").map((x) => {
+                            return x[0].toUpperCase() + x.substring(1).toLowerCase();
+                        }).join(" ");
+                    }
+                    catch (err) {
+                        return status;
+                    }
+                }
+                function secondsToHuman(seconds) {
+                    const d = Math.floor(seconds / (3600 * 24));
+                    const h = Math.floor(seconds % (3600 * 24) / 3600);
+                    const m = Math.floor(seconds % 3600 / 60);
+                    const s = Math.floor(seconds % 60);
+                    const dDisplay = d > 0 ? d + (d == 1 ? " day, " : " days ") : "";
+                    const hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours ") : "";
+                    const mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes ") : "";
+                    const sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
+                    if (dDisplay) {
+                        return dDisplay;
+                    }
+                    if (hDisplay) {
+                        return hDisplay;
+                    }
+                    if (mDisplay) {
+                        return mDisplay;
+                    }
+                    if (sDisplay) {
+                        return sDisplay;
+                    }
+                }
+                try {
+                    const timeDOM = document.getElementById("metaTime");
+                    const statusDOM = document.getElementById("metaStatus");
+                    const nextDOM = document.getElementById("metaNext");
+                    const malDOM = document.getElementById("metaMal");
+                    const anilistDOM = document.getElementById("metaAnilist");
+                    const metaData = await currentEngine.getMetaData(new URLSearchParams(location.search));
+                    let addedCover = false;
+                    if (metaData.nextAiringEpisode) {
+                        nextDOM.style.display = "inline-block";
+                        nextDOM.textContent = `Episode ${metaData.nextAiringEpisode.episode} in ${secondsToHuman(metaData.nextAiringEpisode.timeUntilAiring)}`;
+                    }
+                    if (metaData.season || metaData.seasonYear) {
+                        timeDOM.style.display = "inline-block";
+                        timeDOM.textContent = `${metaData.season} ${metaData.seasonYear}`;
+                    }
+                    if (metaData.status) {
+                        statusDOM.style.display = "inline-block";
+                        statusDOM.textContent = `${fixStatus(metaData.status)}`;
+                    }
+                    if (window.innerWidth > 600) {
+                        if (metaData.bannerImage) {
+                            addedCover = true;
+                            document.getElementById("con_11").style.background = `url("${metaData.bannerImage}") top no-repeat`;
+                            document.getElementById("con_11").style.backgroundSize = `auto 400px`;
+                        }
+                    }
+                    else {
+                        if ((_a = metaData === null || metaData === void 0 ? void 0 : metaData.coverImage) === null || _a === void 0 ? void 0 : _a.extraLarge) {
+                            addedCover = true;
+                            document.getElementById("con_11").style.background = `url("${metaData.coverImage.extraLarge}") top no-repeat`;
+                            document.getElementById("con_11").style.backgroundSize = `contain`;
+                        }
+                    }
+                    if (addedCover) {
+                        imageDOM.style.display = "none";
+                        document.documentElement.style.setProperty('--theme-color', averageColor + "60");
+                    }
+                    malDOM.onclick = function () {
+                        openWebview(`https://myanimelist.net/anime/${metaData.idMal}`);
+                    };
+                    anilistDOM.onclick = function () {
+                        openWebview(`https://anilist.co/anime/${metaData.id}`);
+                    };
+                    malDOM.style.display = "inline-block";
+                    anilistDOM.style.display = "inline-block";
+                    document.getElementById("metadata").style.display = "block";
+                }
+                catch (err) {
+                    console.error(err);
+                }
                 epCon.append(catCon);
                 epCon.append(catDataCon);
             }
@@ -387,7 +473,7 @@ function ini() {
                             "fontSize": "13px",
                             "marginTop": "6px"
                         },
-                        innerText: animeEps[i].date.toUTCString()
+                        innerText: animeEps[i].date.toLocaleString()
                     }));
                 }
                 let check = false;
