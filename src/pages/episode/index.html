@@ -103,7 +103,7 @@
 			position: relative;
 			display: block;
 			width: calc(100% - 100px);
-			max-width: 600px;
+			max-width: 700px;
 			font-size: 16px;
 			margin: auto;
 			line-height: 16px;
@@ -145,7 +145,7 @@
 			bottom: 20px;
 			right: 20px;
 			height: 50px;
-			z-index: 10;
+			z-index: 2;
 			width: 50px;
 			border-radius: 100%;
 			background-color: white;
@@ -315,6 +315,45 @@
 			background-image: url("data:image/svg+xml,%3Csvg role='img' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Ctitle%3EAniList%3C/title%3E%3Cpath d='M6.361 2.943L0 21.056h4.942l1.077-3.133H11.4l1.052 3.133H22.9c.71 0 1.1-.392 1.1-1.101V17.53c0-.71-.39-1.101-1.1-1.101h-6.483V4.045c0-.71-.392-1.102-1.101-1.102h-2.422c-.71 0-1.101.392-1.101 1.102v1.064l-.758-2.166zm2.324 5.948l1.688 5.018H7.144z'/%3E%3C/svg%3E");
 		}
 
+		#relations,
+		#recommendations {
+			padding: 10px 15px;
+			background-color: #ff6363;
+			font-weight: bold;
+			color: white;
+			border-radius: 20px;
+			display: inline-block;
+			margin: 5px;
+			cursor: pointer;
+			display: none;
+		}
+
+		#relationsCon,
+		#recomCon,
+		#sourceCards {
+			transition-duration: 200ms;
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 100%;
+			box-sizing: border-box;
+			background-color: #000000;
+			z-index: 1;
+			text-align: center;
+			overflow-x: auto;
+			white-space: nowrap;
+			height: 280px;
+			display: none;
+			border-radius: 10px 10px 0px 0px;
+		}
+
+		#relationsCon::-webkit-scrollbar,
+		#recomCon::-webkit-scrollbar,
+		#sourceCards::-webkit-scrollbar {
+			height: 0;
+			width: 0;
+		}
+
 		@media only screen and (max-width: 800px) {
 			#imageDescCon {
 				display: block;
@@ -327,11 +366,113 @@
 				font-size: 13px;
 			}
 		}
+
+		.showCard {
+			cursor: pointer;
+			background-size: cover;
+			background-position: center;
+			display: inline-block;
+			height: 220px;
+			margin: 30px 15px;
+			width: 220px;
+			border-radius: 20px;
+			position: relative;
+			font-weight: 600;
+		}
+
+		.showBackdrop {
+			border-radius: 20px;
+			background-image: linear-gradient(#0000007a 0%, #000000e8 91%);
+			position: absolute;
+			top: 0;
+			left: 0;
+			height: 100%;
+			width: 100%;
+		}
+
+		.backdrop {
+			position: fixed;
+			top: 0;
+			left: 0;
+			height: 100%;
+			width: 100%;
+			z-index: 3;
+			display: none;
+			background-image: linear-gradient(0, black, #ffffff38);
+			/* background-color: #00000065; */
+		}
+
+		.showName {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 100%;
+			color: white;
+			padding: 10px;
+			box-sizing: border-box;
+			white-space: normal;
+		}
+
+		#sourceChoice {
+			transition-duration: 200ms;
+			display: none;
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			height: 280px;
+			width: 100%;
+			background-color: rgba(0, 0, 0, 0.5);
+			text-align: center;
+			z-index: 6;
+			border-radius: 10px 10px 0px 0px;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: center;
+		}
+
+		#relationsCon,
+		#recomCon {
+			z-index: 5;
+			display: none;
+		}
+
+		#sourceCards {
+			z-index: 7;
+			display: none;
+		}
+
+		.showLabel {
+			position: absolute;
+			top: 10px;
+			left: 10px;
+			border-radius: 15px;
+			font-weight: normal;
+			padding: 5px 10px;
+			background-color: white;
+			color: black;
+			font-size: 14px;
+			display: inline-block;
+		}
+
+		.close_con {
+			z-index: 3;
+			right: 10px !important;
+		}
 	</style>
 </head>
 
 <body>
 	<div id="pullTab"></div>
+	<div class="backdrop"></div>
+	<div id="relationsCon"></div>
+	<div id="recomCon"></div>
+	<div id="sourceChoice">
+		<div class="meta Gogoanime choice"> Gogoanime </div>
+		<div class="meta 9anime choice"> 9anime </div>
+		<div class="meta Zoro choice"> Zoro </div>
+	</div>
+	<div id="sourceCards"></div>
+
 	<div id="con_11">
 		<div id="scrollDownTop"></div>
 		<div id="noti_con"></div>
@@ -360,6 +501,11 @@
 							<span id="metaNext" class="meta"></span>
 							<span id="metaMal" class="meta mal icon"></span>
 							<span id="metaAnilist" class="meta anilist icon"></span>
+						</div>
+
+						<div id="related">
+							<div id="relations">Relations</div>
+							<div id="recommendations">Recommendations</div>
 						</div>
 
 						<div id="imageDesc">

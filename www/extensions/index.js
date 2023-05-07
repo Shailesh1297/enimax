@@ -1179,7 +1179,7 @@ var zoro = {
                 try {
                     let thumbnailsTemp = [];
                     if (settled) {
-                        promises.push(MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}));
+                        promises.push(MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}, 2000));
                         promises.push(MakeFetchZoro(`https://zoro.to/ajax/v2/episode/list/${id}`, {}));
                         let responses = await Promise.allSettled(promises);
                         try {
@@ -1195,7 +1195,7 @@ var zoro = {
                         }
                     }
                     else {
-                        let metaData = await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {});
+                        let metaData = await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}, 2000);
                         thumbnailsTemp = JSON.parse(metaData).episodes;
                     }
                     for (let i = 0; i < thumbnailsTemp.length; i++) {
@@ -1485,6 +1485,10 @@ var zoro = {
     getMetaData: async function (search) {
         const id = search.get("watch").split("-").pop();
         return await getAnilistInfo("Zoro", id);
+    },
+    rawURLtoInfo: function (url) {
+        // https://zoro.to/kimetsu-no-yaiba-movie-mugen-ressha-hen-15763
+        return `?watch=${url.pathname}&engine=3`;
     }
 };
 
@@ -2215,6 +2219,10 @@ var nineAnime = {
     getMetaData: async function (search) {
         const id = search.get("watch").split(".").pop();
         return await getAnilistInfo("9anime", id);
+    },
+    rawURLtoInfo: function (url) {
+        // https://9anime.pl/watch/demon-slayer-kimetsu-no-yaiba-the-movie-mugen-train.lj5q
+        return `?watch=${url.pathname.replace("/watch", "")}&engine=5`;
     }
 };
 
@@ -2961,6 +2969,10 @@ var gogo = {
     getMetaData: async function (search) {
         const id = search.get("watch").replace("/category/", "");
         return await getAnilistInfo("Gogoanime", id);
+    },
+    rawURLtoInfo: function (url) {
+        // https://gogoanime.bid/category/kimetsu-no-yaiba-movie-mugen-ressha-hen-dub
+        return `?watch=${url.pathname}&engine=7`;
     }
 };
 try {
@@ -3008,6 +3020,45 @@ async function anilistAPI(id) {
                 seasonYear
                 averageScore
                 nextAiringEpisode { airingAt timeUntilAiring episode }
+                relations {
+                    edges{
+                        relationType
+                    }
+                    nodes{
+                        id
+                        idMal
+                        coverImage{
+                            large
+                            extraLarge
+                        }
+                        title{
+                            english
+                            native
+                        }
+                        type
+                    }
+                }
+                recommendations { 
+                    edges { 
+                        node { 
+                            id 
+                            mediaRecommendation 
+                            { 
+                                id
+                                idMal
+                                coverImage{
+                                    large
+                                    extraLarge
+                                }
+                                title{
+                                    english
+                                    native
+                                }
+                                type
+                            } 
+                        } 
+                    } 
+                }
             }
         }`;
     const variables = {

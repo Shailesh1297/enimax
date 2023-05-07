@@ -56,6 +56,66 @@ let pullTabArray = [];
 let webviewLink = "";
 let averageColor = "";
 const imageDOM = document.getElementById("imageMain");
+const backdrop = document.getElementsByClassName("backdrop")[0];
+const sourcesURL = {
+    "Zoro": [],
+    "Gogoanime": [],
+    "9anime": []
+};
+const sourceID = ["Gogoanime", "9anime", "Zoro"];
+const sourceExtensionID = [7, 5, 3];
+const sourceChoiceDOM = document.getElementById("sourceChoice");
+const sourceCardsDOM = document.getElementById("sourceCards");
+const choiceDOM = document.getElementsByClassName("choice");
+const relationsCon = document.getElementById("relationsCon");
+const recomCon = document.getElementById("recomCon");
+backdrop.addEventListener("click", function () {
+    closeCon();
+});
+function makeCross(type) {
+    const cross = createElement({
+        class: "close_con"
+    });
+    cross.addEventListener("click", function () {
+        const parentID = this.parentElement.id;
+        if (parentID == "recomCon" || parentID == "relationsCon") {
+            closeCon();
+        }
+        else {
+            this.parentElement.style.display = "none";
+        }
+    });
+    if (type === "fixed") {
+        cross.style.position = "fixed";
+        cross.style.top = "auto";
+        cross.style.bottom = "260px";
+    }
+    else {
+        cross.style.position = "absolute";
+    }
+    return cross;
+}
+for (let i = 0; i < choiceDOM.length; i++) {
+    const currentIndex = i;
+    choiceDOM[currentIndex].onclick = function () {
+        sourceCardsDOM.innerHTML = "";
+        sourceCardsDOM.style.display = "block";
+        sourceCardsDOM.append(makeCross("fixed"));
+        const metaData = sourcesURL[sourceID[currentIndex]];
+        for (let i = 0; i < metaData.length; i++) {
+            const card = makeCard({
+                id: "",
+                name: metaData[i].title,
+                image: metaData[i].image,
+                label: sourceID[currentIndex]
+            });
+            card.onclick = function () {
+                window.location = extensionList[sourceExtensionID[currentIndex]].rawURLtoInfo(new URL(metaData[i].url));
+            };
+            sourceCardsDOM.append(card);
+        }
+    };
+}
 pullTabArray.push(new pullToRefresh(document.getElementById("con_11")));
 function collapseDesc() {
     const descDOM = document.getElementById("imageDesc");
@@ -151,6 +211,80 @@ function checkIfExists(localURL, dList, dName) {
         }
     }));
 }
+function fixStatus(status) {
+    try {
+        return status.split("_").map((x) => {
+            return x[0].toUpperCase() + x.substring(1).toLowerCase();
+        }).join(" ");
+    }
+    catch (err) {
+        return status;
+    }
+}
+function makeCard(config) {
+    const card = document.createElement("div");
+    card.setAttribute("data-id", config.id);
+    card.className = "showCard";
+    card.style.backgroundImage = `url("${config.image}")`;
+    card.appendChild(createElement({
+        class: "showBackdrop"
+    }));
+    card.appendChild(createElement({
+        class: "showName",
+        innerText: config.name
+    }));
+    if (config.label) {
+        card.appendChild(createElement({
+            class: "showLabel",
+            innerText: config.label
+        }));
+    }
+    return card;
+}
+function makeCardCon(con, nodes, edges) {
+    const relationsCross = makeCross("fixed");
+    con.append(relationsCross);
+    for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].type !== "ANIME") {
+            continue;
+        }
+        const card = makeCard({
+            id: nodes[i].id,
+            image: nodes[i].coverImage.extraLarge,
+            name: nodes[i].title.english ? nodes[i].title.english : nodes[i].title.native,
+            label: edges ? fixStatus(edges[i].relationType) : ""
+        });
+        sourceChoiceDOM.appendChild(makeCross("fixed"));
+        card.addEventListener("click", async function () {
+            const noti = sendNoti([0, "", "Alert", "Fetching the mappings..."]);
+            try {
+                const id = this.getAttribute("data-id");
+                const pages = JSON.parse(await window.parent.MakeFetch(`https://raw.githubusercontent.com/MALSync/MAL-Sync-Backup/master/data/anilist/anime/${id}.json`));
+                noti.remove();
+                const sourcesToCheck = ["Zoro", "9anime", "Gogoanime"];
+                const sourcesToCheckID = [3, 5, 7];
+                sourceChoiceDOM.style.display = "flex";
+                for (let i = 0; i < sourcesToCheck.length; i++) {
+                    const sourcePages = pages.Pages[sourcesToCheck[i]];
+                    sourcesURL[sourcesToCheck[i]] = [];
+                    const sourceDOM = sourceChoiceDOM.getElementsByClassName(`${sourcesToCheck[i]}`)[0];
+                    if (sourceDOM) {
+                        sourceDOM.style.display = "none";
+                        for (const page in sourcePages) {
+                            sourceDOM.style.display = "block";
+                            sourcesURL[sourcesToCheck[i]].push(sourcePages[page]);
+                        }
+                    }
+                }
+            }
+            catch (err) {
+                noti.remove();
+                sendNoti([0, "red", "Alert", "Anime not found."]);
+            }
+        });
+        con.append(card);
+    }
+}
 function ini() {
     let downloadQueue = window.parent.returnDownloadQueue();
     let username = "hi";
@@ -166,7 +300,7 @@ function ini() {
             currentEngine = extensionList[parseInt(temp3[1])];
         }
         async function processEpisodeData(data, downloaded, main_url) {
-            var _a;
+            var _a, _b, _c;
             showMainName = data.mainName;
             showImage = data.image;
             let currentLink = '';
@@ -262,16 +396,6 @@ function ini() {
                 totalCats = 0;
             }
             else {
-                function fixStatus(status) {
-                    try {
-                        return status.split("_").map((x) => {
-                            return x[0].toUpperCase() + x.substring(1).toLowerCase();
-                        }).join(" ");
-                    }
-                    catch (err) {
-                        return status;
-                    }
-                }
                 function secondsToHuman(seconds) {
                     const d = Math.floor(seconds / (3600 * 24));
                     const h = Math.floor(seconds % (3600 * 24) / 3600);
@@ -300,6 +424,8 @@ function ini() {
                     const nextDOM = document.getElementById("metaNext");
                     const malDOM = document.getElementById("metaMal");
                     const anilistDOM = document.getElementById("metaAnilist");
+                    const relationsDOM = relationsCon;
+                    const recomDOM = recomCon;
                     const metaData = await currentEngine.getMetaData(new URLSearchParams(location.search));
                     let addedCover = false;
                     if (metaData.nextAiringEpisode) {
@@ -327,6 +453,17 @@ function ini() {
                             document.getElementById("con_11").style.background = `url("${metaData.coverImage.extraLarge}") top no-repeat`;
                             document.getElementById("con_11").style.backgroundSize = `contain`;
                         }
+                    }
+                    if (((_b = metaData === null || metaData === void 0 ? void 0 : metaData.relations) === null || _b === void 0 ? void 0 : _b.nodes.length) > 0) {
+                        document.getElementById("relations").style.display = "inline-block";
+                        const nodes = metaData.relations.nodes;
+                        const edges = metaData.relations.edges;
+                        makeCardCon(relationsDOM, nodes, edges);
+                    }
+                    if (((_c = metaData === null || metaData === void 0 ? void 0 : metaData.recommendations) === null || _c === void 0 ? void 0 : _c.edges.length) > 0) {
+                        document.getElementById("recommendations").style.display = "inline-block";
+                        const nodes = metaData.recommendations.edges.map((edge) => edge.node.mediaRecommendation);
+                        makeCardCon(recomDOM, nodes);
                     }
                     if (addedCover) {
                         imageDOM.style.display = "none";
@@ -880,4 +1017,53 @@ window.parent.apiCall("POST", { "username": "", "action": 4 }, (response) => {
         addToLibrary.classList.add("notInLib");
     }
 });
+function openCon(con) {
+    con.style.display = "block";
+    backdrop.style.display = "block";
+    recomCon.style.opacity = "1";
+    relationsCon.style.opacity = "1";
+    sourceChoiceDOM.style.opacity = "1";
+    sourceCardsDOM.style.opacity = "1";
+    backdrop.style.opacity = "1";
+    con.style.opacity = "0";
+    con.style.bottom = "-20px";
+    backdrop.style.opacity = "0";
+    requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+            con.style.opacity = "1";
+            con.style.bottom = "0";
+            backdrop.style.opacity = "1";
+        });
+    });
+}
+function closeCon() {
+    requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+            recomCon.style.bottom = "-20px";
+            relationsCon.style.bottom = "-20px";
+            sourceChoiceDOM.style.bottom = "-20px";
+            sourceCardsDOM.style.bottom = "-20px";
+            recomCon.style.opacity = "0";
+            relationsCon.style.opacity = "0";
+            sourceChoiceDOM.style.opacity = "0";
+            sourceCardsDOM.style.opacity = "0";
+            backdrop.style.opacity = "0";
+            setTimeout(function () {
+                recomCon.style.display = "none";
+                relationsCon.style.display = "none";
+                sourceChoiceDOM.style.display = "none";
+                sourceCardsDOM.style.display = "none";
+                backdrop.style.display = "none";
+                sourceChoiceDOM.style.bottom = "0px";
+                sourceCardsDOM.style.bottom = "0px";
+            }, 200);
+        });
+    });
+}
+document.getElementById("relations").onclick = function () {
+    openCon(relationsCon);
+};
+document.getElementById("recommendations").onclick = function () {
+    openCon(recomCon);
+};
 applyTheme();

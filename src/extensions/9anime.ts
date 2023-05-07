@@ -514,5 +514,9 @@ var nineAnime: extension = {
     getMetaData: async function (search: URLSearchParams) {
         const id = search.get("watch").split(".").pop();
         return await getAnilistInfo("9anime", id);
+    },
+    rawURLtoInfo: function (url: URL) {
+        // https://9anime.pl/watch/demon-slayer-kimetsu-no-yaiba-the-movie-mugen-train.lj5q
+        return `?watch=${url.pathname.replace("/watch", "")}&engine=5`;
     }
 }

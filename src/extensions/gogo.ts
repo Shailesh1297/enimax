@@ -227,8 +227,12 @@ var gogo: extension = {
         return JSON.parse(decryptedData);
     },
     getMetaData: async function (search: URLSearchParams) {
-        const id = search.get("watch").replace("/category/", "");        
+        const id = search.get("watch").replace("/category/", "");
         return await getAnilistInfo("Gogoanime", id);
+    },
+    rawURLtoInfo: function (url: URL) {
+        // https://gogoanime.bid/category/kimetsu-no-yaiba-movie-mugen-ressha-hen-dub
+        return `?watch=${url.pathname}&engine=7`;
     }
 };
 

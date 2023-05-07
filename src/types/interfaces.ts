@@ -135,6 +135,7 @@ interface cordovaWindow extends Window {
     setFmoviesBase: Function,
     updateBackgroundBlur: Function,
     makeRequest: Function,
+    MakeFetch: Function,
     resolveLocalFileSystemURL: Function
 }
 
@@ -152,6 +153,13 @@ interface sourceConfig {
     clicked: boolean,
     url?: string,
     name?: string,
+}
+
+interface RelationCardConfig{
+    id: string,
+    image: string,
+    name: string,
+    label?: string
 }
 
 interface modifiedString extends String {

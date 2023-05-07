@@ -78,7 +78,7 @@ var zoro = {
                 try {
                     let thumbnailsTemp = [];
                     if (settled) {
-                        promises.push(MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}));
+                        promises.push(MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}, 2000));
                         promises.push(MakeFetchZoro(`https://zoro.to/ajax/v2/episode/list/${id}`, {}));
                         let responses = await Promise.allSettled(promises);
                         try {
@@ -94,7 +94,7 @@ var zoro = {
                         }
                     }
                     else {
-                        let metaData = await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {});
+                        let metaData = await MakeFetchTimeout(`https://api.enime.moe/mapping/mal/${malID}`, {}, 2000);
                         thumbnailsTemp = JSON.parse(metaData).episodes;
                     }
                     for (let i = 0; i < thumbnailsTemp.length; i++) {
@@ -384,5 +384,9 @@ var zoro = {
     getMetaData: async function (search) {
         const id = search.get("watch").split("-").pop();
         return await getAnilistInfo("Zoro", id);
+    },
+    rawURLtoInfo: function (url) {
+        // https://zoro.to/kimetsu-no-yaiba-movie-mugen-ressha-hen-15763
+        return `?watch=${url.pathname}&engine=3`;
     }
 };

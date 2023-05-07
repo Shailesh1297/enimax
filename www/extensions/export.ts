@@ -33,6 +33,45 @@ async function anilistAPI(id) {
                 seasonYear
                 averageScore
                 nextAiringEpisode { airingAt timeUntilAiring episode }
+                relations {
+                    edges{
+                        relationType
+                    }
+                    nodes{
+                        id
+                        idMal
+                        coverImage{
+                            large
+                            extraLarge
+                        }
+                        title{
+                            english
+                            native
+                        }
+                        type
+                    }
+                }
+                recommendations { 
+                    edges { 
+                        node { 
+                            id 
+                            mediaRecommendation 
+                            { 
+                                id
+                                idMal
+                                coverImage{
+                                    large
+                                    extraLarge
+                                }
+                                title{
+                                    english
+                                    native
+                                }
+                                type
+                            } 
+                        } 
+                    } 
+                }
             }
         }`;
 
