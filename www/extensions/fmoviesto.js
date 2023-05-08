@@ -506,34 +506,6 @@ var fmoviesto = {
             return title;
         }
     },
-    discover: async function () {
-        let temp = document.createElement("div");
-        try {
-            temp.innerHTML = DOMPurify.sanitize(await MakeFetchZoro(`https://9anime.to/home`, {}));
-            temp = temp.querySelector(".ani.items");
-            let data = [];
-            for (const elem of temp.querySelectorAll(".item")) {
-                let image = elem.querySelector("img").getAttribute("src");
-                let name = elem.querySelector(".name.d-title").innerText.trim();
-                let link = elem.querySelector(".name.d-title").getAttribute("href");
-                const splitLink = link.split("/");
-                splitLink.pop();
-                link = splitLink.join("/").replace("/watch", "");
-                data.push({
-                    image,
-                    name,
-                    link
-                });
-            }
-            return data;
-        }
-        catch (err) {
-            console.error(err);
-        }
-        finally {
-            removeDOM(temp);
-        }
-    },
     config: {
         "referer": "https://fmovies.to",
     },

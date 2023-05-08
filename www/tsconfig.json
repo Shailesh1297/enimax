@@ -3,7 +3,7 @@
         "outDir": "../www",
         // "noImplicitAny": true,
         "target": "ES2017",
-        "module": "commonjs",
+        // "module": "commonjs",
         "lib": [
             "es5",
             "es6",

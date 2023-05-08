@@ -56,67 +56,17 @@ let pullTabArray = [];
 let webviewLink = "";
 let averageColor = "";
 const imageDOM = document.getElementById("imageMain");
+// @ts-ignore
 const backdrop = document.getElementsByClassName("backdrop")[0];
-const sourcesURL = {
-    "Zoro": [],
-    "Gogoanime": [],
-    "9anime": []
-};
-const sourceID = ["Gogoanime", "9anime", "Zoro"];
-const sourceExtensionID = [7, 5, 3];
+// @ts-ignore
 const sourceChoiceDOM = document.getElementById("sourceChoice");
-const sourceCardsDOM = document.getElementById("sourceCards");
-const choiceDOM = document.getElementsByClassName("choice");
+// @ts-ignore
 const relationsCon = document.getElementById("relationsCon");
+// @ts-ignore
 const recomCon = document.getElementById("recomCon");
-backdrop.addEventListener("click", function () {
-    closeCon();
-});
-function makeCross(type) {
-    const cross = createElement({
-        class: "close_con"
-    });
-    cross.addEventListener("click", function () {
-        const parentID = this.parentElement.id;
-        if (parentID == "recomCon" || parentID == "relationsCon") {
-            closeCon();
-        }
-        else {
-            this.parentElement.style.display = "none";
-        }
-    });
-    if (type === "fixed") {
-        cross.style.position = "fixed";
-        cross.style.top = "auto";
-        cross.style.bottom = "260px";
-    }
-    else {
-        cross.style.position = "absolute";
-    }
-    return cross;
-}
-for (let i = 0; i < choiceDOM.length; i++) {
-    const currentIndex = i;
-    choiceDOM[currentIndex].onclick = function () {
-        sourceCardsDOM.innerHTML = "";
-        sourceCardsDOM.style.display = "block";
-        sourceCardsDOM.append(makeCross("fixed"));
-        const metaData = sourcesURL[sourceID[currentIndex]];
-        for (let i = 0; i < metaData.length; i++) {
-            const card = makeCard({
-                id: "",
-                name: metaData[i].title,
-                image: metaData[i].image,
-                label: sourceID[currentIndex]
-            });
-            card.onclick = function () {
-                const newLocation = extensionList[sourceExtensionID[currentIndex]].rawURLtoInfo(new URL(metaData[i].url));
-                window.parent.postMessage({ "action": 500, data: "pages/episode/index.html" + newLocation }, "*");
-            };
-            sourceCardsDOM.append(card);
-        }
-    };
-}
+// @ts-ignore
+const sourceCardsDOM = document.getElementById("sourceCards");
+iniChoiceDOM();
 pullTabArray.push(new pullToRefresh(document.getElementById("con_11")));
 function collapseDesc() {
     const descDOM = document.getElementById("imageDesc");
@@ -211,86 +161,6 @@ function checkIfExists(localURL, dList, dName) {
             reject("notinlist");
         }
     }));
-}
-function fixStatus(status) {
-    try {
-        return status.split("_").map((x) => {
-            return x[0].toUpperCase() + x.substring(1).toLowerCase();
-        }).join(" ");
-    }
-    catch (err) {
-        return status;
-    }
-}
-function makeCard(config) {
-    const card = document.createElement("div");
-    card.setAttribute("data-id", config.id);
-    card.className = "showCard";
-    card.style.backgroundImage = `url("${config.image}")`;
-    card.appendChild(createElement({
-        class: "showBackdrop"
-    }));
-    card.appendChild(createElement({
-        class: "showName",
-        innerText: config.name
-    }));
-    if (config.label) {
-        card.appendChild(createElement({
-            class: "showLabel",
-            innerText: config.label
-        }));
-    }
-    return card;
-}
-function makeCardCon(con, nodes, edges) {
-    var _a;
-    try {
-        const relationsCross = makeCross("fixed");
-        con.append(relationsCross);
-        for (let i = 0; i < nodes.length; i++) {
-            if (((_a = nodes[i]) === null || _a === void 0 ? void 0 : _a.type) !== "ANIME") {
-                continue;
-            }
-            const card = makeCard({
-                id: nodes[i].id,
-                image: nodes[i].coverImage.extraLarge,
-                name: nodes[i].title.english ? nodes[i].title.english : nodes[i].title.native,
-                label: edges ? fixStatus(edges[i].relationType) : nodes[i].seasonYear ? nodes[i].seasonYear : ""
-            });
-            sourceChoiceDOM.appendChild(makeCross("fixed"));
-            card.addEventListener("click", async function () {
-                const noti = sendNoti([0, "", "Alert", "Fetching the mappings..."]);
-                try {
-                    const id = this.getAttribute("data-id");
-                    const pages = JSON.parse(await window.parent.MakeFetch(`https://raw.githubusercontent.com/MALSync/MAL-Sync-Backup/master/data/anilist/anime/${id}.json`));
-                    noti.remove();
-                    const sourcesToCheck = ["Zoro", "9anime", "Gogoanime"];
-                    const sourcesToCheckID = [3, 5, 7];
-                    sourceChoiceDOM.style.display = "flex";
-                    for (let i = 0; i < sourcesToCheck.length; i++) {
-                        const sourcePages = pages.Pages[sourcesToCheck[i]];
-                        sourcesURL[sourcesToCheck[i]] = [];
-                        const sourceDOM = sourceChoiceDOM.getElementsByClassName(`${sourcesToCheck[i]}`)[0];
-                        if (sourceDOM) {
-                            sourceDOM.style.display = "none";
-                            for (const page in sourcePages) {
-                                sourceDOM.style.display = "block";
-                                sourcesURL[sourcesToCheck[i]].push(sourcePages[page]);
-                            }
-                        }
-                    }
-                }
-                catch (err) {
-                    noti.remove();
-                    sendNoti([0, "red", "Alert", "Anime not found."]);
-                }
-            });
-            con.append(card);
-        }
-    }
-    catch (err) {
-        console.error(err);
-    }
 }
 function ini() {
     let downloadQueue = window.parent.returnDownloadQueue();
@@ -522,7 +392,7 @@ function ini() {
                 }
                 catCon.append(createCat(`room_${partitions * i}`, pageName, 1));
                 catDataCons.push(createElement({
-                    "class": `categoriesDataMain snappedCategoriesDataMain`,
+                    "class": `categoriesDataMain snappedCategoriesDataMain closed`,
                     style: {
                         "min-width": "100%"
                     },
@@ -555,18 +425,32 @@ function ini() {
                 let tempCatDOM = document.getElementsByClassName("categories");
                 let cusRoomDOM = document.getElementById("custom_rooms");
                 scrollSnapFunc = function (shouldScroll = true) {
+                    var _a;
                     let unRoundedIndex = cusRoomDOM.scrollLeft / cusRoomDOM.offsetWidth;
                     let index = Math.round(unRoundedIndex);
                     if (index != scrollLastIndex) {
+                        let foundCurrentCon = false;
                         for (let i = 0; i < tempCatDOM.length; i++) {
+                            const dataCon = document.getElementById(tempCatDOM[i].getAttribute("data-id"));
+                            const prevCon = document.getElementById((_a = tempCatDOM[i - 1]) === null || _a === void 0 ? void 0 : _a.getAttribute("data-id"));
                             if (i == index) {
                                 tempCatDOM[i].classList.add("activeCat");
                                 if (shouldScroll) {
                                     tempCatDOM[i].scrollIntoView();
                                 }
+                                foundCurrentCon = true;
+                                prevCon === null || prevCon === void 0 ? void 0 : prevCon.classList.remove("closed");
+                                dataCon.classList.remove("closed");
                                 lastScrollElem = document.getElementById(tempCatDOM[i].getAttribute("data-id"));
                             }
                             else {
+                                if (foundCurrentCon) {
+                                    dataCon.classList.remove("closed");
+                                    foundCurrentCon = false;
+                                }
+                                else if (dataCon) {
+                                    dataCon.classList.add("closed");
+                                }
                                 tempCatDOM[i].classList.remove("activeCat");
                             }
                         }
@@ -1024,49 +908,6 @@ window.parent.apiCall("POST", { "username": "", "action": 4 }, (response) => {
         addToLibrary.classList.add("notInLib");
     }
 });
-function openCon(con) {
-    con.style.display = "block";
-    backdrop.style.display = "block";
-    recomCon.style.opacity = "1";
-    relationsCon.style.opacity = "1";
-    sourceChoiceDOM.style.opacity = "1";
-    sourceCardsDOM.style.opacity = "1";
-    backdrop.style.opacity = "1";
-    con.style.opacity = "0";
-    con.style.bottom = "-20px";
-    backdrop.style.opacity = "0";
-    requestAnimationFrame(function () {
-        requestAnimationFrame(function () {
-            con.style.opacity = "1";
-            con.style.bottom = "0";
-            backdrop.style.opacity = "1";
-        });
-    });
-}
-function closeCon() {
-    requestAnimationFrame(function () {
-        requestAnimationFrame(function () {
-            recomCon.style.bottom = "-20px";
-            relationsCon.style.bottom = "-20px";
-            sourceChoiceDOM.style.bottom = "-20px";
-            sourceCardsDOM.style.bottom = "-20px";
-            recomCon.style.opacity = "0";
-            relationsCon.style.opacity = "0";
-            sourceChoiceDOM.style.opacity = "0";
-            sourceCardsDOM.style.opacity = "0";
-            backdrop.style.opacity = "0";
-            setTimeout(function () {
-                recomCon.style.display = "none";
-                relationsCon.style.display = "none";
-                sourceChoiceDOM.style.display = "none";
-                sourceCardsDOM.style.display = "none";
-                backdrop.style.display = "none";
-                sourceChoiceDOM.style.bottom = "0px";
-                sourceCardsDOM.style.bottom = "0px";
-            }, 200);
-        });
-    });
-}
 document.getElementById("relations").onclick = function () {
     openCon(relationsCon);
 };

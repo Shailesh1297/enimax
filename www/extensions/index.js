@@ -216,6 +216,163 @@ function removeDOM(domElem) {
     catch (err) {
     }
 }
+function getCurrentSeason(type) {
+    const seasons = ["WINTER", "SPRING", "SUMMER", "FALL"];
+    let season = "";
+    const month = new Date().getMonth();
+    switch (month) {
+        case 11:
+        case 0:
+        case 1:
+            season = "WINTER";
+            break;
+        case 2:
+        case 3:
+        case 4:
+            season = "SPRING";
+            break;
+        case 5:
+        case 6:
+        case 7:
+            season = "SUMMER";
+            break;
+        case 8:
+        case 9:
+        case 10:
+            season = "FALL";
+            break;
+    }
+    if (type === "next") {
+        season = seasons[(seasons.indexOf(season) + 1) % 4];
+    }
+    return season;
+}
+function getCurrentYear(type) {
+    let year = new Date().getFullYear();
+    if (type == "next" && getCurrentSeason(type) === "WINTER") {
+        year++;
+    }
+    return year;
+}
+const anilistQueries = {
+    "info": `query ($id: Int) {
+                Media (id: $id, type: ANIME) { 
+                    id
+                    title {
+                        romaji
+                        english
+                        native
+                    }
+                    coverImage { 
+                        extraLarge 
+                        large 
+                        color 
+                    }
+                    bannerImage
+                    averageScore
+                    status(version: 2)
+                    idMal
+                    genres
+                    season
+                    seasonYear
+                    averageScore
+                    nextAiringEpisode { airingAt timeUntilAiring episode }
+                    relations {
+                        edges{
+                            relationType
+                        }
+                        nodes{
+                            id
+                            idMal
+                            coverImage{
+                                large
+                                extraLarge
+                            }
+                            title{
+                                english
+                                native
+                            }
+                            type
+                        }
+                    }
+                    recommendations { 
+                        edges { 
+                            node { 
+                                id 
+                                mediaRecommendation 
+                                { 
+                                    id
+                                    idMal
+                                    coverImage{
+                                        large
+                                        extraLarge
+                                    }
+                                    title{
+                                        english
+                                        native
+                                    }
+                                    type
+                                    seasonYear
+                                } 
+                            } 
+                        } 
+                    }
+                }
+            }`,
+    "trending": `query ($page: Int, $perPage: Int, $season: MediaSeason, $seasonYear: Int) {
+                    Page(page: $page, perPage: $perPage) {
+                        media(sort: POPULARITY_DESC, type: ANIME, season: $season, seasonYear: $seasonYear) {
+                            id
+                            idMal
+                            coverImage{
+                                large
+                                extraLarge
+                            }
+                            bannerImage
+                            description(asHtml: false)
+                            title{
+                                english
+                                native
+                            }
+                            type
+                            genres
+                            startDate{
+                                day
+                                month
+                                year
+                            }
+                            seasonYear
+                        }
+                    }
+                }`
+};
+async function anilistAPI(type, variables = {}) {
+    const query = anilistQueries[type];
+    const url = 'https://graphql.anilist.co', options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            query: query,
+            variables: variables
+        })
+    };
+    return JSON.parse(await MakeFetch(url, options));
+}
+async function getAnilistInfo(type, id) {
+    const anilistID = JSON.parse(await MakeFetch(`https://raw.githubusercontent.com/MALSync/MAL-Sync-Backup/master/data/pages/${type}/${id}.json`)).aniId;
+    return (await anilistAPI("info", { id: anilistID })).data.Media;
+}
+async function getAnilistTrending(type) {
+    return (await anilistAPI("trending", {
+        page: 1,
+        perPage: 25,
+        season: getCurrentSeason(type),
+        seasonYear: getCurrentYear(type)
+    })).data.Page.media;
+}
 
 var wco = {
     baseURL: "https://www.wcoforever.net",
@@ -2734,34 +2891,6 @@ var fmoviesto = {
             return title;
         }
     },
-    discover: async function () {
-        let temp = document.createElement("div");
-        try {
-            temp.innerHTML = DOMPurify.sanitize(await MakeFetchZoro(`https://9anime.to/home`, {}));
-            temp = temp.querySelector(".ani.items");
-            let data = [];
-            for (const elem of temp.querySelectorAll(".item")) {
-                let image = elem.querySelector("img").getAttribute("src");
-                let name = elem.querySelector(".name.d-title").innerText.trim();
-                let link = elem.querySelector(".name.d-title").getAttribute("href");
-                const splitLink = link.split("/");
-                splitLink.pop();
-                link = splitLink.join("/").replace("/watch", "");
-                data.push({
-                    image,
-                    name,
-                    link
-                });
-            }
-            return data;
-        }
-        catch (err) {
-            console.error(err);
-        }
-        finally {
-            removeDOM(temp);
-        }
-    },
     config: {
         "referer": "https://fmovies.to",
     },
@@ -2830,8 +2959,8 @@ var gogo = {
             response.name = animeDOM.querySelector(".anime_info_body_bg h1").innerText.trim();
             response.description = animeDOM.querySelectorAll(".anime_info_body_bg p.type")[1].innerText.trim();
             const episodeCon = animeDOM.querySelector("#episode_page").children;
-            const epStart = episodeCon[0].querySelector("a").getAttribute("ep_start");
-            const epEnd = episodeCon[episodeCon.length - 1].querySelector("a").getAttribute("ep_end");
+            const epStart = episodeCon[0].querySelector("a").innerText.split("-")[0];
+            const epEnd = episodeCon[episodeCon.length - 1].querySelector("a").innerText.split("-")[1];
             const movieID = animeDOM.querySelector("#movie_id").getAttribute("value");
             const alias = animeDOM.querySelector("#alias_anime").getAttribute("value");
             const epData = [];
@@ -2996,89 +3125,3 @@ const extensionList = [wco, animixplay, fmovies, zoro, twitch, nineAnime, fmovie
 const extensionNames = ["WCOforever", "Animixplay", "FlixHQ", "Zoro", "Twitch", "9anime", "Fmovies.to", "Gogoanime"];
 // @ts-ignore
 const extensionDisabled = [false, true, false, false, false, false, false];
-async function anilistAPI(id) {
-    const query = `
-        query ($id: Int) {
-            Media (id: $id, type: ANIME) { 
-                id
-                title {
-                    romaji
-                    english
-                    native
-                }
-                coverImage { 
-                    extraLarge 
-                    large 
-                    color 
-                }
-                bannerImage
-                averageScore
-                status(version: 2)
-                idMal
-                genres
-                season
-                seasonYear
-                averageScore
-                nextAiringEpisode { airingAt timeUntilAiring episode }
-                relations {
-                    edges{
-                        relationType
-                    }
-                    nodes{
-                        id
-                        idMal
-                        coverImage{
-                            large
-                            extraLarge
-                        }
-                        title{
-                            english
-                            native
-                        }
-                        type
-                    }
-                }
-                recommendations { 
-                    edges { 
-                        node { 
-                            id 
-                            mediaRecommendation 
-                            { 
-                                id
-                                idMal
-                                coverImage{
-                                    large
-                                    extraLarge
-                                }
-                                title{
-                                    english
-                                    native
-                                }
-                                type
-                                seasonYear
-                            } 
-                        } 
-                    } 
-                }
-            }
-        }`;
-    const variables = {
-        id
-    };
-    const url = 'https://graphql.anilist.co', options = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-            query: query,
-            variables: variables
-        })
-    };
-    return JSON.parse(await MakeFetch(url, options)).data.Media;
-}
-async function getAnilistInfo(type, id) {
-    const anilistID = JSON.parse(await MakeFetch(`https://raw.githubusercontent.com/MALSync/MAL-Sync-Backup/master/data/pages/${type}/${id}.json`)).aniId;
-    return await anilistAPI(anilistID);
-}

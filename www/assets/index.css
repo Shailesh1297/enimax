@@ -1368,6 +1368,14 @@ input:checked+.slider:before {
 	/* align-items: center; */
 }
 
+.categoriesDataMain.closed > div {
+    display: none !important;
+}
+
+.displayCon.closed{
+	display: none !important;
+}
+
 #catActive {
 	position: relative;
 	line-height: 0;
@@ -1493,4 +1501,163 @@ input:checked+.slider:before {
 	background-repeat: no-repeat;
 	background-size: contain;
 	width: 25px;
+}
+
+
+
+#relations,
+#recommendations {
+	padding: 10px 15px;
+	background-color: #ff6363;
+	font-weight: bold;
+	color: white;
+	border-radius: 20px;
+	display: inline-block;
+	margin: 5px;
+	cursor: pointer;
+	display: none;
+}
+
+#relationsCon,
+#recomCon,
+#sourceCards {
+	transition-duration: 200ms;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	box-sizing: border-box;
+	background-color: #000000;
+	z-index: 1;
+	text-align: center;
+	overflow-x: auto;
+	white-space: nowrap;
+	height: 280px;
+	display: none;
+	border-radius: 10px 10px 0px 0px;
+}
+
+#relationsCon::-webkit-scrollbar,
+#recomCon::-webkit-scrollbar,
+#sourceCards::-webkit-scrollbar {
+	height: 0;
+	width: 0;
+}
+
+@media only screen and (max-width: 800px) {
+	#imageDescCon {
+		display: block;
+		width: 100%;
+		line-height: 13px;
+		font-size: 13px;
+	}
+
+	.genreItem {
+		font-size: 13px;
+	}
+}
+
+.showCard {
+	cursor: pointer;
+	background-size: cover;
+	background-position: center;
+	display: inline-block;
+	height: 220px;
+	margin: 30px 15px;
+	width: 220px;
+	border-radius: 20px;
+	position: relative;
+	font-weight: 600;
+}
+
+.showBackdrop {
+	border-radius: 20px;
+	background-image: linear-gradient(#0000007a 0%, #000000e8 91%);
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+}
+
+.backdrop {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	z-index: 3;
+	display: none;
+	background-image: linear-gradient(0, black, #ffffff38);
+	/* background-color: #00000065; */
+}
+
+.showName {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	color: white;
+	padding: 10px;
+	box-sizing: border-box;
+	white-space: normal;
+}
+
+#sourceChoice {
+	transition-duration: 200ms;
+	display: none;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	height: 280px;
+	width: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+	text-align: center;
+	z-index: 6;
+	border-radius: 10px 10px 0px 0px;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+}
+
+#relationsCon,
+#recomCon {
+	z-index: 5;
+	display: none;
+}
+
+#sourceCards {
+	z-index: 7;
+	display: none;
+}
+
+.showLabel {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	border-radius: 15px;
+	font-weight: normal;
+	padding: 5px 10px;
+	background-color: white;
+	color: black;
+	font-size: 14px;
+	display: inline-block;
+}
+
+
+#metadata {
+	color: white;
+	margin-top: 30px;
+	margin-bottom: 10px;
+	display: none;
+}
+
+.meta {
+	background: white;
+	padding: 10px 15px;
+	border-radius: 20px;
+	color: black;
+	font-weight: bolder;
+	margin: 5px;
+	display: none;
 }

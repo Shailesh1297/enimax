@@ -257,3 +257,174 @@ function removeDOM(domElem: HTMLElement) {
 
     }
 }
+
+
+function getCurrentSeason(type: "current" | "next") {
+    const seasons = ["WINTER", "SPRING", "SUMMER", "FALL"];
+    let season = "";
+    const month = new Date().getMonth();
+    switch (month) {
+        case 11:
+        case 0:
+        case 1:
+            season = "WINTER";
+            break;
+        case 2:
+        case 3:
+        case 4:
+            season = "SPRING";
+            break;
+        case 5:
+        case 6:
+        case 7:
+            season = "SUMMER";
+            break;
+        case 8:
+        case 9:
+        case 10:
+            season = "FALL";
+            break;
+    }
+
+    if (type === "next") {
+        season = seasons[(seasons.indexOf(season) + 1) % 4];
+    }
+
+    return season;
+}
+
+function getCurrentYear(type: "current" | "next") {
+    let year = new Date().getFullYear();
+    if (type == "next" && getCurrentSeason(type) === "WINTER") {
+        year++;
+    }
+    return year;
+}
+
+const anilistQueries = {
+    "info": `query ($id: Int) {
+                Media (id: $id, type: ANIME) { 
+                    id
+                    title {
+                        romaji
+                        english
+                        native
+                    }
+                    coverImage { 
+                        extraLarge 
+                        large 
+                        color 
+                    }
+                    bannerImage
+                    averageScore
+                    status(version: 2)
+                    idMal
+                    genres
+                    season
+                    seasonYear
+                    averageScore
+                    nextAiringEpisode { airingAt timeUntilAiring episode }
+                    relations {
+                        edges{
+                            relationType
+                        }
+                        nodes{
+                            id
+                            idMal
+                            coverImage{
+                                large
+                                extraLarge
+                            }
+                            title{
+                                english
+                                native
+                            }
+                            type
+                        }
+                    }
+                    recommendations { 
+                        edges { 
+                            node { 
+                                id 
+                                mediaRecommendation 
+                                { 
+                                    id
+                                    idMal
+                                    coverImage{
+                                        large
+                                        extraLarge
+                                    }
+                                    title{
+                                        english
+                                        native
+                                    }
+                                    type
+                                    seasonYear
+                                } 
+                            } 
+                        } 
+                    }
+                }
+            }`,
+    "trending": `query ($page: Int, $perPage: Int, $season: MediaSeason, $seasonYear: Int) {
+                    Page(page: $page, perPage: $perPage) {
+                        media(sort: POPULARITY_DESC, type: ANIME, season: $season, seasonYear: $seasonYear) {
+                            id
+                            idMal
+                            coverImage{
+                                large
+                                extraLarge
+                            }
+                            bannerImage
+                            description(asHtml: false)
+                            title{
+                                english
+                                native
+                            }
+                            type
+                            genres
+                            startDate{
+                                day
+                                month
+                                year
+                            }
+                            seasonYear
+                        }
+                    }
+                }`
+};
+
+async function anilistAPI(type: "info" | "trending", variables = {}) {
+
+    const query = anilistQueries[type];
+    const url = 'https://graphql.anilist.co',
+        options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                query: query,
+                variables: variables
+            })
+        };
+
+    return JSON.parse(await MakeFetch(url, options));
+}
+
+async function getAnilistInfo(type: anilistType, id: string) {
+    const anilistID = JSON.parse(await MakeFetch(`https://raw.githubusercontent.com/MALSync/MAL-Sync-Backup/master/data/pages/${type}/${id}.json`)).aniId;
+
+    return (await anilistAPI("info", { id: anilistID })).data.Media;
+}
+
+async function getAnilistTrending(type: "current" | "next") {
+
+    return (await anilistAPI("trending", {
+        page: 1,
+        perPage: 25,
+        season: getCurrentSeason(type),
+        seasonYear: getCurrentYear(type)
+    })).data.Page.media;
+}
