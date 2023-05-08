@@ -51,16 +51,16 @@ var gogo: extension = {
             const id = url.replace("category/", "gogo-");
 
 
-            animeDOM.innerHTML = DOMPurify.sanitize(animeHTML);
-
+            animeDOM.innerHTML = DOMPurify.sanitize(animeHTML, {ADD_ATTR: ["ep_start", "ep_end"]});
+            
             response.mainName = id;
             response.image = (animeDOM.querySelector(".anime_info_body_bg img") as HTMLElement).getAttribute("src");
             response.name = (animeDOM.querySelector(".anime_info_body_bg h1") as HTMLElement).innerText.trim();
             response.description = (animeDOM.querySelectorAll(".anime_info_body_bg p.type")[1] as HTMLElement).innerText.trim();
 
             const episodeCon = animeDOM.querySelector("#episode_page").children;
-            const epStart = episodeCon[0].querySelector("a").innerText.split("-")[0];
-            const epEnd = episodeCon[episodeCon.length - 1].querySelector("a").innerText.split("-")[1];
+            const epStart = episodeCon[0].querySelector("a").getAttribute("ep_start");
+            const epEnd = episodeCon[episodeCon.length - 1].querySelector("a").getAttribute("ep_end");
             const movieID = animeDOM.querySelector("#movie_id").getAttribute("value");
             const alias = animeDOM.querySelector("#alias_anime").getAttribute("value");
             const epData: Array<extensionInfoEpisode> = [];
