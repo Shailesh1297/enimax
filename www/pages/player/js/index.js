@@ -1283,6 +1283,14 @@ if (config.local || downloaded) {
 else {
     window.parent.postMessage({ "action": 20, data: "" }, "*");
 }
+document.getElementById("back").onclick = function () {
+    if (config.chrome) {
+        history.back();
+    }
+    else {
+        window.parent.back();
+    }
+};
 let settingsPullInstance = new settingsPull(document.getElementById("settingHandlePadding"), closeSettings);
 let settingsPullInstanceTT = new settingsPull(document.querySelector(".menuCon"), closeSettings, true);
 applyTheme();

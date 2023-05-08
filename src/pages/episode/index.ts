@@ -138,7 +138,8 @@ for (let i = 0; i < choiceDOM.length; i++) {
             });
 
             card.onclick = function () {
-                window.location = extensionList[sourceExtensionID[currentIndex]].rawURLtoInfo(new URL(metaData[i].url))
+                const newLocation = extensionList[sourceExtensionID[currentIndex]].rawURLtoInfo(new URL(metaData[i].url))
+                window.parent.postMessage({ "action": 500, data: "pages/episode/index.html" + newLocation }, "*");
             }
 
             sourceCardsDOM.append(card);
@@ -291,58 +292,61 @@ function makeCard(config: RelationCardConfig) {
 }
 
 function makeCardCon(con: HTMLElement, nodes: any, edges?: any) {
-    const relationsCross = makeCross("fixed");
+    try {
+        const relationsCross = makeCross("fixed");
 
-    con.append(relationsCross);
+        con.append(relationsCross);
 
-    for (let i = 0; i < nodes.length; i++) {
+        for (let i = 0; i < nodes.length; i++) {
+            if (nodes[i]?.type !== "ANIME") {
+                continue;
+            }
 
-        if (nodes[i].type !== "ANIME") {
-            continue;
-        }
+            const card = makeCard({
+                id: nodes[i].id,
+                image: nodes[i].coverImage.extraLarge,
+                name: nodes[i].title.english ? nodes[i].title.english : nodes[i].title.native,
+                label: edges ? fixStatus(edges[i].relationType) : nodes[i].seasonYear ? nodes[i].seasonYear : ""
+            });
 
-        const card = makeCard({
-            id: nodes[i].id,
-            image: nodes[i].coverImage.extraLarge,
-            name: nodes[i].title.english ? nodes[i].title.english : nodes[i].title.native,
-            label: edges ? fixStatus(edges[i].relationType) : ""
-        });
-
-        sourceChoiceDOM.appendChild(makeCross("fixed"));
+            sourceChoiceDOM.appendChild(makeCross("fixed"));
 
 
-        card.addEventListener("click", async function () {
-            const noti = sendNoti([0, "", "Alert", "Fetching the mappings..."]);
-            try {
-                const id = this.getAttribute("data-id");
-                const pages = JSON.parse(await (window.parent as cordovaWindow).MakeFetch(`https://raw.githubusercontent.com/MALSync/MAL-Sync-Backup/master/data/anilist/anime/${id}.json`));
-                noti.remove();
-                const sourcesToCheck = ["Zoro", "9anime", "Gogoanime"];
-                const sourcesToCheckID = [3, 5, 7];
-                sourceChoiceDOM.style.display = "flex";
+            card.addEventListener("click", async function () {
+                const noti = sendNoti([0, "", "Alert", "Fetching the mappings..."]);
+                try {
+                    const id = this.getAttribute("data-id");
+                    const pages = JSON.parse(await (window.parent as cordovaWindow).MakeFetch(`https://raw.githubusercontent.com/MALSync/MAL-Sync-Backup/master/data/anilist/anime/${id}.json`));
+                    noti.remove();
+                    const sourcesToCheck = ["Zoro", "9anime", "Gogoanime"];
+                    const sourcesToCheckID = [3, 5, 7];
+                    sourceChoiceDOM.style.display = "flex";
 
-                for (let i = 0; i < sourcesToCheck.length; i++) {
-                    const sourcePages = pages.Pages[sourcesToCheck[i]];
-                    sourcesURL[sourcesToCheck[i]] = [];
-                    const sourceDOM = (sourceChoiceDOM.getElementsByClassName(`${sourcesToCheck[i]}`)[0] as HTMLElement);
-                    if (sourceDOM) {
+                    for (let i = 0; i < sourcesToCheck.length; i++) {
+                        const sourcePages = pages.Pages[sourcesToCheck[i]];
+                        sourcesURL[sourcesToCheck[i]] = [];
+                        const sourceDOM = (sourceChoiceDOM.getElementsByClassName(`${sourcesToCheck[i]}`)[0] as HTMLElement);
+                        if (sourceDOM) {
 
-                        sourceDOM.style.display = "none";
+                            sourceDOM.style.display = "none";
 
-                        for (const page in sourcePages) {
-                            sourceDOM.style.display = "block";
-                            sourcesURL[sourcesToCheck[i]].push(sourcePages[page]);
+                            for (const page in sourcePages) {
+                                sourceDOM.style.display = "block";
+                                sourcesURL[sourcesToCheck[i]].push(sourcePages[page]);
+                            }
                         }
                     }
+                } catch (err) {
+                    noti.remove();
+                    sendNoti([0, "red", "Alert", "Anime not found."]);
                 }
-            } catch (err) {
-                noti.remove();
-                sendNoti([0, "red", "Alert", "Anime not found."]);
-            }
-        });
+            });
 
 
-        con.append(card);
+            con.append(card);
+        }
+    } catch (err) {
+        console.error(err);
     }
 }
 
@@ -1284,6 +1288,10 @@ document.getElementById("relations").onclick = function () {
 
 document.getElementById("recommendations").onclick = function () {
     openCon(recomCon);
+};
+
+document.getElementById("back").onclick = function () {
+    window.parent.postMessage({ "action": 500, data: "pages/homepage/index.html" }, "*");
 };
 
 

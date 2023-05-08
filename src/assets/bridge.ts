@@ -12,6 +12,7 @@ var socket;
 let frameHistory: Array<string> = [];
 var token;
 let seekCheck = true;
+let backFunction: Function;
 
 function returnExtensionList() {
     return extensionList;
@@ -629,6 +630,11 @@ function onResume() {
     }
 }
 
+
+function back(){
+    backFunction();
+}
+
 async function onDeviceReady() {
 
     await SQLInit();
@@ -647,7 +653,7 @@ async function onDeviceReady() {
     downloadQueueInstance = new downloadQueue();
     mainIFrame.src = "pages/homepage/index.html";
 
-    function onBackKeyDown() {
+    backFunction = function onBackKeyDown() {
         try {
             // @ts-ignore
             if (playerIFrame.contentWindow.isLocked() === true) {
@@ -702,7 +708,7 @@ async function onDeviceReady() {
         window.location.href = "login.html";
     }
 
-    document.addEventListener("backbutton", onBackKeyDown, false);
+    document.addEventListener("backbutton", () => {backFunction()}, false);
     document.addEventListener("pause", onPause, false);
     document.addEventListener("resume", onResume, false);
 

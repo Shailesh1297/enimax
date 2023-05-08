@@ -29,6 +29,7 @@ class vid {
 	metaData: HTMLElement;
 	titleCon: HTMLElement;
 	vid: HTMLVideoElement;
+	back: HTMLElement;
 	locked: boolean;
 	downTown: number;
 	seekMode: boolean;
@@ -88,6 +89,7 @@ class vid {
 		this.buffered = document.querySelector("#buffered");
 		this.metaData = document.querySelector("#metaData");
 		this.titleCon = document.querySelector("#titleCon");
+		this.back = document.querySelector("#back");
 		this.epCon = document.querySelector("#epCon");
 		this.bar = document.querySelector("#bar");
 		this.locked = false;
@@ -863,6 +865,10 @@ class vid {
 		this.popControls.style.transform = "translateX(100px)";
 		this.metaData.style.transform = "translateX(-100px)";
 
+		this.back.style.opacity = "0";
+		this.back.style.pointerEvents = "none";
+		this.back.style.transform = "translateX(-100px)";
+
 
 		this.bar_con.style.bottom = "-70px";
 		this.bar_con.style.pointerEvents = "none";
@@ -884,10 +890,15 @@ class vid {
 
 		this.metaData.style.opacity = "1";
 		this.pop.style.opacity = "1";
+
 		this.popControls.style.opacity = "1";
 		this.popControls.style.pointerEvents = "auto";
-
 		this.popControls.style.transform = "translateX(0px)";
+
+		this.back.style.opacity = "1";
+		this.back.style.pointerEvents = "auto";
+		this.back.style.transform = "translateX(0px)";
+
 		this.metaData.style.transform = "translateX(0px)";
 
 		this.bar_con.style.bottom = "10px";

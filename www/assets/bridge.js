@@ -11,6 +11,7 @@ var socket;
 let frameHistory = [];
 var token;
 let seekCheck = true;
+let backFunction;
 function returnExtensionList() {
     return extensionList;
 }
@@ -525,6 +526,9 @@ function onResume() {
         playerIFrame.contentWindow.postMessage({ action: "pipout" }, "*");
     }
 }
+function back() {
+    backFunction();
+}
 async function onDeviceReady() {
     await SQLInit();
     await SQLInitDownloaded();
@@ -538,7 +542,7 @@ async function onDeviceReady() {
     token = thisWindow.cordova.plugin.http.getCookieString(config.remoteWOport);
     downloadQueueInstance = new downloadQueue();
     mainIFrame.src = "pages/homepage/index.html";
-    function onBackKeyDown() {
+    backFunction = function onBackKeyDown() {
         try {
             // @ts-ignore
             if (playerIFrame.contentWindow.isLocked() === true) {
@@ -583,12 +587,12 @@ async function onDeviceReady() {
                 setURL(frameHistory[frameHistory.length - 1]);
             }
         }
-    }
+    };
     if (thisWindow.cordova.plugin.http.getCookieString(config.remoteWOport).indexOf("connect.sid") == -1
         && config.local == false && localStorage.getItem("offline") === 'false') {
         window.location.href = "login.html";
     }
-    document.addEventListener("backbutton", onBackKeyDown, false);
+    document.addEventListener("backbutton", () => { backFunction(); }, false);
     document.addEventListener("pause", onPause, false);
     document.addEventListener("resume", onResume, false);
 }

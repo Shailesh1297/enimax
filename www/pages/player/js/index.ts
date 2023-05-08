@@ -1320,15 +1320,15 @@ window.onmessage = async function (message: MessageEvent) {
 	} else if (message.data.action == 4) {
 		changeEp(0, message.data.data);
 	} else if (message.data.action == "pip") {
-		if(localStorage.getItem("autopip") === "true" &&
-		   !vidInstance.vid.paused){
+		if (localStorage.getItem("autopip") === "true" &&
+			!vidInstance.vid.paused) {
 			vidInstance.togglePictureInPicture();
 		}
 	} else if (message.data.action == "pipout") {
-		if(localStorage.getItem("autopip") === "true"){
-			if(vidInstance.wasLocked){
+		if (localStorage.getItem("autopip") === "true") {
+			if (vidInstance.wasLocked) {
 				vidInstance.lockVid();
-			}else{
+			} else {
 				vidInstance.lockVid2();
 			}
 		}
@@ -1491,6 +1491,14 @@ if (config.local || downloaded) {
 	ini_main();
 } else {
 	window.parent.postMessage({ "action": 20, data: "" }, "*");
+}
+
+document.getElementById("back").onclick = function () {
+	if (config.chrome) {
+		history.back();
+	} else {
+		(window.parent as cordovaWindow).back();
+	}
 }
 
 let settingsPullInstance = new settingsPull(document.getElementById("settingHandlePadding"), closeSettings);

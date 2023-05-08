@@ -63,6 +63,7 @@ async function anilistAPI(id) {
                                     native
                                 }
                                 type
+                                seasonYear
                             } 
                         } 
                     } 

@@ -126,6 +126,7 @@ interface cordovaWindow extends Window {
     returnDownloadQueue: Function,
     returnExtensionDisabled: Function,
     listDir: Function,
+    back: Function,
     removeDirectory: Function,
     extractKey: Function,
     saveAsImport: Function,
