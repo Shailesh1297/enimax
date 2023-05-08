@@ -514,32 +514,14 @@ function ini() {
                     let index = Math.round(unRoundedIndex);
 
                     if (index != scrollLastIndex) {
-                        let foundCurrentCon = false;
                         for (let i = 0; i < tempCatDOM.length; i++) {
-                            const dataCon = document.getElementById(tempCatDOM[i].getAttribute("data-id"));
-                            const prevCon = document.getElementById(tempCatDOM[i - 1]?.getAttribute("data-id"));
-                            
                             if (i == index) {
                                 tempCatDOM[i].classList.add("activeCat");
                                 if (shouldScroll) {
                                     tempCatDOM[i].scrollIntoView();
                                 }
-
-                                foundCurrentCon = true;
-                                prevCon?.classList.remove("closed");
-                                dataCon.classList.remove("closed");
-
                                 lastScrollElem = document.getElementById(tempCatDOM[i].getAttribute("data-id"));
                             } else {
-
-                                if (foundCurrentCon) {
-                                    dataCon.classList.remove("closed");
-                                    foundCurrentCon = false;
-                                }
-                                else if (dataCon) {
-                                    dataCon.classList.add("closed");
-                                }
-                                
                                 tempCatDOM[i].classList.remove("activeCat");
                             }
                         }
@@ -553,6 +535,29 @@ function ini() {
                                     temp.style.height = activeCatDOM.offsetHeight.toString();
                                     temp.style.width = activeCatDOM.offsetWidth.toString();
                                 }
+
+                                setTimeout(() => {
+                                    let foundCurrentCon = false;
+                                    for (let i = 0; i < tempCatDOM.length; i++) {
+                                        const dataCon = document.getElementById(tempCatDOM[i].getAttribute("data-id"));
+                                        const prevCon = document.getElementById(tempCatDOM[i - 1]?.getAttribute("data-id"));
+
+                                        if (i == index) {
+                                            foundCurrentCon = true;
+                                            prevCon?.classList.remove("closed");
+                                            dataCon.classList.remove("closed");
+                                        } else {
+
+                                            if (foundCurrentCon) {
+                                                dataCon.classList.remove("closed");
+                                                foundCurrentCon = false;
+                                            }
+                                            else if (dataCon) {
+                                                dataCon.classList.add("closed");
+                                            }
+                                        }
+                                    }
+                                }, 250);
                             });
                         });
                     }

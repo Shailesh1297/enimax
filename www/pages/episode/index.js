@@ -425,32 +425,18 @@ function ini() {
                 let tempCatDOM = document.getElementsByClassName("categories");
                 let cusRoomDOM = document.getElementById("custom_rooms");
                 scrollSnapFunc = function (shouldScroll = true) {
-                    var _a;
                     let unRoundedIndex = cusRoomDOM.scrollLeft / cusRoomDOM.offsetWidth;
                     let index = Math.round(unRoundedIndex);
                     if (index != scrollLastIndex) {
-                        let foundCurrentCon = false;
                         for (let i = 0; i < tempCatDOM.length; i++) {
-                            const dataCon = document.getElementById(tempCatDOM[i].getAttribute("data-id"));
-                            const prevCon = document.getElementById((_a = tempCatDOM[i - 1]) === null || _a === void 0 ? void 0 : _a.getAttribute("data-id"));
                             if (i == index) {
                                 tempCatDOM[i].classList.add("activeCat");
                                 if (shouldScroll) {
                                     tempCatDOM[i].scrollIntoView();
                                 }
-                                foundCurrentCon = true;
-                                prevCon === null || prevCon === void 0 ? void 0 : prevCon.classList.remove("closed");
-                                dataCon.classList.remove("closed");
                                 lastScrollElem = document.getElementById(tempCatDOM[i].getAttribute("data-id"));
                             }
                             else {
-                                if (foundCurrentCon) {
-                                    dataCon.classList.remove("closed");
-                                    foundCurrentCon = false;
-                                }
-                                else if (dataCon) {
-                                    dataCon.classList.add("closed");
-                                }
                                 tempCatDOM[i].classList.remove("activeCat");
                             }
                         }
@@ -463,6 +449,28 @@ function ini() {
                                     temp.style.height = activeCatDOM.offsetHeight.toString();
                                     temp.style.width = activeCatDOM.offsetWidth.toString();
                                 }
+                                setTimeout(() => {
+                                    var _a;
+                                    let foundCurrentCon = false;
+                                    for (let i = 0; i < tempCatDOM.length; i++) {
+                                        const dataCon = document.getElementById(tempCatDOM[i].getAttribute("data-id"));
+                                        const prevCon = document.getElementById((_a = tempCatDOM[i - 1]) === null || _a === void 0 ? void 0 : _a.getAttribute("data-id"));
+                                        if (i == index) {
+                                            foundCurrentCon = true;
+                                            prevCon === null || prevCon === void 0 ? void 0 : prevCon.classList.remove("closed");
+                                            dataCon.classList.remove("closed");
+                                        }
+                                        else {
+                                            if (foundCurrentCon) {
+                                                dataCon.classList.remove("closed");
+                                                foundCurrentCon = false;
+                                            }
+                                            else if (dataCon) {
+                                                dataCon.classList.add("closed");
+                                            }
+                                        }
+                                    }
+                                }, 250);
                             });
                         });
                     }

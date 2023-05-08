@@ -771,15 +771,11 @@ function updateRoomAdd() {
 let scrollLastIndex;
 let cusRoomDOM = document.getElementById("custom_rooms");
 function cusRoomScroll(forced = false) {
-    var _a;
     let tempCatDOM = document.getElementsByClassName("categories");
     let unRoundedIndex = cusRoomDOM.scrollLeft / cusRoomDOM.offsetWidth;
     let index = Math.round(unRoundedIndex);
     if (index != scrollLastIndex || forced) {
-        let foundCurrentCon = false;
         for (let i = 0; i < tempCatDOM.length; i++) {
-            const dataCon = document.getElementById(tempCatDOM[i].getAttribute("data-id"));
-            const prevCon = document.getElementById((_a = tempCatDOM[i - 1]) === null || _a === void 0 ? void 0 : _a.getAttribute("data-id"));
             if (i == index) {
                 tempCatDOM[i].classList.add("activeCat");
                 tempCatDOM[i].scrollIntoView();
@@ -789,19 +785,9 @@ function cusRoomScroll(forced = false) {
                         populateDiscover();
                     }
                 }
-                foundCurrentCon = true;
-                prevCon === null || prevCon === void 0 ? void 0 : prevCon.classList.remove("closed");
-                dataCon.classList.remove("closed");
                 localStorage.setItem("currentCategory", tempCatDOM[i].getAttribute("data-id"));
             }
             else {
-                if (foundCurrentCon) {
-                    dataCon.classList.remove("closed");
-                    foundCurrentCon = false;
-                }
-                else if (dataCon) {
-                    dataCon.classList.add("closed");
-                }
                 tempCatDOM[i].classList.remove("activeCat");
             }
         }
@@ -814,6 +800,28 @@ function cusRoomScroll(forced = false) {
                     temp.style.height = activeCatDOM.offsetHeight.toString();
                     temp.style.width = activeCatDOM.offsetWidth.toString();
                 }
+                setTimeout(() => {
+                    var _a;
+                    let foundCurrentCon = false;
+                    for (let i = 0; i < tempCatDOM.length; i++) {
+                        const dataCon = document.getElementById(tempCatDOM[i].getAttribute("data-id"));
+                        const prevCon = document.getElementById((_a = tempCatDOM[i - 1]) === null || _a === void 0 ? void 0 : _a.getAttribute("data-id"));
+                        if (i == index) {
+                            foundCurrentCon = true;
+                            prevCon === null || prevCon === void 0 ? void 0 : prevCon.classList.remove("closed");
+                            dataCon.classList.remove("closed");
+                        }
+                        else {
+                            if (foundCurrentCon) {
+                                dataCon.classList.remove("closed");
+                                foundCurrentCon = false;
+                            }
+                            else if (dataCon) {
+                                dataCon.classList.add("closed");
+                            }
+                        }
+                    }
+                }, 250);
             });
         });
     }
