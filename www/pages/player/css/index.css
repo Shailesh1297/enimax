@@ -28,7 +28,7 @@ body {
 
 #time {
     font-size: 16px;
-    width: 120px;
+    width: 150px;
     font-family: tw cen mt;
     color: white;
     pointer-events: none;
@@ -334,7 +334,8 @@ div {
     justify-content: 0;
 }
 
-#pop, #metaData {
+#pop,
+#metaData {
     height: 100%;
     width: 100%;
     position: absolute;
@@ -347,13 +348,23 @@ div {
     opacity: 1;
 }
 
-#metaData{
+#metaData {
     background-color: transparent !important;
+    left: 10px !important;
 }
 
-#epCon{
+#back {
+    transition-duration: 200ms;
+    height: 30px;
+    top: 15px;
+    background-size: 70%;
+    left: 10px;
+}
+
+#epCon {
     transition-duration: 200ms;
 }
+
 #list li a {
     color: black;
     text-decoration: none;
@@ -655,8 +666,8 @@ select {
     width: 100%;
     text-align: center;
     position: absolute;
-    top:0;
-    left:0;
+    top: 0;
+    left: 0;
     z-index: 11;
     pointer-events: inherit;
 }

@@ -2,6 +2,7 @@ var wco = {
     baseURL: "https://www.wcoforever.net",
     searchApi: function (query) {
         let baseURL = this.baseURL;
+        let tempDiv = document.createElement("div");
         return (new Promise(function (resolve, reject) {
             let formData = new FormData();
             formData.append('catara', query);
@@ -9,7 +10,6 @@ var wco = {
             fetch(`${baseURL}/search`, {
                 method: 'POST', body: formData
             }).then(response => response.text()).then(function (x) {
-                let tempDiv = document.createElement("div");
                 tempDiv.innerHTML = DOMPurify.sanitize(x);
                 var conDIV = tempDiv.querySelector(".items").children;
                 let data = [];
@@ -20,23 +20,26 @@ var wco = {
                         "link": conDIV[i].getElementsByTagName("a")[1].getAttribute("href").replace(baseURL, "") + "&engine=0",
                     });
                 }
-                tempDiv.remove();
                 resolve({
                     "status": 200,
                     "data": data
                 });
             }).catch(function (x) {
                 reject(x);
+            }).finally(() => {
+                removeDOM(tempDiv);
             });
         }));
     },
     getAnimeInfo: function (url) {
         let baseURL = this.baseURL;
+        let rawURL = "";
         return (new Promise(function (resolve, reject) {
             url = url.split("&engine")[0];
             url = baseURL + "/" + url;
+            rawURL = url;
+            let temp = document.createElement("div");
             fetch(url).then(response => response.text()).then(function (response) {
-                let temp = document.createElement("div");
                 temp.innerHTML = DOMPurify.sanitize(response);
                 let data = {
                     "name": "",
@@ -112,10 +115,12 @@ var wco = {
                 }
                 data.episodes = animeEps;
                 data.mainName = url.replace("https://www.wcoforever.net/anime/", "") + "-";
-                temp.remove();
                 resolve(data);
             }).catch(function (err) {
+                err.url = rawURL;
                 reject(err);
+            }).finally(() => {
+                removeDOM(temp);
             });
         }));
     },
@@ -166,6 +171,7 @@ var wco = {
             next: null,
             prev: null,
         };
+        let dom = document.createElement("div");
         try {
             let reqOption = {
                 'headers': {
@@ -175,7 +181,6 @@ var wco = {
             };
             let pageHTML = await MakeFetch(url, {});
             let sources = data.sources;
-            let dom = document.createElement("div");
             dom.innerHTML = DOMPurify.sanitize(pageHTML);
             try {
                 let tmpName = dom.querySelector('[rel="category tag"]').getAttribute("href").replace(`${baseURL}/anime/`, "");
@@ -293,7 +298,6 @@ var wco = {
             data.episode = animeEp;
             data.status = 200;
             data.message = "done";
-            dom.remove();
             return data;
         }
         catch (err) {
@@ -302,39 +306,53 @@ var wco = {
             data.message = "Couldn't get the link";
             return data;
         }
+        finally {
+            removeDOM(dom);
+        }
     },
     discover: async function () {
         let baseURL = this.baseURL;
         let temp = document.createElement("div");
-        temp.innerHTML = DOMPurify.sanitize(await MakeFetch(baseURL, {}));
-        let data = [];
-        for (let elem of temp.querySelectorAll(".items")[1].querySelectorAll("li")) {
-            let image = "https:" + elem.querySelector("img").getAttribute("src");
-            let tempAnchor = elem.querySelectorAll("a")[1];
-            let name = tempAnchor.innerText;
-            let link = tempAnchor.getAttribute("href");
-            if (link == "") {
-                link = null;
+        try {
+            temp.innerHTML = DOMPurify.sanitize(await MakeFetch(baseURL, {}));
+            let data = [];
+            for (let elem of temp.querySelectorAll(".items")[1].querySelectorAll("li")) {
+                let image = "https:" + elem.querySelector("img").getAttribute("src");
+                let tempAnchor = elem.querySelectorAll("a")[1];
+                let name = tempAnchor.innerText;
+                let link = tempAnchor.getAttribute("href");
+                if (link == "") {
+                    link = null;
+                }
+                data.push({
+                    image,
+                    name,
+                    link,
+                    "getLink": true
+                });
             }
-            data.push({
-                image,
-                name,
-                link,
-                "getLink": true
-            });
+            return data;
         }
-        return data;
+        catch (err) {
+            throw err;
+        }
+        finally {
+            removeDOM(temp);
+        }
     },
     getDiscoverLink: async function (mainLink) {
         let baseURL = this.baseURL;
+        let temp = document.createElement("div");
         try {
-            let temp = document.createElement("div");
             temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`${baseURL}${mainLink}`, {}));
             mainLink = temp.querySelector('[rel="category tag"]').getAttribute("href").replace(baseURL, "");
             return mainLink;
         }
         catch (err) {
             throw err;
+        }
+        finally {
+            removeDOM(temp);
         }
     }
 };

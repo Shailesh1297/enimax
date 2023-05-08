@@ -23,7 +23,7 @@ select {
 
 	line-height: 3;
 
-	width: calc(100% - 90px);
+	width: calc(100% - 120px);
 	height: 60px;
 	line-height: 3;
 	background-color: var(--theme-color);
@@ -48,7 +48,7 @@ select {
 	position: fixed;
 	z-index: 99;
 	top: 10px;
-	left: 10px;
+	left: 40px;
 	transition-duration: 0.2s;
 	background: var(--theme-color);
 	height: 40px;

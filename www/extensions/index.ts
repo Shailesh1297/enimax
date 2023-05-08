@@ -197,15 +197,15 @@ if (config && config.chrome) {
 }
 
 
-function getWebviewHTML(url = "https://www.zoro.to", hidden = false) {
+function getWebviewHTML(url = "https://www.zoro.to", hidden = false, timeout: number | undefined = 15000, code: boolean | string = false) {
     return new Promise((resolve, reject) => {
         // @ts-ignore
         const inappRef = cordova.InAppBrowser.open(url, '_blank', hidden ? "hidden=true" : "");
 
         inappRef.addEventListener('loadstop', () => {
             inappRef.executeScript({
-                'code': `let resultInApp={'status':200,'data':document.body.innerText};
-                        webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify(resultInApp));`
+                'code': code === false ? `let resultInApp={'status':200,'data':document.body.innerText};
+                        webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify(resultInApp));` : code
             });
         });
 
@@ -215,20 +215,30 @@ function getWebviewHTML(url = "https://www.zoro.to", hidden = false) {
         });
 
         inappRef.addEventListener('message', (result: string) => {
+            console.log(result);
+            inappRef.close();
             resolve(result);
         });
 
-        setTimeout(function () {
-            inappRef.close();
-            reject("Timeout");
-        }, 15000);
+        inappRef.addEventListener('exit', (result: string) => {
+            setTimeout(() => {
+                resolve("closed");
+            }, 500);
+        });
+
+        if (timeout) {
+            setTimeout(function () {
+                inappRef.close();
+                reject("Timeout");
+            }, timeout);
+        }
     });
 }
 
 async function MakeFetchZoro(url: string, options = {}): Promise<string> {
     return new Promise(function (resolve, reject) {
         fetch(url, options).then(response => response.text()).then((response) => {
-            if (response.includes("if the site connection is secure") && !config.chrome) {
+            if ((response.includes("if the site connection is secure") || response.includes("Security checking...")) && !config.chrome) {
                 getWebviewHTML(url);
             }
             resolve(response);
@@ -236,4 +246,185 @@ async function MakeFetchZoro(url: string, options = {}): Promise<string> {
             reject(new Error(`${err.message}: ${url}`));
         });
     });
+}
+
+function removeDOM(domElem: HTMLElement) {
+    console.log("Removing", domElem);
+    try {
+        domElem.innerHTML = "";
+        domElem.remove();
+    } catch (err) {
+
+    }
+}
+
+
+function getCurrentSeason(type: "current" | "next") {
+    const seasons = ["WINTER", "SPRING", "SUMMER", "FALL"];
+    let season = "";
+    const month = new Date().getMonth();
+    switch (month) {
+        case 11:
+        case 0:
+        case 1:
+            season = "WINTER";
+            break;
+        case 2:
+        case 3:
+        case 4:
+            season = "SPRING";
+            break;
+        case 5:
+        case 6:
+        case 7:
+            season = "SUMMER";
+            break;
+        case 8:
+        case 9:
+        case 10:
+            season = "FALL";
+            break;
+    }
+
+    if (type === "next") {
+        season = seasons[(seasons.indexOf(season) + 1) % 4];
+    }
+
+    return season;
+}
+
+function getCurrentYear(type: "current" | "next") {
+    let year = new Date().getFullYear();
+    if (type == "next" && getCurrentSeason(type) === "WINTER") {
+        year++;
+    }
+    return year;
+}
+
+const anilistQueries = {
+    "info": `query ($id: Int) {
+                Media (id: $id, type: ANIME) { 
+                    id
+                    title {
+                        romaji
+                        english
+                        native
+                    }
+                    coverImage { 
+                        extraLarge 
+                        large 
+                        color 
+                    }
+                    bannerImage
+                    averageScore
+                    status(version: 2)
+                    idMal
+                    genres
+                    season
+                    seasonYear
+                    averageScore
+                    nextAiringEpisode { airingAt timeUntilAiring episode }
+                    relations {
+                        edges{
+                            relationType
+                        }
+                        nodes{
+                            id
+                            idMal
+                            coverImage{
+                                large
+                                extraLarge
+                            }
+                            title{
+                                english
+                                native
+                            }
+                            type
+                        }
+                    }
+                    recommendations { 
+                        edges { 
+                            node { 
+                                id 
+                                mediaRecommendation 
+                                { 
+                                    id
+                                    idMal
+                                    coverImage{
+                                        large
+                                        extraLarge
+                                    }
+                                    title{
+                                        english
+                                        native
+                                    }
+                                    type
+                                    seasonYear
+                                } 
+                            } 
+                        } 
+                    }
+                }
+            }`,
+    "trending": `query ($page: Int, $perPage: Int, $season: MediaSeason, $seasonYear: Int) {
+                    Page(page: $page, perPage: $perPage) {
+                        media(sort: POPULARITY_DESC, type: ANIME, season: $season, seasonYear: $seasonYear) {
+                            id
+                            idMal
+                            coverImage{
+                                large
+                                extraLarge
+                            }
+                            bannerImage
+                            description(asHtml: false)
+                            title{
+                                english
+                                native
+                            }
+                            type
+                            genres
+                            startDate{
+                                day
+                                month
+                                year
+                            }
+                            seasonYear
+                        }
+                    }
+                }`
+};
+
+async function anilistAPI(type: "info" | "trending", variables = {}) {
+
+    const query = anilistQueries[type];
+    const url = 'https://graphql.anilist.co',
+        options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                query: query,
+                variables: variables
+            })
+        };
+
+    return JSON.parse(await MakeFetch(url, options));
+}
+
+async function getAnilistInfo(type: anilistType, id: string) {
+    const anilistID = JSON.parse(await MakeFetch(`https://raw.githubusercontent.com/MALSync/MAL-Sync-Backup/master/data/pages/${type}/${id}.json`)).aniId;
+
+    return (await anilistAPI("info", { id: anilistID })).data.Media;
+}
+
+async function getAnilistTrending(type: "current" | "next") {
+
+    return (await anilistAPI("trending", {
+        page: 1,
+        perPage: 25,
+        season: getCurrentSeason(type),
+        seasonYear: getCurrentYear(type)
+    })).data.Page.media;
 }

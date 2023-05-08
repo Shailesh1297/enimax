@@ -1,7 +1,8 @@
-var wco : extension = {
-    baseURL : "https://www.wcoforever.net",
-    searchApi: function (query : string) : Promise<extensionSearch> {
+var wco: extension = {
+    baseURL: "https://www.wcoforever.net",
+    searchApi: function (query: string): Promise<extensionSearch> {
         let baseURL = this.baseURL;
+        let tempDiv = document.createElement("div");
 
         return (new Promise(function (resolve, reject) {
             let formData = new FormData();
@@ -12,13 +13,12 @@ var wco : extension = {
                 method: 'POST', body: formData
             }).then(response => response.text()).then(function (x) {
 
-                let tempDiv = document.createElement("div");
                 tempDiv.innerHTML = DOMPurify.sanitize(x);
 
 
                 var conDIV = tempDiv.querySelector(".items").children;
 
-                let data : Array<extensionSearchData> = [];
+                let data: Array<extensionSearchData> = [];
                 for (var i = 0; i < conDIV.length; i++) {
                     data.push({
                         "image": conDIV[i].getElementsByTagName("img")[0].getAttribute("src"),
@@ -27,8 +27,6 @@ var wco : extension = {
                     });
                 }
 
-                tempDiv.remove();
-
                 resolve({
                     "status": 200,
                     "data": data
@@ -36,28 +34,34 @@ var wco : extension = {
 
             }).catch(function (x) {
                 reject(x);
+            }).finally(() => {
+                removeDOM(tempDiv);
             });
         }));
 
     },
-    getAnimeInfo: function (url : string) : Promise<extensionInfo> {
+    getAnimeInfo: function (url: string): Promise<extensionInfo> {
         let baseURL = this.baseURL;
+        let rawURL = "";
         return (new Promise(function (resolve, reject) {
             url = url.split("&engine")[0];
             url = baseURL + "/" + url;
+            rawURL = url;
+
+            let temp = document.createElement("div");
+
             fetch(url).then(response => response.text()).then(function (response) {
-                let temp = document.createElement("div");
                 temp.innerHTML = DOMPurify.sanitize(response);
 
-                let data : extensionInfo = {
-                    "name" : "",
-                    "image" : "",
-                    "description" : "",
-                    "episodes" : [],
-                    "mainName" : ""
+                let data: extensionInfo = {
+                    "name": "",
+                    "image": "",
+                    "description": "",
+                    "episodes": [],
+                    "mainName": ""
                 };
 
-                data.name = (temp.querySelectorAll(".video-title")[0]  as HTMLElement).innerText;
+                data.name = (temp.querySelectorAll(".video-title")[0] as HTMLElement).innerText;
                 data.image = temp.querySelector("#sidebar_cat").querySelectorAll(".img5")[0].getAttribute("src");
 
                 if (data.image.indexOf("//") == 0) {
@@ -67,8 +71,8 @@ var wco : extension = {
                 data.description = temp.querySelector("#sidebar_cat").querySelectorAll("p")[0].innerText;
                 data.totalPages = 1;
                 data.pageInfo = [{
-                    "pageName" : "Season 1",
-                    "pageSize" : 0
+                    "pageName": "Season 1",
+                    "pageSize": 0
                 }];
 
                 let lastSeason = "1";
@@ -79,24 +83,24 @@ var wco : extension = {
                 let animeName;
                 for (var i = animeDOM.length - 1; i >= 0; i--) {
 
-                    let season : string = lastSeason;
-                    try{
+                    let season: string = lastSeason;
+                    try {
                         let hasSeason = parseInt(animeDOM[i].innerText.toLowerCase().split("season")[1]);
-                        if(!isNaN(hasSeason)){
+                        if (!isNaN(hasSeason)) {
                             season = hasSeason.toString();
-                        }else{
+                        } else {
                             season = "1";
                         }
-                    }catch(err){
+                    } catch (err) {
 
                     }
 
-                    if(season != lastSeason){
+                    if (season != lastSeason) {
                         lastSeason = season;
                         data.totalPages++;
                         data.pageInfo[data.totalPages - 1] = {
-                            "pageSize" : 0,
-                            "pageName" : `Season ${season}`
+                            "pageSize": 0,
+                            "pageName": `Season ${season}`
                         }
                     }
 
@@ -134,20 +138,22 @@ var wco : extension = {
                 data.episodes = animeEps;
                 data.mainName = url.replace("https://www.wcoforever.net/anime/", "") + "-";
 
-                temp.remove();
                 resolve(data);
             }).catch(function (err) {
+                err.url = rawURL;
                 reject(err);
+            }).finally(() => {
+                removeDOM(temp);
             });
 
         }));
     },
-    getLinkFromUrl: async function (url : string) : Promise<extensionVidSource> {
+    getLinkFromUrl: async function (url: string): Promise<extensionVidSource> {
         let baseURL = this.baseURL;
         url = url.split("&engine")[0];
         url = `${baseURL}${url}`;
         let animeNameMain = decodeURIComponent(url.split(`${baseURL}/`)[1].split("/")[0]);
-        let animeEp;     
+        let animeEp;
         let animeName = animeNameMain.split("episode")[0];
         animeName = animeName.trim();
         if (animeNameMain.split("episode").length == 1) {
@@ -187,16 +193,18 @@ var wco : extension = {
             animeEp = 0.1;
         }
 
-        const data : extensionVidSource= {
-            sources : [],
+        const data: extensionVidSource = {
+            sources: [],
             name: "",
-            nameWSeason : "",
-            episode : "",
-            status : 400,
+            nameWSeason: "",
+            episode: "",
+            status: 400,
             message: "",
-            next : null,
-            prev : null,
+            next: null,
+            prev: null,
         };
+
+        let dom = document.createElement("div");
 
         try {
             let reqOption = {
@@ -208,7 +216,6 @@ var wco : extension = {
 
             let pageHTML = await MakeFetch(url, {});
             let sources = data.sources;
-            let dom = document.createElement("div");
 
             dom.innerHTML = DOMPurify.sanitize(pageHTML);
 
@@ -224,15 +231,15 @@ var wco : extension = {
 
 
             let nextPrev = dom.getElementsByClassName("prev-next");
-            
+
 
             for (let npi = 0; npi < nextPrev.length; npi++) {
-                try{
+                try {
                     let tempData = nextPrev[npi].children[0].getAttribute("rel").trim().toLowerCase();
-                    if(tempData == "next" || tempData == "prev"){
+                    if (tempData == "next" || tempData == "prev") {
                         data[tempData] = (nextPrev[npi].children[0].getAttribute("href").replace(baseURL, "")) + "&engine=0";
                     }
-                }catch(err){
+                } catch (err) {
 
                 }
             }
@@ -254,14 +261,14 @@ var wco : extension = {
 
             reqOption.headers["referer"] = mainVidLink;
 
-            let domain : string;
+            let domain: string;
             try {
                 domain = new URL(mainVidLink).origin;
             } catch (err) {
                 domain = "https://embed.watchanimesub.net";
             }
 
-            let videoHTML : string;
+            let videoHTML: string;
 
             if (config.chrome) {
                 videoHTML = await MakeFetch(mainVidLink, {});
@@ -269,13 +276,13 @@ var wco : extension = {
                 videoHTML = await MakeCusReqFmovies(mainVidLink, reqOption);
             }
 
-            let vidLink  = domain + videoHTML.split("$.getJSON(\"")[1].split("\"")[0];
+            let vidLink = domain + videoHTML.split("$.getJSON(\"")[1].split("\"")[0];
 
             try {
                 let vidLink2 = (vidLink.split("v=cizgi").join('v=')).split('&embed=cizgi').join('&embed=anime');
 
 
-                let vidLink2HTML : string;
+                let vidLink2HTML: string;
                 if (config.chrome) {
                     vidLink2HTML = await MakeFetch(vidLink2, {});
                 } else {
@@ -313,14 +320,14 @@ var wco : extension = {
                 console.error(err);
             }
 
-            let vidLinkHTML : string;
+            let vidLinkHTML: string;
 
             if (config.chrome) {
                 vidLinkHTML = await MakeFetch(vidLink, {});
             } else {
                 vidLinkHTML = await MakeCusReqFmovies(vidLink, reqOption);
             }
-            
+
             let vidLinkData = JSON.parse(vidLinkHTML);
 
             if (vidLinkData.enc != "") {
@@ -356,51 +363,61 @@ var wco : extension = {
             data.episode = animeEp;
             data.status = 200;
             data.message = "done";
-            dom.remove();
             return data;
         } catch (err) {
             console.error(err);
             alert("Couldn't get the link");
             data.message = "Couldn't get the link";
             return data;
+        } finally {
+            removeDOM(dom);
         }
 
     },
-    discover: async function () : Promise<Array<extensionDiscoverData>> {
+    discover: async function (): Promise<Array<extensionDiscoverData>> {
         let baseURL = this.baseURL;
         let temp = document.createElement("div");
-        temp.innerHTML = DOMPurify.sanitize(await MakeFetch(baseURL, {}));
-        let data : Array<extensionDiscoverData> = [];
 
-        for (let elem of temp.querySelectorAll(".items")[1].querySelectorAll("li")) {
-            let image = "https:" + elem.querySelector("img").getAttribute("src");
-            let tempAnchor = elem.querySelectorAll("a")[1];
-            let name = tempAnchor.innerText;
-            let link = tempAnchor.getAttribute("href");
-            if (link == "") {
-                link = null;
-            }
-
-            data.push({
-                image,
-                name,
-                link,
-                "getLink": true
-            });
-
-        }
-        return data;
-    },
-    getDiscoverLink: async function (mainLink : string) : Promise<string> {
-        let baseURL = this.baseURL;
-        
         try {
-            let temp = document.createElement("div");
+            temp.innerHTML = DOMPurify.sanitize(await MakeFetch(baseURL, {}));
+            let data: Array<extensionDiscoverData> = [];
+
+            for (let elem of temp.querySelectorAll(".items")[1].querySelectorAll("li")) {
+                let image = "https:" + elem.querySelector("img").getAttribute("src");
+                let tempAnchor = elem.querySelectorAll("a")[1];
+                let name = tempAnchor.innerText;
+                let link = tempAnchor.getAttribute("href");
+                if (link == "") {
+                    link = null;
+                }
+
+                data.push({
+                    image,
+                    name,
+                    link,
+                    "getLink": true
+                });
+
+            }
+            return data;
+        } catch (err) {
+            throw err;
+        } finally {
+            removeDOM(temp);
+        }
+    },
+    getDiscoverLink: async function (mainLink: string): Promise<string> {
+        let baseURL = this.baseURL;
+        let temp = document.createElement("div");
+
+        try {
             temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`${baseURL}${mainLink}`, {}));
             mainLink = temp.querySelector('[rel="category tag"]').getAttribute("href").replace(baseURL, "");
             return mainLink;
         } catch (err) {
             throw err;
+        } finally {
+            removeDOM(temp);
         }
     }
 

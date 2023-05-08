@@ -18,6 +18,56 @@ let pullTabArray = [];
 let flaggedShow = [];
 let errDOM = document.getElementById("errorCon");
 let firstLoad = true;
+let states = "";
+// @ts-ignore
+const backdrop = document.getElementsByClassName("backdrop")[0];
+// @ts-ignore
+const sourceChoiceDOM = document.getElementById("sourceChoice");
+// @ts-ignore
+const relationsCon = document.getElementById("relationsCon");
+// @ts-ignore
+const recomCon = document.getElementById("recomCon");
+// @ts-ignore
+const sourceCardsDOM = document.getElementById("sourceCards");
+// @ts-ignore
+const extensionList = window.parent.returnExtensionList();
+// @ts-ignore
+const extensionNames = window.parent.returnExtensionNames();
+iniChoiceDOM(130);
+let stateAction = {
+    access: () => {
+        document.getElementById("accessabilityCon").style.display = "none";
+    },
+    themes: () => {
+        document.getElementById("themesCon").style.display = "none";
+    },
+    menu: () => {
+        toggleMenu("1");
+    },
+    movecat: () => {
+        document.getElementById("room_add_show").style.display = "none";
+    },
+    addcat: () => {
+        document.getElementById("room_con").style.display = "none";
+    },
+    reordercat: () => {
+        document.getElementById("room_dis").style.display = "none";
+    },
+    queue: () => {
+        document.getElementById("queueCon").style.display = "none";
+        document.getElementById("queueCon").setAttribute("data-conopen", "false");
+    }
+};
+function addState(id) {
+    states = id;
+    const currentAction = new URLSearchParams(location.search);
+    if (!currentAction.get("action")) {
+        window.history.pushState({}, "", `?action=${id}`);
+    }
+    else {
+        window.history.replaceState({}, "", `?action=${id}`);
+    }
+}
 async function populateDownloadedArray() {
     try {
         downloadedFolders = {};
@@ -32,8 +82,6 @@ async function populateDownloadedArray() {
     }
 }
 async function testIt(idx = -1) {
-    let extensionList = window.parent.returnExtensionList();
-    let extensionNames = window.parent.returnExtensionNames();
     let searchQuery = "odd";
     let errored = false;
     for (let i = 0; i < extensionList.length; i++) {
@@ -195,6 +243,7 @@ document.getElementById("exportData").onclick = function () {
     exportDataSQL();
 };
 document.getElementById("accessability").onclick = function () {
+    addState("access");
     document.getElementById("accessabilityCon").style.display = "flex";
 };
 document.getElementById("queueButton").setAttribute("data-paused", (localStorage.getItem("downloadPaused") === 'true').toString());
@@ -357,9 +406,11 @@ function reloadQueue(mode = 0) {
 document.getElementById("queueOpen").onclick = function () {
     document.getElementById("queueCon").setAttribute("data-conopen", "true");
     document.getElementById("queueCon").style.display = "block";
+    addState("queue");
     reloadQueue();
 };
 document.getElementById("themes").onclick = function () {
+    addState("themes");
     document.getElementById("themesCon").setAttribute("data-conopen", "true");
     document.getElementById("themesCon").style.display = "flex";
 };
@@ -544,12 +595,14 @@ document.getElementById("reset").addEventListener("click", function () {
 function changeServer() {
     window.parent.postMessage({ "action": 26, data: "settings.html" }, "*");
 }
-function toggleMenu() {
+function toggleMenu(state) {
     let menuI = document.getElementById("menuIcon");
     let menuElem = document.getElementById("menu");
-    menuI.classList.toggle("change");
     let conElem = document.getElementById("con_11");
-    if (menuElem.getAttribute("data-open") == "0") {
+    if (state) {
+        menuElem.setAttribute("data-open", state);
+    }
+    if (menuElem.getAttribute("data-open") === "0") {
         conElem.style.transform = "scale(0.8) translateX(300px)";
         conElem.style.opacity = "0.6";
         conElem.style.pointerEvents = "none";
@@ -558,6 +611,8 @@ function toggleMenu() {
         menuElem.style.transform = "translateX(0px)";
         menuElem.style.opacity = "1";
         menuElem.style.pointerEvents = "auto";
+        menuI.classList.add("change");
+        addState("menu");
     }
     else {
         conElem.style.transform = "scale(1) translateX(0)";
@@ -568,6 +623,7 @@ function toggleMenu() {
         menuElem.style.transform = "translateX(-200px)";
         menuElem.style.opacity = "0";
         menuElem.style.pointerEvents = "none";
+        menuI.classList.remove("change");
     }
 }
 document.getElementById("menuIcon").addEventListener("click", function () {
@@ -644,6 +700,7 @@ function watched_card(y) {
     var x = y.getAttribute("data-showname");
     selectedShow = x;
     document.getElementById("room_add_show").style.display = "flex";
+    addState("movecat");
 }
 function makeRoomElem(roomID, roomName, add = false) {
     let className = "room_card_delete";
@@ -711,71 +768,125 @@ function updateRoomAdd() {
         document.getElementById("room_add_child").append(makeRoomElem(roomID, roomName, true));
     }
 }
-if (isSnapSupported) {
-    let scrollLastIndex;
+let scrollLastIndex;
+let cusRoomDOM = document.getElementById("custom_rooms");
+function cusRoomScroll(forced = false) {
     let tempCatDOM = document.getElementsByClassName("categories");
-    let cusRoomDOM = document.getElementById("custom_rooms");
-    cusRoomDOM.addEventListener("scroll", function () {
-        let unRoundedIndex = cusRoomDOM.scrollLeft / cusRoomDOM.offsetWidth;
-        let index = Math.round(unRoundedIndex);
-        if (index != scrollLastIndex) {
-            for (let i = 0; i < tempCatDOM.length; i++) {
-                if (i == index) {
-                    tempCatDOM[i].classList.add("activeCat");
-                    tempCatDOM[i].scrollIntoView();
-                    localStorage.setItem("currentCategory", tempCatDOM[i].getAttribute("data-id"));
-                }
-                else {
-                    tempCatDOM[i].classList.remove("activeCat");
-                }
-            }
-            let activeCatDOM = document.querySelector(".categories.activeCat");
-            let temp = document.getElementById("catActiveMain");
-            window.requestAnimationFrame(function () {
-                window.requestAnimationFrame(function () {
-                    if (temp && activeCatDOM) {
-                        temp.style.left = activeCatDOM.offsetLeft.toString();
-                        temp.style.height = activeCatDOM.offsetHeight.toString();
-                        temp.style.width = activeCatDOM.offsetWidth.toString();
+    let unRoundedIndex = cusRoomDOM.scrollLeft / cusRoomDOM.offsetWidth;
+    let index = Math.round(unRoundedIndex);
+    if (index != scrollLastIndex || forced) {
+        for (let i = 0; i < tempCatDOM.length; i++) {
+            if (i == index) {
+                tempCatDOM[i].classList.add("activeCat");
+                tempCatDOM[i].scrollIntoView();
+                if (tempCatDOM[i].getAttribute("data-id") === "discoverCon") {
+                    if (firstLoad) {
+                        firstLoad = false;
+                        populateDiscover();
                     }
-                });
-            });
+                }
+                localStorage.setItem("currentCategory", tempCatDOM[i].getAttribute("data-id"));
+            }
+            else {
+                tempCatDOM[i].classList.remove("activeCat");
+            }
         }
-        scrollLastIndex = index;
-    }, { "passive": true });
+        let activeCatDOM = document.querySelector(".categories.activeCat");
+        let temp = document.getElementById("catActiveMain");
+        window.requestAnimationFrame(function () {
+            window.requestAnimationFrame(function () {
+                if (temp && activeCatDOM) {
+                    temp.style.left = activeCatDOM.offsetLeft.toString();
+                    temp.style.height = activeCatDOM.offsetHeight.toString();
+                    temp.style.width = activeCatDOM.offsetWidth.toString();
+                }
+                setTimeout(() => {
+                    var _a;
+                    let foundCurrentCon = false;
+                    for (let i = 0; i < tempCatDOM.length; i++) {
+                        const dataCon = document.getElementById(tempCatDOM[i].getAttribute("data-id"));
+                        const prevCon = document.getElementById((_a = tempCatDOM[i - 1]) === null || _a === void 0 ? void 0 : _a.getAttribute("data-id"));
+                        if (i == index) {
+                            foundCurrentCon = true;
+                            prevCon === null || prevCon === void 0 ? void 0 : prevCon.classList.remove("closed");
+                            dataCon.classList.remove("closed");
+                        }
+                        else {
+                            if (foundCurrentCon) {
+                                dataCon.classList.remove("closed");
+                                foundCurrentCon = false;
+                            }
+                            else if (dataCon) {
+                                dataCon.classList.add("closed");
+                            }
+                        }
+                    }
+                }, 250);
+            });
+        });
+    }
+    scrollLastIndex = index;
 }
-function makeDiscoverCard(data, engine, engineName) {
+if (isSnapSupported) {
+    cusRoomDOM.addEventListener("scroll", () => { cusRoomScroll(); }, { "passive": true });
+}
+// function makeDiscoverCard(data, engine, engineName) {
+//     let tempDiv1 = createElement({ "class": "s_card" });
+//     tempDiv1.style.backgroundImage = `url("${data.image}")`;
+//     let tempDiv2 = createElement({ "class": "s_card_bg" });
+//     let tempDiv3 = createElement({ "class": "s_card_title" });
+//     let tempDiv4 = createElement({ "class": "s_card_title_main", "innerText": data.name, "style": { "text-decoration": "none" } });
+//     let tempDivEx = createElement({ "class": "card_title_extension", "attributes": {}, "listeners": {}, "innerText": engineName });
+//     let tempDiv5;
+//     tempDiv5 = createElement({
+//         "element": "div", "class": "s_card_play",
+//         "attributes": {
+//             "data-href": data.link
+//         },
+//         "listeners": {
+//             "click": async function () {
+//                 let curLink = this.getAttribute("data-href");
+//                 if (data.getLink === true) {
+//                     sendNoti([0, "", "Alert", "Redirecting. Wait a moment..."]);
+//                     let extensionList = (<cordovaWindow>window.parent).returnExtensionList();
+//                     try {
+//                         let episodeLink = await extensionList[engine].getDiscoverLink(curLink);
+//                         curLink = `pages/episode/index.html?watch=${episodeLink}&engine=${engine}`;
+//                     } catch (err) {
+//                         sendNoti([2, "red", "Alert", "An unexpected error has occurred."]);
+//                         console.error(err);
+//                     }
+//                 } else {
+//                     curLink = `pages/episode/index.html?watch=${curLink}&engine=${engine}`;
+//                 }
+//                 window.parent.postMessage({ "action": 500, data: curLink }, "*");
+//             }
+//         }
+//     });
+//     tempDiv3.append(tempDiv4);
+//     tempDiv2.append(tempDiv3);
+//     tempDiv2.append(tempDiv5);
+//     tempDiv1.append(tempDiv2);
+//     tempDiv1.append(tempDivEx);
+//     return tempDiv1;
+// }
+function makeDiscoverCard(data) {
     let tempDiv1 = createElement({ "class": "s_card" });
     tempDiv1.style.backgroundImage = `url("${data.image}")`;
     let tempDiv2 = createElement({ "class": "s_card_bg" });
     let tempDiv3 = createElement({ "class": "s_card_title" });
     let tempDiv4 = createElement({ "class": "s_card_title_main", "innerText": data.name, "style": { "text-decoration": "none" } });
-    let tempDivEx = createElement({ "class": "card_title_extension", "attributes": {}, "listeners": {}, "innerText": engineName });
+    let tempDivEx = createElement({ "class": "card_title_extension", "attributes": {}, "listeners": {}, "innerText": data.label });
     let tempDiv5;
     tempDiv5 = createElement({
         "element": "div", "class": "s_card_play",
         "attributes": {
-            "data-href": data.link
+            "data-id": data.id
         },
         "listeners": {
             "click": async function () {
-                let curLink = this.getAttribute("data-href");
-                if (data.getLink === true) {
-                    sendNoti([0, "", "Alert", "Redirecting. Wait a moment..."]);
-                    let extensionList = window.parent.returnExtensionList();
-                    try {
-                        let episodeLink = await extensionList[engine].getDiscoverLink(curLink);
-                        curLink = `pages/episode/index.html?watch=${episodeLink}&engine=${engine}`;
-                    }
-                    catch (err) {
-                        sendNoti([2, "red", "Alert", "An unexpected error has occurred."]);
-                        console.error(err);
-                    }
-                }
-                else {
-                    curLink = `pages/episode/index.html?watch=${curLink}&engine=${engine}`;
-                }
-                window.parent.postMessage({ "action": 500, data: curLink }, "*");
+                openCon(sourceChoiceDOM, "flex");
+                fetchMapping(this.getAttribute("data-id"));
             }
         }
     });
@@ -786,59 +897,172 @@ function makeDiscoverCard(data, engine, engineName) {
     tempDiv1.append(tempDivEx);
     return tempDiv1;
 }
+// async function populateDiscover() {
+//     let extensionList = (<cordovaWindow>window.parent).returnExtensionList();
+//     let extensionNames = (<cordovaWindow>window.parent).returnExtensionNames();
+//     let disCon = document.getElementById("discoverCon");
+//     let parents = [];
+//     let exTitle = [];
+//     for (let i = 0; i < extensionList.length; i++) {
+//         parents.push(createElement({
+//             "style": {
+//                 "display": "none",
+//                 "height": "280px",
+//                 "marginBottom": "40px",
+//                 "width": "100%",
+//                 "whiteSpace": "nowrap",
+//                 "overflowX": "auto"
+//             }
+//         }));
+//         exTitle.push(createElement({
+//             "style": {
+//                 "display": "none",
+//             },
+//             "class": "discoverTitle",
+//             "innerText": extensionNames[i]
+//         }));
+//         disCon.append(exTitle[i]);
+//         disCon.append(parents[i]);
+//     }
+//     for (let i = 0; i < extensionList.length; i++) {
+//         let engine = i;
+//         try {
+//             extensionList[engine]["discover"]().then(function (data: extensionDiscoverData[]) {
+//                 console.log("here", data);
+//                 let parentDiscover = parents[engine];
+//                 let titleDiscover = exTitle[engine];
+//                 for (const card of data) {
+//                     if (card.link === null) {
+//                         continue;
+//                     }
+//                     if (engine == 1) {
+//                         let index = card.link.lastIndexOf("/");
+//                         card.link = card.link.substring(0, index);
+//                     }
+//                     parentDiscover.append(makeDiscoverCard(card, engine, extensionNames[engine]));
+//                 }
+//                 parentDiscover.style.display = "block";
+//                 titleDiscover.style.display = "inline-block";
+//             }).catch(function (err) {
+//                 console.error(err);
+//             });
+//         } catch (err) {
+//             console.error(err);
+//         }
+//     }
+//     disCon.append(createElement({
+//         "style": {
+//             "width": "100%",
+//             "height": "70px"
+//         }
+//     }));
+// }
+function humanDate(date) {
+    const thisDate = new Date();
+    thisDate.setDate(date.day);
+    thisDate.setMonth(date.month);
+    thisDate.setFullYear(date.year);
+    return `${thisDate.getDate()} ${thisDate.toLocaleString('en-us', { month: "short" })} ${thisDate.getFullYear()}`;
+}
 async function populateDiscover() {
-    let extensionList = window.parent.returnExtensionList();
-    let extensionNames = window.parent.returnExtensionNames();
-    let disCon = document.getElementById("discoverCon");
-    let parents = [];
-    let exTitle = [];
-    for (let i = 0; i < extensionList.length; i++) {
-        parents.push(createElement({
-            "style": {
-                "display": "none",
-                "height": "280px",
-                "marginBottom": "40px",
-                "width": "100%",
-                "whiteSpace": "nowrap",
-                "overflowX": "auto"
+    var _a, _b;
+    const disCon = document.getElementById("discoverCon");
+    const types = ["current", "next"];
+    const typesTitle = ["Popular this season", "Next season"];
+    let addedBanner = false;
+    for (let i = 0; i < types.length; i++) {
+        const type = types[i];
+        const currentTrending = await window.parent.getAnilistTrending(type);
+        if (!addedBanner && false) {
+            const node = currentTrending[0];
+            const id = node.id;
+            addedBanner = true;
+            const bannerCon = createElement({
+                "class": "bannerCon hasBackground",
+                "style": {
+                    "backgroundImage": `url("${node.bannerImage}")`
+                }
+            });
+            const bannerMainContent = createElement({
+                "style": {
+                    "position": "relative"
+                }
+            });
+            bannerCon.append(createElement({
+                "class": "bannerBackdrop"
+            }));
+            bannerMainContent.append(createElement({
+                "class": "bannerDescription",
+                "innerText": node.description,
+                "listeners": {
+                    "click": function () {
+                        this.classList.toggle("open");
+                    }
+                }
+            }));
+            if (((_a = node === null || node === void 0 ? void 0 : node.genres) === null || _a === void 0 ? void 0 : _a.length) > 0) {
+                const genreCon = createElement({
+                    style: {
+                        marginTop: "10px"
+                    }
+                });
+                for (let i = 0; i < node.genres.length; i++) {
+                    genreCon.append(createElement({
+                        class: "card_title_extension",
+                        style: {
+                            margin: "5px",
+                            fontWeight: "500",
+                            position: "static"
+                        },
+                        innerText: node.genres[i]
+                    }));
+                }
+                bannerMainContent.append(genreCon);
             }
-        }));
-        exTitle.push(createElement({
+            bannerMainContent.append(createElement({
+                "class": "bannerTitle",
+                "innerText": node.title.english ? node.title.english : node.title.native,
+                "listeners": {
+                    "click": function () {
+                        openCon(sourceChoiceDOM, "flex");
+                        fetchMapping(id);
+                    }
+                }
+            }));
+            bannerCon.append(bannerMainContent);
+            disCon.append(bannerCon);
+            currentTrending.shift();
+        }
+        const title = createElement({
             "style": {
-                "display": "none",
+                "display": "block",
             },
             "class": "discoverTitle",
-            "innerText": extensionNames[i]
-        }));
-        disCon.append(exTitle[i]);
-        disCon.append(parents[i]);
-    }
-    for (let i = 0; i < extensionList.length; i++) {
-        let engine = i;
-        try {
-            extensionList[engine]["discover"]().then(function (data) {
-                console.log("here", data);
-                let parentDiscover = parents[engine];
-                let titleDiscover = exTitle[engine];
-                for (const card of data) {
-                    if (card.link === null) {
-                        continue;
-                    }
-                    if (engine == 1) {
-                        let index = card.link.lastIndexOf("/");
-                        card.link = card.link.substring(0, index);
-                    }
-                    parentDiscover.append(makeDiscoverCard(card, engine, extensionNames[engine]));
-                }
-                parentDiscover.style.display = "block";
-                titleDiscover.style.display = "inline-block";
-            }).catch(function (err) {
-                console.error(err);
-            });
+            "innerText": typesTitle[i]
+        });
+        disCon.append(title);
+        const con = createElement({
+            class: "discoverCardCon"
+        });
+        for (const node of currentTrending) {
+            let label = "";
+            if (type === "next" && node.startDate) {
+                label = humanDate(node.startDate);
+            }
+            else if (node.genres && node.genres.length > 0) {
+                label = node.genres[0];
+            }
+            con.append(makeDiscoverCard({
+                id: node.id,
+                image: (_b = node === null || node === void 0 ? void 0 : node.coverImage) === null || _b === void 0 ? void 0 : _b.extraLarge,
+                name: (node === null || node === void 0 ? void 0 : node.title) ? node.title.english ? node.title.english : node.title.native : "",
+                label
+            }));
         }
-        catch (err) {
-            console.error(err);
-        }
+        title.addEventListener("click", function () {
+            con.classList.toggle("open");
+        });
+        disCon.append(con);
     }
     disCon.append(createElement({
         "style": {
@@ -858,14 +1082,14 @@ function addCustomRoom() {
     tempRecent.id = "recentlyCat";
     document.getElementById("categoriesCon").append(tempRecent);
     document.getElementById("custom_rooms").append(createElement({
-        "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === "room_recently") ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain" : ""}`,
+        "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === "room_recently") ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain closed" : ""}`,
         "id": `room_recently`
     }));
     let tempOngoing = createCat("room_-1", "Ongoing");
     tempOngoing.id = "ongoingCat";
     document.getElementById("categoriesCon").append(tempOngoing);
     document.getElementById("custom_rooms").append(createElement({
-        "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === "room_-1") ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain" : ""}`,
+        "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === "room_-1") ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain closed" : ""}`,
         "id": `room_-1`
     }));
     if (localStorage.getItem("discoverHide") !== "true" && localStorage.getItem("offline") !== 'true') {
@@ -873,7 +1097,7 @@ function addCustomRoom() {
         tempDiscover.id = "discoverCat";
         document.getElementById("categoriesCon").append(tempDiscover);
         document.getElementById("custom_rooms").append(createElement({
-            "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === "discoverCon") ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain" : ""}`,
+            "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === "discoverCon") ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain closed" : ""}`,
             "id": `discoverCon`
         }));
     }
@@ -882,7 +1106,7 @@ function addCustomRoom() {
         if (yye > -1) {
             let roomID = `room_${rooms2[yye]}`;
             let tempDiv = createElement({
-                "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === roomID) ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain" : ""}`,
+                "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === roomID) ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain closed" : ""}`,
                 "id": roomID
             });
             let tempDiv2 = createCat(roomID, rooms2[yye - 1]);
@@ -894,7 +1118,7 @@ function addCustomRoom() {
     for (var i = 0; i < rooms2.length; i += 2) {
         let roomID = `room_${rooms2[i + 1]}`;
         let tempDiv = createElement({
-            "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === roomID) ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain" : ""}`,
+            "class": `categoriesDataMain${(localStorage.getItem("currentCategory") === roomID) ? " active" : ""}${(isSnapSupported) ? " snappedCategoriesDataMain closed" : ""}`,
             "id": roomID
         });
         let tempDiv2 = createCat(roomID, rooms2[i]);
@@ -919,10 +1143,6 @@ function addCustomRoom() {
         });
     }
     catch (err) {
-    }
-    if (localStorage.getItem("discoverHide") !== "true" && localStorage.getItem("offline") !== 'true' && firstLoad) {
-        firstLoad = false;
-        populateDiscover();
     }
 }
 // todo
@@ -987,11 +1207,13 @@ if (true) {
     }
     function add_room_open() {
         document.getElementById("room_con").style.display = "flex";
+        addState("addcat");
     }
     function show_room_open() {
         updateRoomDis();
         last_order = getCurrentOrder();
         document.getElementById("room_dis").style.display = "flex";
+        addState("reordercat");
     }
     var api = {
         add_room: () => {
@@ -1012,6 +1234,7 @@ if (true) {
         change_state: (domelem) => {
             let state = domelem.getAttribute("data-roomid");
             window.parent.apiCall("POST", { "username": username, "action": 7, "name": selectedShow, "state": state }, getUserInfo);
+            document.getElementById("room_add_show").style.display = "none";
         },
         change_image_card: (name, domelem) => {
             var img_url_prompt = prompt("Enter the URL of the image", domelem.getAttribute("data-bg1"));
@@ -1031,7 +1254,19 @@ if (true) {
         },
         get_userinfo: () => {
             permNoti = sendNoti([0, null, "Message", "Syncing with the server..."]);
-            window.parent.apiCall("POST", { "username": username, "action": 4 }, get_userinfo_callback, []);
+            window.parent
+                .apiCall("POST", { "username": username, "action": 4 }, get_userinfo_callback, [])
+                .then(() => {
+                console.log("Success.");
+            })
+                .catch((err) => {
+                const errorCon = document.getElementById("custom_rooms");
+                constructErrorPage(errorCon, err.message, {
+                    "hasReload": true,
+                    "hasLink": false
+                });
+            });
+            permNoti.remove();
         }
     };
     function change_image_callback(x, y, z) {
@@ -1220,6 +1455,7 @@ if (true) {
             else {
                 domToAppend = document.getElementById('room_recently');
             }
+            domToAppend.setAttribute("data-empty", "false");
             if (parseInt(data[i][4]) == -1) {
                 findUnwatched = true;
             }
@@ -1415,6 +1651,18 @@ if (true) {
             if (catMainDOM[i].id == "discoverCon") {
                 continue;
             }
+            if (catMainDOM[i].getAttribute("data-empty") !== "false") {
+                constructErrorPage(catMainDOM[i], "So empty. Try searching things and adding it to the library!", {
+                    hasLink: true,
+                    hasReload: false,
+                    customConClass: "absolute",
+                    isError: false,
+                    linkClass: "search",
+                    clickEvent: () => {
+                        window.parent.postMessage({ "action": 500, data: "pages/search/index.html" }, "*");
+                    }
+                });
+            }
             catMainDOM[i].append(createElement({
                 "style": {
                     "width": "100%",
@@ -1434,6 +1682,10 @@ if (true) {
         }
         else {
             updateNewEpCached();
+        }
+        cusRoomScroll(true);
+        if (!firstLoad) {
+            populateDiscover();
         }
     }
     var ini_api = api;
@@ -1456,7 +1708,8 @@ if (true) {
     else if (config.chrome) {
         verURL = "https://raw.githubusercontent.com/enimax-anime/enimax-chrome-extension/main/version.json";
     }
-    fetch(verURL).then((x) => x.json())
+    fetch(verURL)
+        .then((x) => x.json())
         .then(function (x) {
         let curTime = Math.floor((new Date()).getTime() / 1000);
         let lastUpdate = parseInt(localStorage.getItem("lastUpdate"));
@@ -1471,6 +1724,8 @@ if (true) {
             sendNoti([0, "", "New update!", x.message]);
             localStorage.setItem("lastUpdate", curTime.toString());
         }
+    }).catch((err) => {
+        console.error(err);
     });
 }
 function changeEngine() {
@@ -1483,7 +1738,7 @@ function changeEngine() {
     }
 }
 for (let element of document.getElementsByClassName("menuItem")) {
-    element.addEventListener("click", toggleMenu);
+    element.addEventListener("click", () => { toggleMenu(); });
 }
 applyTheme();
 switchOption(localStorage.getItem("useImageBack"));
@@ -1502,7 +1757,7 @@ function selectTheme(index) {
     }
 }
 let menuP = new menuPull(document.getElementById("con_11"), toggleMenu);
-document.getElementById("toggleMenuOpen").addEventListener("click", toggleMenu);
+document.getElementById("toggleMenuOpen").addEventListener("click", () => { toggleMenu(); });
 let themeCount = 0;
 for (let themeElem of document.getElementsByClassName("themesContainer")) {
     let curCount = themeCount;
@@ -1516,7 +1771,21 @@ for (let themeElem of document.getElementsByClassName("themesContainer")) {
     themeCount++;
 }
 document.getElementById("opSlider").value = isNaN(parseFloat(localStorage.getItem("bgOpacity"))) ? "0.6" : parseFloat(localStorage.getItem("bgOpacity")).toString();
+document.getElementById("token").onclick = function () {
+    const url = prompt("Enter the URL", "https://www.zoro.to");
+    // @ts-ignore
+    window.parent.getWebviewHTML(url, false, null, "console.log()");
+};
 document.getElementById("opSlider").oninput = function () {
     let elem = document.getElementById("opSlider");
     window.parent.postMessage({ "action": "updateOpacity", data: elem.value }, "*");
 };
+window.addEventListener("popstate", function (event) {
+    console.log(states);
+    try {
+        stateAction[states]();
+    }
+    catch (err) {
+        console.error(err);
+    }
+});

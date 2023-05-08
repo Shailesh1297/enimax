@@ -5,6 +5,7 @@ test/
 /plugins/
 /platforms/
 build.json
+build.sh
 copyConfig.sh
 Makefile
 

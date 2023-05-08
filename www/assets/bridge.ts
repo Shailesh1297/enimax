@@ -12,6 +12,7 @@ var socket;
 let frameHistory: Array<string> = [];
 var token;
 let seekCheck = true;
+let backFunction: Function;
 
 function returnExtensionList() {
     return extensionList;
@@ -441,6 +442,11 @@ function executeAction(message: MessageAction, reqSource: Window) {
     else if (message.action == 500) {
         setURL(message.data);
     }
+    else if (message.action == 501) {
+        if (frameHistory[frameHistory.length - 1] != mainIFrame.contentWindow.location.href) {
+            frameHistory.push(mainIFrame.contentWindow.location.href);
+        }
+    }
     else if (message.action == 22) {
         window.location.href = "reset.html";
     }
@@ -607,7 +613,30 @@ window.addEventListener('message', function (x) {
     }
 });
 
+
+function onPause() {
+    let frameLocation = playerIFrame.contentWindow.location.pathname;
+
+    if (frameLocation.includes("pages/player")) {
+        playerIFrame.contentWindow.postMessage({ action: "pip" }, "*");
+    }
+}
+
+function onResume() {
+    let frameLocation = playerIFrame.contentWindow.location.pathname;
+
+    if (frameLocation.includes("pages/player")) {
+        playerIFrame.contentWindow.postMessage({ action: "pipout" }, "*");
+    }
+}
+
+
+function back(){
+    backFunction();
+}
+
 async function onDeviceReady() {
+
     await SQLInit();
     await SQLInitDownloaded();
 
@@ -624,7 +653,7 @@ async function onDeviceReady() {
     downloadQueueInstance = new downloadQueue();
     mainIFrame.src = "pages/homepage/index.html";
 
-    function onBackKeyDown() {
+    backFunction = function onBackKeyDown() {
         try {
             // @ts-ignore
             if (playerIFrame.contentWindow.isLocked() === true) {
@@ -634,19 +663,33 @@ async function onDeviceReady() {
             console.log(err);
         }
 
-        let frameLocation = mainIFrame.contentWindow.location.pathname;
-        if (frameLocation.indexOf("www/pages/homepage/index.html") > -1 || (playerIFrame.className.indexOf("pop") == -1 && (playerIFrame as HTMLIFrameElement).contentWindow.location.pathname.indexOf("www/pages/player/index.html") > -1)) {
+        let frameLocation = mainIFrame.contentWindow.location;
+
+        const frameWasOpen = playerIFrame.className.indexOf("pop") == -1 && (playerIFrame as HTMLIFrameElement).contentWindow.location.pathname.indexOf("www/pages/player/index.html") > -1;
+        const homePageOpen = frameLocation.pathname.indexOf("www/pages/homepage/index.html") > -1;
+        if (homePageOpen || frameWasOpen) {
             playerIFrame.contentWindow.location.replace("fallback.html");
             playerIFrame.classList.remove("pop");
-
             playerIFrame.style.display = "none";
             mainIFrame.style.display = "block";
+            mainIFrame.style.height = "100%";
 
-            if (frameLocation.indexOf("www/pages/homepage/index.html") > -1) {
-                setURL((mainIFrame as HTMLIFrameElement).contentWindow.location.href);
+            if (frameWasOpen) {
+                if (homePageOpen) {
+                    (mainIFrame as HTMLIFrameElement).contentWindow.location.reload();
+                }
+            } else {
+                if (frameLocation.pathname.indexOf("www/pages/homepage/index.html") > -1) {
+
+                    if (frameLocation.search.includes("action=")) {
+                        history.back();
+                    } else if (!(playerIFrame as HTMLIFrameElement).contentWindow.location.pathname.includes("www/pages/player/index.html")) {
+                        // @ts-ignore
+                        navigator.app.exitApp();
+                    }
+                }
             }
 
-            mainIFrame.style.height = "100%";
 
             // @ts-ignore
             MusicControls.destroy(() => { }, () => { });
@@ -660,12 +703,15 @@ async function onDeviceReady() {
         }
     }
 
-    if (thisWindow.cordova.plugin.http.getCookieString(config.remoteWOport).indexOf("connect.sid") == -1 
+    if (thisWindow.cordova.plugin.http.getCookieString(config.remoteWOport).indexOf("connect.sid") == -1
         && config.local == false && localStorage.getItem("offline") === 'false') {
         window.location.href = "login.html";
     }
 
-    document.addEventListener("backbutton", onBackKeyDown, false);
+    document.addEventListener("backbutton", () => {backFunction()}, false);
+    document.addEventListener("pause", onPause, false);
+    document.addEventListener("resume", onResume, false);
+
 }
 
 document.addEventListener("deviceready", onDeviceReady, false);

@@ -1,10 +1,10 @@
 //todo refactor
 class notification {
-    data: any;
-    elem: any;
-    className: string;
-    noti: HTMLDivElement;
-	constructor(DomElem : HTMLElement, data : notiConfig) {
+	data: any;
+	elem: any;
+	className: string;
+	noti: HTMLDivElement;
+	constructor(DomElem: HTMLElement, data: notiConfig) {
 		this.data = data;
 		this.elem = DomElem;
 		if ("color" in data && data["color"] == "red") {
@@ -72,6 +72,14 @@ class notification {
 		this.elem.prepend(newElem);
 		this.noti = newElem;
 
+	}
+
+	remove() {
+		try {
+			this.noti.remove();
+		} catch (err) {
+			console.error(err);
+		}
 	}
 
 

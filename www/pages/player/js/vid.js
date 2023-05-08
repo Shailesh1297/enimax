@@ -24,6 +24,7 @@ class vid {
         this.buffered = document.querySelector("#buffered");
         this.metaData = document.querySelector("#metaData");
         this.titleCon = document.querySelector("#titleCon");
+        this.back = document.querySelector("#back");
         this.epCon = document.querySelector("#epCon");
         this.bar = document.querySelector("#bar");
         this.locked = false;
@@ -32,6 +33,7 @@ class vid {
         this.fullscreenCheck = 0;
         this.open = 1;
         this.type = 0;
+        this.wasLocked = false;
         this.vid = document.querySelector("#v");
         this.windowSize = window.innerWidth;
         this.updateTimeout();
@@ -193,9 +195,14 @@ class vid {
             }
         }
     }
-    lockVid() {
+    lockVid(opacity = 1) {
         this.con.style.pointerEvents = "none";
-        this.lock2.style.opacity = "1";
+        if (opacity === 1) {
+            this.lock2.style.opacity = "1";
+        }
+        else {
+            this.lock2.style.opacity = "0";
+        }
         this.lock2.style.pointerEvents = "auto";
         this.locked = true;
         this.close_controls();
@@ -582,6 +589,9 @@ class vid {
         this.popControls.style.pointerEvents = "none";
         this.popControls.style.transform = "translateX(100px)";
         this.metaData.style.transform = "translateX(-100px)";
+        this.back.style.opacity = "0";
+        this.back.style.pointerEvents = "none";
+        this.back.style.transform = "translateX(-100px)";
         this.bar_con.style.bottom = "-70px";
         this.bar_con.style.pointerEvents = "none";
         this.bar_con.style.opacity = "0";
@@ -598,6 +608,9 @@ class vid {
         this.popControls.style.opacity = "1";
         this.popControls.style.pointerEvents = "auto";
         this.popControls.style.transform = "translateX(0px)";
+        this.back.style.opacity = "1";
+        this.back.style.pointerEvents = "auto";
+        this.back.style.transform = "translateX(0px)";
         this.metaData.style.transform = "translateX(0px)";
         this.bar_con.style.bottom = "10px";
         this.bar_con.style.opacity = "1";
@@ -609,17 +622,20 @@ class vid {
         this.open = 1;
     }
     togglePictureInPicture() {
-        try {
+        if (this.config.chrome) {
+            if (document.pictureInPictureElement) {
+                document.exitPictureInPicture();
+            }
+            else if (document.pictureInPictureEnabled) {
+                this.vid.requestPictureInPicture();
+            }
+        }
+        else {
             window.parent.postMessage({ "action": 11, data: "landscape" }, "*");
-        }
-        catch (err) {
-            console.error(err);
-        }
-        if (document.pictureInPictureElement) {
-            document.exitPictureInPicture();
-        }
-        else if (document.pictureInPictureEnabled) {
-            this.vid.requestPictureInPicture();
+            if (localStorage.getItem("autopip") === "true") {
+                this.wasLocked = this.locked;
+                this.lockVid(0);
+            }
         }
         this.close_controls();
     }
@@ -656,20 +672,12 @@ class vid {
         }
     }
     timeToString(timeInSeconds) {
-        let minutes = "0";
-        let seconds = "0";
-        if (Math.floor(timeInSeconds / 60) < 10) {
-            minutes = "0".concat(Math.floor(timeInSeconds / 60).toString());
-        }
-        else {
-            minutes = Math.floor(timeInSeconds / 60).toString();
-        }
-        if (timeInSeconds % 60 < 10) {
-            seconds = "0".concat(Math.floor(timeInSeconds % 60).toString());
-        }
-        else {
-            seconds = Math.floor(timeInSeconds % 60).toString();
-        }
-        return (minutes + ":" + seconds);
+        var h = Math.floor(timeInSeconds / 3600);
+        var m = Math.floor(timeInSeconds % 3600 / 60);
+        var s = Math.floor(timeInSeconds % 3600 % 60);
+        var hDisplay = h > 0 ? (h < 10 ? "0" : "") + h + ":" : "";
+        var mDisplay = (m < 10 ? "0" : "") + m + ":";
+        var sDisplay = (s < 10 ? "0" : "") + s;
+        return hDisplay + mDisplay + sDisplay;
     }
 }

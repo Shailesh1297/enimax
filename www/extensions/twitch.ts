@@ -30,7 +30,7 @@ var twitch: extension = {
                 data.push({
                     "name": channels.item.login,
                     "id": channels.item.login,
-                    "image": channels.item.profileImageURL,
+                    "image": channels.item.profileImageURL.replace("150x150.png","300x300.png"),
                     "link": "/" + encodeURIComponent(channels.item.login) + "&engine=4"
                 });
             }
@@ -46,6 +46,7 @@ var twitch: extension = {
     getAnimeInfo: function (url, sibling = false, currentID = -1) {
         url = url.split("&engine")[0];
         let id = url.replace("?watch=/", "");
+        const rawURL = `${this.baseURL}/${url}`;
 
         let response: extensionInfo = {
             "name": "",
@@ -109,12 +110,13 @@ var twitch: extension = {
 
                 } else {
                     for (let vod of items) {
-                        response.image = vod.node.owner.profileImageURL;
+                        response.image = vod.node.owner.profileImageURL.replace("50x50.png","300x300.png");
                         data.unshift({
                             "link": "?watch=" + encodeURIComponent(id) + "&id=" + vod.node.id + "&engine=4",
                             "id": id,
                             "title": vod.node.title,
-                            "thumbnail": vod.node.previewThumbnailURL
+                            "thumbnail": vod.node.previewThumbnailURL,
+                            "date": new Date(vod.node.publishedAt)
                         });
                     }
                 }
@@ -134,7 +136,10 @@ var twitch: extension = {
                 response.episodes = data;
 
                 resolve(response);
-            }).catch((error) => reject(error));
+            }).catch((error) => {
+                error.url = rawURL;
+                reject(error);
+            });
 
         });
 

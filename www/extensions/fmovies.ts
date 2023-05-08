@@ -1,52 +1,59 @@
 var fmovies: extension = {
     baseURL: fmoviesBaseURL,
     searchApi: async function (query: string): Promise<extensionSearch> {
-        query = decodeURIComponent(query);
-        let response = await MakeFetch(`https://${fmoviesBaseURL}/search/${query.replace(" ", "-")}`, {});
-
         let tempDOM = document.createElement("div");
-        tempDOM.innerHTML = DOMPurify.sanitize(response);
-        let data: Array<extensionSearchData> = [];
 
-        let section = tempDOM.querySelectorAll(".flw-item");
-        for (var i = 0; i < section.length; i++) {
+        try {
+            query = decodeURIComponent(query);
+            let response = await MakeFetchZoro(`https://${fmoviesBaseURL}/search/${query.replace(" ", "-")}`, {});
 
-            let current = section[i];
+            tempDOM.innerHTML = DOMPurify.sanitize(response);
+            let data: Array<extensionSearchData> = [];
 
-            let dataCur: extensionSearchData = {
-                "image": "",
-                "link": "",
-                "name": "",
-            };
+            let section = tempDOM.querySelectorAll(".flw-item");
+            for (var i = 0; i < section.length; i++) {
 
-            let poster = current.querySelector(".film-poster");
-            let detail = current.querySelector(".film-detail");
-            let temlLink = poster.querySelector("a").getAttribute("href");
+                let current = section[i];
 
-            if (temlLink.includes("http")) {
-                temlLink = (new URL(temlLink)).pathname;
+                let dataCur: extensionSearchData = {
+                    "image": "",
+                    "link": "",
+                    "name": "",
+                };
+
+                let poster = current.querySelector(".film-poster");
+                let detail = current.querySelector(".film-detail");
+                let temlLink = poster.querySelector("a").getAttribute("href");
+
+                if (temlLink.includes("http")) {
+                    temlLink = (new URL(temlLink)).pathname;
+                }
+
+                dataCur.image = poster.querySelector("img").getAttribute("data-src");
+                dataCur.link = temlLink + "&engine=2";
+                dataCur.name = (detail.querySelector(".film-name") as HTMLElement).innerText.trim();
+
+                data.push(dataCur);
             }
 
-            dataCur.image = poster.querySelector("img").getAttribute("data-src");
-            dataCur.link = temlLink + "&engine=2";
-            dataCur.name = (detail.querySelector(".film-name") as HTMLElement).innerText.trim();
-
-            data.push(dataCur);
+            return {
+                "status": 200,
+                "data": data
+            };
+        } catch (err) {
+            throw err;
+        } finally {
+            removeDOM(tempDOM);
         }
-
-        tempDOM.remove();
-
-        return {
-            "status": 200,
-            "data": data
-        };
     },
     getSeason: async function getSeason(showID: string, showURL: string) {
+        let tempSeasonDIV = document.createElement("div");
+        let tempMetaDataDIV = document.createElement("div");
+
         try {
             const isInk = fmoviesBaseURL.includes(".ink");
             let seasonHTML = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/tv/seasons/${showID}`);
 
-            let tempSeasonDIV = document.createElement("div");
             tempSeasonDIV.innerHTML = DOMPurify.sanitize(seasonHTML);
             let tempDOM = tempSeasonDIV.getElementsByClassName("dropdown-item ss-item");
             let seasonInfo = {};
@@ -56,7 +63,6 @@ var fmovies: extension = {
             }
 
             let showMetaData = await MakeFetch(`https://${fmoviesBaseURL}/${showURL}`);
-            let tempMetaDataDIV = document.createElement("div");
             tempMetaDataDIV.innerHTML = DOMPurify.sanitize(showMetaData);
             let metaData;
             if (isInk) {
@@ -87,20 +93,20 @@ var fmovies: extension = {
                 console.log(err);
             }
 
-            tempSeasonDIV.remove();
-            tempMetaDataDIV.remove();
-
-            console.log(metaData);
             return { "status": 200, "data": { "seasons": seasonInfo, "meta": metaData } };
 
         } catch (error) {
             return { "status": 400, "data": error.toString() };
+        } finally {
+            removeDOM(tempSeasonDIV);
+            removeDOM(tempMetaDataDIV);
         }
     },
     getEpisode: async function getEpisode(seasonID: string) {
+        let temp = document.createElement("div");
+
         try {
             let r = await MakeFetch(`https://${fmoviesBaseURL}/ajax/v2/season/episodes/${seasonID}`);
-            let temp = document.createElement("div");
             temp.innerHTML = DOMPurify.sanitize(r);
             let tempDOM = temp.getElementsByClassName("nav-link btn btn-sm btn-secondary eps-item");
             let data = [];
@@ -112,13 +118,12 @@ var fmovies: extension = {
                 data.push(episodeData);
             }
 
-            temp.remove();
-
             return { "status": 200, "data": data };
-
 
         } catch (error) {
             return { "status": 400, "data": error.toString() };
+        } finally {
+            removeDOM(temp);
         }
     },
     getAnimeInfo: async function (url: string): Promise<extensionInfo> {
@@ -131,7 +136,7 @@ var fmovies: extension = {
         } else if (url.includes("-online-") && fmoviesBaseURL.includes(".ink")) {
             url = url.replace("-online-", "-full-");
         }
-        
+
         let self = this;
         let urlSplit = url.split("&engine");
         if (urlSplit.length >= 2) {
@@ -148,146 +153,154 @@ var fmovies: extension = {
 
         let showIdSplit = url.split("-");
         let showId = showIdSplit[showIdSplit.length - 1].split(".")[0];
-        let response = await self.getSeason(showId, url);
+        const rawURL = `https://${fmoviesBaseURL}/${url}`;
+
+        try {
+
+            let response = await self.getSeason(showId, url);
 
 
-        if (response.status == 200) {
-            data.name = response.data.meta.name;
-            data.image = response.data.meta.image;
-            data.description = response.data.meta.des;
-            data.mainName = url.split("/watch-")[1].split(isInk ? "-full" : "-online")[0] + "-" + showId + "-";
-            data.episodes = [];
+            if (response.status == 200) {
+                data.name = response.data.meta.name;
+                data.image = response.data.meta.image;
+                data.description = response.data.meta.des;
+                data.mainName = url.split("/watch-")[1].split(isInk ? "-full" : "-online")[0] + "-" + showId + "-";
+                data.episodes = [];
 
-            if(response.data.meta.genres && response.data.meta.genres.length > 0){
-                data.genres = response.data.meta.genres;
-            }
-            
-            let allAwaits = [];
-            let seasonNames = [];
-            let metaDataPromises = [];
-            let metaData = {};
-
-
-            for (let season in response.data.seasons) {
-                seasonNames.push(season);
-
-                try {
-                    // metaDataPromises.push(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/tv/season?id=${showId}&season=${season.split(" ")[1].trim()}`, {}, 1000));
-                } catch (err) {
-
+                if (response.data.meta.genres && response.data.meta.genres.length > 0) {
+                    data.genres = response.data.meta.genres;
                 }
 
+                let allAwaits = [];
+                let seasonNames = [];
+                let metaDataPromises = [];
+                let metaData = {};
 
-                allAwaits.push(self.getEpisode(response.data.seasons[season]));
-            }
 
-            let values;
-            let tempMetaData: string[] = [];
-            let isSettleSupported = "allSettled" in Promise;
-            if (!isSettleSupported) {
-                try {
-                    tempMetaData = await Promise.all(metaDataPromises);
-                } catch (err) {
-
-                }
-                values = await Promise.all(allAwaits);
-
-            } else {
-                let allReponses = await Promise.allSettled([Promise.all(allAwaits), Promise.all(metaDataPromises)]);
-                if (allReponses[0].status === "fulfilled") {
-                    values = allReponses[0].value;
-                    console.log(values);
-                } else {
-                    throw Error("Could not get the seasons. Try again.");
-                }
-
-                if (allReponses[1].status === "fulfilled") {
-                    tempMetaData = allReponses[1].value;
-                }
-            }
-
-            try {
-                for (let i = 0; i < tempMetaData.length; i++) {
-                    let metaJSON = JSON.parse(tempMetaData[i]);
-
-                    let episodeData: any = {};
-
-                    for (let j = 0; j < metaJSON.episodes.length; j++) {
-                        let curEpisode = metaJSON.episodes[j];
-                        episodeData[curEpisode.episode_number] = {};
-                        episodeData[curEpisode.episode_number].thumbnail = `https://image.tmdb.org/t/p/w300${curEpisode.still_path}`,
-                            episodeData[curEpisode.episode_number].description = curEpisode.overview
-                    }
-
-                    metaData[metaJSON.season_number] = episodeData;
-
-                }
-            } catch (err) {
-                console.error(err);
-            }
-
-            data.totalPages = values.length;
-            data.pageInfo = [];
-
-            for (let key = 0; key < values.length; key++) {
-                let seasonData = values[key];
-
-                data.pageInfo.push({
-                    "pageName": seasonNames[key],
-                    "pageSize": seasonData.data.length
-                });
-
-                for (let i = 0; i < seasonData.data.length; i++) {
-                    let tempData: extensionInfoEpisode = {
-                        title: `${seasonNames[key]} | ${seasonData.data[i].title}`,
-                        link: `?watch=${url}.${seasonData.data[i].id}&engine=2`,
-                    };
+                for (let season in response.data.seasons) {
+                    seasonNames.push(season);
 
                     try {
-                        let ep = parseInt(seasonData.data[i].title.split("Eps ")[1]);
-                        let season = seasonNames[key].split(" ")[1].trim();
-                        if (season in metaData && ep in metaData[season]) {
-                            tempData.thumbnail = metaData[season][ep].thumbnail;
-                            tempData.description = metaData[season][ep].description;
-                        }
+                        // metaDataPromises.push(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/tv/season?id=${showId}&season=${season.split(" ")[1].trim()}`, {}, 1000));
                     } catch (err) {
-                        console.error(err);
+
+                    }
+
+
+                    allAwaits.push(self.getEpisode(response.data.seasons[season]));
+                }
+
+                let values;
+                let tempMetaData: string[] = [];
+                let isSettleSupported = "allSettled" in Promise;
+                if (!isSettleSupported) {
+                    try {
+                        tempMetaData = await Promise.all(metaDataPromises);
+                    } catch (err) {
+
+                    }
+                    values = await Promise.all(allAwaits);
+
+                } else {
+                    let allReponses = await Promise.allSettled([Promise.all(allAwaits), Promise.all(metaDataPromises)]);
+                    if (allReponses[0].status === "fulfilled") {
+                        values = allReponses[0].value;
+                        console.log(values);
+                    } else {
+                        throw Error("Could not get the seasons. Try again.");
+                    }
+
+                    if (allReponses[1].status === "fulfilled") {
+                        tempMetaData = allReponses[1].value;
+                    }
+                }
+
+                try {
+                    for (let i = 0; i < tempMetaData.length; i++) {
+                        let metaJSON = JSON.parse(tempMetaData[i]);
+
+                        let episodeData: any = {};
+
+                        for (let j = 0; j < metaJSON.episodes.length; j++) {
+                            let curEpisode = metaJSON.episodes[j];
+                            episodeData[curEpisode.episode_number] = {};
+                            episodeData[curEpisode.episode_number].thumbnail = `https://image.tmdb.org/t/p/w300${curEpisode.still_path}`,
+                                episodeData[curEpisode.episode_number].description = curEpisode.overview
+                        }
+
+                        metaData[metaJSON.season_number] = episodeData;
+
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+
+                data.totalPages = values.length;
+                data.pageInfo = [];
+
+                for (let key = 0; key < values.length; key++) {
+                    let seasonData = values[key];
+
+                    data.pageInfo.push({
+                        "pageName": seasonNames[key],
+                        "pageSize": seasonData.data.length
+                    });
+
+                    for (let i = 0; i < seasonData.data.length; i++) {
+                        let tempData: extensionInfoEpisode = {
+                            title: `${seasonNames[key]} | ${seasonData.data[i].title}`,
+                            link: `?watch=${url}.${seasonData.data[i].id}&engine=2`,
+                        };
+
+                        try {
+                            let ep = parseInt(seasonData.data[i].title.split("Eps ")[1]);
+                            let season = seasonNames[key].split(" ")[1].trim();
+                            if (season in metaData && ep in metaData[season]) {
+                                tempData.thumbnail = metaData[season][ep].thumbnail;
+                                tempData.description = metaData[season][ep].description;
+                            }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                        data.episodes.push(tempData);
+                    }
+                }
+
+                if (Object.keys(response.data.seasons).length === 0) {
+
+
+                    let thumbnail = null;
+                    try {
+                        // thumbnail = `https://image.tmdb.org/t/p/w300${JSON.parse(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/movies?id=${showId}`, {}, 1000)).backdrop_path}`;
+                    } catch (err) {
+
+                    }
+
+                    let tempData: extensionInfoEpisode = {
+                        title: `Watch`,
+                        link: `?watch=${url}&engine=2`
+                    };
+
+                    if (thumbnail) {
+                        tempData.thumbnail = thumbnail;
                     }
                     data.episodes.push(tempData);
+                    data.totalPages = 1;
+                    data.pageInfo = [{
+                        "pageName": "Movie",
+                        "pageSize": 1
+                    }];
+
                 }
+
+                return data;
+
+            } else {
+                throw Error("Could not get the seasons.");
             }
-
-            if (Object.keys(response.data.seasons).length === 0) {
-
-
-                let thumbnail = null;
-                try {
-                    // thumbnail = `https://image.tmdb.org/t/p/w300${JSON.parse(await MakeFetchTimeout(`https://ink-fork-carpenter.glitch.me/movies?id=${showId}`, {}, 1000)).backdrop_path}`;
-                } catch (err) {
-
-                }
-
-                let tempData: extensionInfoEpisode = {
-                    title: `Watch`,
-                    link: `?watch=${url}&engine=2`
-                };
-
-                if (thumbnail) {
-                    tempData.thumbnail = thumbnail;
-                }
-                data.episodes.push(tempData);
-                data.totalPages = 1;
-                data.pageInfo = [{
-                    "pageName": "Movie",
-                    "pageSize": 1
-                }];
-
-            }
-
-            return data;
-
-        } else {
-            throw Error("Could not get the seasons.");
+        } catch (err) {
+            err.url = rawURL;
+            throw err;
         }
 
     },
@@ -338,6 +351,9 @@ var fmovies: extension = {
         let showIdSplit = url.split("-");
         let showId = showIdSplit[showIdSplit.length - 1].split(".")[0];
 
+        const infoDOM = document.createElement("div");
+        const tempGetDom = document.createElement("div");
+        const temp = document.createElement("div");
 
         try {
             const option = {
@@ -367,11 +383,10 @@ var fmovies: extension = {
 
 
             if (isShow) {
-                var getLink2 = responseAPI;
-                var dom = document.createElement("div");
-                dom.innerHTML = DOMPurify.sanitize(getLink2);
+                let getLink2 = responseAPI;
+                infoDOM.innerHTML = DOMPurify.sanitize(getLink2);
 
-                let tempDOM = dom.getElementsByClassName("nav-link btn btn-sm btn-secondary");
+                let tempDOM = infoDOM.getElementsByClassName("nav-link btn btn-sm btn-secondary");
 
                 for (var i = 0; i < tempDOM.length; i++) {
                     if (tempDOM[i].getAttribute("title").toLowerCase().indexOf("vidcloud") > -1) {
@@ -381,14 +396,10 @@ var fmovies: extension = {
 
                 }
 
-                dom.remove();
-
-
             } else {
-                var getLink2 = responseAPI;
-                var dom = document.createElement("div");
-                dom.innerHTML = DOMPurify.sanitize(getLink2);
-                let tempDOM = dom.getElementsByClassName("nav-link btn btn-sm btn-secondary");
+                let getLink2 = responseAPI;
+                infoDOM.innerHTML = DOMPurify.sanitize(getLink2);
+                let tempDOM = infoDOM.getElementsByClassName("nav-link btn btn-sm btn-secondary");
 
                 for (var i = 0; i < tempDOM.length; i++) {
                     if (tempDOM[i].getAttribute("title").toLowerCase().indexOf("vidcloud") > -1) {
@@ -397,7 +408,6 @@ var fmovies: extension = {
                     }
                 }
 
-                dom.remove();
             }
 
             let seasonLinkPromises = [
@@ -409,10 +419,8 @@ var fmovies: extension = {
 
             let getSeason = seasonLinkData[0];
 
-            let tempGetDom = document.createElement("div");
             tempGetDom.innerHTML = DOMPurify.sanitize(getSeason);
             let currentSeason = tempGetDom.querySelector(".detail_page-watch").getAttribute("data-season");
-            tempGetDom.remove();
 
 
             let getLink = seasonLinkData[1];
@@ -431,7 +439,6 @@ var fmovies: extension = {
 
             if (seasonNotEmpty) {
                 let r = parallelReqs[1];
-                let temp = document.createElement("div");
                 temp.innerHTML = DOMPurify.sanitize(r);
                 let tempDOM = temp.getElementsByClassName("nav-link btn btn-sm btn-secondary eps-item");
                 for (var i = 0; i < tempDOM.length; i++) {
@@ -446,7 +453,6 @@ var fmovies: extension = {
                     }
 
                 }
-                temp.remove();
             }
 
             let sourceJSON = parallelReqs[0];
@@ -507,32 +513,43 @@ var fmovies: extension = {
         } catch (err) {
             console.error(err);
             throw (new Error("Couldn't get the link"));
+        } finally {
+            removeDOM(infoDOM);
+            removeDOM(tempGetDom);
+            removeDOM(temp);
         }
     },
     discover: async function (): Promise<Array<extensionDiscoverData>> {
         let temp = document.createElement("div");
-        temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://fmovies.ink/tv-show`, {}));
-        let data = [];
-        for (const elem of temp.querySelectorAll(".flw-item")) {
-            let image = elem.querySelector("img").getAttribute("data-src");
-            let tempAnchor = elem.querySelector(".film-name");
-            let name = (tempAnchor as HTMLElement).innerText.trim();
-            let link = tempAnchor.querySelector("a").getAttribute("href");
 
-            try {
-                link = (new URL(link)).pathname;
-            } catch (err) {
+        try {
+            temp.innerHTML = DOMPurify.sanitize(await MakeFetch(`https://fmovies.ink/tv-show`, {}));
+            let data = [];
+            for (const elem of temp.querySelectorAll(".flw-item")) {
+                let image = elem.querySelector("img").getAttribute("data-src");
+                let tempAnchor = elem.querySelector(".film-name");
+                let name = (tempAnchor as HTMLElement).innerText.trim();
+                let link = tempAnchor.querySelector("a").getAttribute("href");
 
+                try {
+                    link = (new URL(link)).pathname;
+                } catch (err) {
+
+                }
+
+                data.push({
+                    image,
+                    name,
+                    link
+                });
             }
 
-            data.push({
-                image,
-                name,
-                link
-            });
+            return data;
+        } catch (err) {
+            throw err;
+        } finally {
+            removeDOM(temp);
         }
-
-        return data;
     },
     fixTitle: function (title: string) {
         try {

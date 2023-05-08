@@ -1,69 +1,71 @@
-interface Coords{
-    screenX : number,
-    screenY : number
+interface Coords {
+	screenX: number,
+	screenY: number
 }
 
 class vid {
-    overlay : HTMLElement;
-    bar_main : HTMLElement;
-    barLine : HTMLElement;
-    bar_con : HTMLElement;
-    big_play : HTMLElement;
-    controlTop : NodeListOf<HTMLElement>;
-    total : HTMLElement;
-    current : HTMLElement;
-    pop : HTMLElement;
-    popControls : HTMLElement;
-    seeker : HTMLElement;
-    bar_con1 : HTMLElement;
-    loaded : HTMLElement;
-    bar : HTMLElement;
-    con : HTMLElement;
-    fullscreenDOM : HTMLElement;
-    pip : HTMLElement;
-    lock : HTMLElement;
-    lock2 : HTMLElement;
-    retry : HTMLElement;
-    buffered : HTMLElement;
-    epCon : HTMLElement;
+	overlay: HTMLElement;
+	bar_main: HTMLElement;
+	barLine: HTMLElement;
+	bar_con: HTMLElement;
+	big_play: HTMLElement;
+	controlTop: NodeListOf<HTMLElement>;
+	total: HTMLElement;
+	current: HTMLElement;
+	pop: HTMLElement;
+	popControls: HTMLElement;
+	seeker: HTMLElement;
+	bar_con1: HTMLElement;
+	loaded: HTMLElement;
+	bar: HTMLElement;
+	con: HTMLElement;
+	fullscreenDOM: HTMLElement;
+	pip: HTMLElement;
+	lock: HTMLElement;
+	lock2: HTMLElement;
+	retry: HTMLElement;
+	buffered: HTMLElement;
+	epCon: HTMLElement;
 	metaData: HTMLElement;
 	titleCon: HTMLElement;
-    vid: HTMLVideoElement;
-    locked : boolean;
-    downTown : number;
-    seekMode: boolean;
-    seekTimeout : number;
-    fullscreenCheck : number;
-    open : number;
-    windowSize : number;
-    type: number;
-    iniX: number;
-    iniY: number;
-    timeStampStart: number;
-    canSeekNow: boolean;
-    shouldPlay: boolean;
-    currentTime: number;
-    check: number;
-    gesture: number;
-    currentPresetTemp: any;
-    currentPreset: any;
-    lastTime: number;
-    doubleClickTime: any;
-    doubleClickCoords: any;
-    doubleClickCheck: number;
-    doubleMode: number;
-    objectFitArray: string[];
-    objectPositionArray: string[];
-    objectPresets: number[][];
-    objectFit: any;
-    objectPosition: any;
-    objectFitTemp: any;
-    objectPositionTemp: any;
-    clickTimeout: any;
-    config: any;
-	constructor(config : EnimaxConfig) {
+	vid: HTMLVideoElement;
+	back: HTMLElement;
+	locked: boolean;
+	downTown: number;
+	seekMode: boolean;
+	seekTimeout: number;
+	fullscreenCheck: number;
+	open: number;
+	windowSize: number;
+	type: number;
+	iniX: number;
+	iniY: number;
+	timeStampStart: number;
+	canSeekNow: boolean;
+	shouldPlay: boolean;
+	currentTime: number;
+	check: number;
+	gesture: number;
+	currentPresetTemp: any;
+	currentPreset: any;
+	lastTime: number;
+	doubleClickTime: any;
+	doubleClickCoords: any;
+	doubleClickCheck: number;
+	doubleMode: number;
+	objectFitArray: string[];
+	objectPositionArray: string[];
+	objectPresets: number[][];
+	objectFit: any;
+	objectPosition: any;
+	objectFitTemp: any;
+	objectPositionTemp: any;
+	clickTimeout: any;
+	config: any;
+	wasLocked: boolean;
+	constructor(config: EnimaxConfig) {
 
-        this.config = config;
+		this.config = config;
 		this.overlay = document.querySelector("#seek_overlay");
 		this.bar_main = document.querySelector("#bar_main");
 		this.barLine = document.querySelector("#bar");
@@ -87,21 +89,23 @@ class vid {
 		this.buffered = document.querySelector("#buffered");
 		this.metaData = document.querySelector("#metaData");
 		this.titleCon = document.querySelector("#titleCon");
+		this.back = document.querySelector("#back");
 		this.epCon = document.querySelector("#epCon");
 		this.bar = document.querySelector("#bar");
 		this.locked = false;
 		this.downTown = 0;
 		this.seekMode = false;
-        this.fullscreenCheck = 0;
+		this.fullscreenCheck = 0;
 		this.open = 1;
-        this.type = 0;
+		this.type = 0;
+		this.wasLocked = false;
 		this.vid = document.querySelector("#v");
 		this.windowSize = window.innerWidth;
 		this.updateTimeout();
 		this.seekTimeout;
 
 		var x = this;
-        let self = this;
+		let self = this;
 
 		this.retry.addEventListener("click", function () {
 			location.reload();
@@ -140,7 +144,7 @@ class vid {
 		this.vid.addEventListener("timeupdate", function () {
 			self.updateTime.bind(self)();
 
-            window.dispatchEvent(new Event("videoTimeUpdated"));
+			window.dispatchEvent(new Event("videoTimeUpdated"));
 
 		});
 
@@ -153,13 +157,13 @@ class vid {
 
 		this.vid.addEventListener("loadedmetadata", function () {
 
-            window.dispatchEvent(new Event("videoLoadedMetaData"));
+			window.dispatchEvent(new Event("videoLoadedMetaData"));
 
 		});
 
 		this.vid.addEventListener("ended", function () {
 
-            window.dispatchEvent(new Event("videoEnded"));
+			window.dispatchEvent(new Event("videoEnded"));
 
 		});
 
@@ -197,7 +201,7 @@ class vid {
 
 		this.vid.addEventListener("durationchange", function () {
 			x.total.innerText = x.timeToString(x.vid.duration);
-            window.dispatchEvent(new Event("videoDurationChanged"));
+			window.dispatchEvent(new Event("videoDurationChanged"));
 		});
 
 
@@ -271,7 +275,7 @@ class vid {
 
 
 
-		
+
 		this.bar_con1.addEventListener("mousedown", function (event) {
 			self.type = 1;
 			self.seekIni.bind(self)(0, event);
@@ -326,9 +330,9 @@ class vid {
 		this.lastTime;
 
 
-        window.dispatchEvent(new Event("videoStartInterval"));
+		window.dispatchEvent(new Event("videoStartInterval"));
 
-		
+
 		this.doubleClickTime;
 		this.doubleClickCoords;
 		this.doubleClickCheck = 0;
@@ -362,14 +366,18 @@ class vid {
 		}
 	}
 
-	lockVid() {
+	lockVid(opacity = 1) {
 		this.con.style.pointerEvents = "none";
-		this.lock2.style.opacity = "1";
+
+		if (opacity === 1) {
+			this.lock2.style.opacity = "1";
+		} else {
+			this.lock2.style.opacity = "0";
+		}
+
 		this.lock2.style.pointerEvents = "auto";
 		this.locked = true;
-
 		this.close_controls();
-
 	}
 
 	lockVid2() {
@@ -420,7 +428,7 @@ class vid {
 	}
 
 
-	setObjectSettings(fillMode : number, updateLocal = true) {
+	setObjectSettings(fillMode: number, updateLocal = true) {
 		let settings = this.objectPresets[fillMode];
 
 		if (updateLocal) {
@@ -432,15 +440,15 @@ class vid {
 		this.objectFitTemp = this.objectFitArray[settings[0]];
 		this.objectPositionTemp = this.objectPositionArray[settings[1]];
 
-        let fillEvent : videoChangedFillModeEvent = new CustomEvent("videoChangedFillMode", {
-			detail : {
-				"fillMode" : fillMode.toString()
+		let fillEvent: videoChangedFillModeEvent = new CustomEvent("videoChangedFillMode", {
+			detail: {
+				"fillMode": fillMode.toString()
 			}
 		});
-        window.dispatchEvent(fillEvent);
+		window.dispatchEvent(fillEvent);
 	}
 
-	vid_click(timeStamp : number, coords : Array<number>) : void {
+	vid_click(timeStamp: number, coords: Array<number>): void {
 
 		if (timeStamp - this.doubleClickTime < 400) {
 			this.doubleMode = 1;
@@ -459,24 +467,24 @@ class vid {
 		} else if (this.doubleMode == 1 && typeof this.doubleClickCoords == 'object' && this.doubleClickCoords.length == 2 && Math.abs(this.doubleClickCoords[0] - coords[0]) < 50 && Math.abs(this.doubleClickCoords[1] - coords[1]) < 50) {
 
 			if (coords[0] > window.innerWidth / 2) {
-                
-                const doubleTapEvent : videoDoubleTapEvent = new CustomEvent("videoDoubleTap", {
-					detail : {
-						"DTType" : "plus"
+
+				const doubleTapEvent: videoDoubleTapEvent = new CustomEvent("videoDoubleTap", {
+					detail: {
+						"DTType": "plus"
 					}
 				});
-                window.dispatchEvent(doubleTapEvent);
+				window.dispatchEvent(doubleTapEvent);
 				this.updateTime();
 
 
 			} else {
 
-				const doubleTapEvent : videoDoubleTapEvent = new CustomEvent("videoDoubleTap", {
-					detail : {
-						"DTType" : "minus"
+				const doubleTapEvent: videoDoubleTapEvent = new CustomEvent("videoDoubleTap", {
+					detail: {
+						"DTType": "minus"
 					}
 				});
-                window.dispatchEvent(doubleTapEvent);
+				window.dispatchEvent(doubleTapEvent);
 				this.updateTime();
 			}
 
@@ -489,7 +497,7 @@ class vid {
 		this.doubleClickCoords = coords;
 	}
 
-	showTimestamp(event : MouseEvent | TouchEvent) : void{
+	showTimestamp(event: MouseEvent | TouchEvent): void {
 		this.seeker.style.opacity = "1";
 		let coords = this.getcoordinates(event);
 		let temp = Math.max(0, Math.min((coords.screenX - this.bar.getBoundingClientRect().x) / this.bar.getBoundingClientRect().width, 1));
@@ -497,11 +505,11 @@ class vid {
 		this.seeker.style.left = temp * 100 + "%";
 	}
 
-	hideTimestamp() : void {
+	hideTimestamp(): void {
 		this.seeker.style.opacity = "0";
 	}
 
-	seekIni(pointerCheck : number, event : MouseEvent | TouchEvent) {
+	seekIni(pointerCheck: number, event: MouseEvent | TouchEvent) {
 
 		if (isNaN(this.vid.duration)) {
 			return;
@@ -512,7 +520,7 @@ class vid {
 			if (pointerCheck != 1) {
 				this.overlay.style.pointerEvents = "auto";
 			}
-            
+
 			if (this.type == 2) {
 				this.iniX = coords.screenX;
 				this.iniY = coords.screenY;
@@ -581,14 +589,14 @@ class vid {
 		}
 	}
 
-	updateTimeout() : void {
+	updateTimeout(): void {
 		this.lastTime = (new Date()).getTime();
 		if (this.open == 0 && this.locked === false) {
 			this.open_controls();
 		}
 	}
 
-	seekMove(event : MouseEvent | TouchEvent) {
+	seekMove(event: MouseEvent | TouchEvent) {
 		if (isNaN(this.vid.duration)) {
 			return;
 		}
@@ -650,21 +658,21 @@ class vid {
 			} else if (this.check != 100 && this.check != 99 && (this.iniY - coords.screenY) > 50) {
 				this.check = 100;
 				this.canSeekNow = false;
-                const event : videoOpenSettingsEvent = new CustomEvent("videoOpenSettings", {
-					detail : {
-						translate : 0
+				const event: videoOpenSettingsEvent = new CustomEvent("videoOpenSettings", {
+					detail: {
+						translate: 0
 					}
 				});
-                window.dispatchEvent(event);
+				window.dispatchEvent(event);
 				clearTimeout(this.seekTimeout);
 			} else if (this.check == 100) {
 
-				const event : videoOpenSettingsEvent = new CustomEvent("videoOpenSettings", {
-					detail : {
-						translate : this.iniY - coords.screenY
+				const event: videoOpenSettingsEvent = new CustomEvent("videoOpenSettings", {
+					detail: {
+						translate: this.iniY - coords.screenY
 					}
 				});
-                window.dispatchEvent(event);
+				window.dispatchEvent(event);
 
 				this.downTown = this.iniY - coords.screenY;
 			}
@@ -727,7 +735,7 @@ class vid {
 
 	}
 
-	seekEnd(event : MouseEvent | TouchEvent) {
+	seekEnd(event: MouseEvent | TouchEvent) {
 		if (isNaN(this.vid.duration)) {
 			this.updateTimeout();
 			return;
@@ -741,14 +749,14 @@ class vid {
 		if (this.check == 100) {
 			if (this.downTown > 130) {
 
-				const event : videoOpenSettingsEvent = new CustomEvent("videoOpenSettings", {
-					detail : {
-						translate : -1
+				const event: videoOpenSettingsEvent = new CustomEvent("videoOpenSettings", {
+					detail: {
+						translate: -1
 					}
 				});
-                window.dispatchEvent(event);
+				window.dispatchEvent(event);
 			} else {
-                window.dispatchEvent(new Event("videoCloseSettings"));
+				window.dispatchEvent(new Event("videoCloseSettings"));
 			}
 		}
 
@@ -807,7 +815,7 @@ class vid {
 				this.vid_click(event.timeStamp, [coords.screenX, coords.screenY]);
 
 			} else {
-                window.dispatchEvent(new Event("videoSeeked"));
+				window.dispatchEvent(new Event("videoSeeked"));
 			}
 
 
@@ -816,18 +824,18 @@ class vid {
 		}
 	}
 
-	updateTime() : void {
+	updateTime(): void {
 		this.bar_main.style.left = 100 * (this.vid.currentTime / this.vid.duration) + "%";
 		this.loaded.style.width = 100 * (this.vid.currentTime / this.vid.duration) + "%";
 		this.current.innerText = this.timeToString(this.vid.currentTime);
 	}
 
-	getcoordinates(event : MouseEvent | TouchEvent) : Coords {
+	getcoordinates(event: MouseEvent | TouchEvent): Coords {
 
-		let tempCoords : Coords = {
-            "screenX" : 0,
-            "screenY" : 0
-        };
+		let tempCoords: Coords = {
+			"screenX": 0,
+			"screenY": 0
+		};
 
 
 		if ("touches" in event) {
@@ -847,16 +855,20 @@ class vid {
 		return tempCoords;
 	}
 
-	close_controls() : void {
+	close_controls(): void {
 
 		this.metaData.style.opacity = "0";
 		this.pop.style.opacity = "0";
 		this.popControls.style.opacity = "0";
 		this.popControls.style.pointerEvents = "none";
-		
+
 		this.popControls.style.transform = "translateX(100px)";
 		this.metaData.style.transform = "translateX(-100px)";
-		
+
+		this.back.style.opacity = "0";
+		this.back.style.pointerEvents = "none";
+		this.back.style.transform = "translateX(-100px)";
+
 
 		this.bar_con.style.bottom = "-70px";
 		this.bar_con.style.pointerEvents = "none";
@@ -872,16 +884,21 @@ class vid {
 
 	}
 
-	open_controls() : void {
+	open_controls(): void {
 
-        this.lastTime = (new Date()).getTime();
+		this.lastTime = (new Date()).getTime();
 
 		this.metaData.style.opacity = "1";
 		this.pop.style.opacity = "1";
+
 		this.popControls.style.opacity = "1";
 		this.popControls.style.pointerEvents = "auto";
-
 		this.popControls.style.transform = "translateX(0px)";
+
+		this.back.style.opacity = "1";
+		this.back.style.pointerEvents = "auto";
+		this.back.style.transform = "translateX(0px)";
+
 		this.metaData.style.transform = "translateX(0px)";
 
 		this.bar_con.style.bottom = "10px";
@@ -899,24 +916,27 @@ class vid {
 
 	}
 
-	togglePictureInPicture() : void {
-		try {
-			window.parent.postMessage({ "action": 11, data: "landscape" }, "*");
-		} catch (err) {
-			console.error(err);
-		}
+	togglePictureInPicture(): void {
 
-		if (document.pictureInPictureElement) {
-			document.exitPictureInPicture();
-		} else if (document.pictureInPictureEnabled) {
-			this.vid.requestPictureInPicture();
+		if (this.config.chrome) {
+			if (document.pictureInPictureElement) {
+				document.exitPictureInPicture();
+			} else if (document.pictureInPictureEnabled) {
+				this.vid.requestPictureInPicture();
+			}
+		} else {
+			window.parent.postMessage({ "action": 11, data: "landscape" }, "*");
+
+			if (localStorage.getItem("autopip") === "true") {
+				this.wasLocked = this.locked;
+				this.lockVid(0);
+			}
 		}
 
 		this.close_controls();
-
 	}
 
-	goFullScreen() : void {
+	goFullScreen(): void {
 
 		if (this.fullscreenCheck == 0) {
 			if (this.fullscreenDOM.requestFullscreen) {
@@ -952,23 +972,14 @@ class vid {
 
 	}
 
-	timeToString(timeInSeconds : number) : string {
-
-        let minutes = "0";
-        let seconds = "0";
-		if (Math.floor(timeInSeconds / 60) < 10) {
-			minutes = "0".concat(Math.floor(timeInSeconds / 60).toString());
+		timeToString(timeInSeconds: number): string {
+			var h = Math.floor(timeInSeconds / 3600);
+			var m = Math.floor(timeInSeconds % 3600 / 60);
+			var s = Math.floor(timeInSeconds % 3600 % 60);
+		
+			var hDisplay = h > 0 ? (h < 10 ? "0" : "") + h + ":": "";
+			var mDisplay = (m < 10 ? "0" : "") + m + ":"
+			var sDisplay = (s < 10 ? "0" : "") + s
+			return hDisplay + mDisplay + sDisplay; 
 		}
-		else {
-			minutes = Math.floor(timeInSeconds / 60).toString();
-		}
-
-		if (timeInSeconds % 60 < 10) {
-			seconds = "0".concat(Math.floor(timeInSeconds % 60).toString());
-		}
-		else {
-			seconds = Math.floor(timeInSeconds % 60).toString();
-		}
-		return (minutes + ":" + seconds);
-	}
 }

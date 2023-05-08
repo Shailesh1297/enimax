@@ -1,6 +1,7 @@
 type ExitFullscreen = typeof document.exitFullscreen
 type RequestFullscreen = typeof document.documentElement.requestFullscreen
-type TypeFunc = (res : Response) => Promise<string>
+type TypeFunc = (res: Response) => Promise<string>
+type anilistType = "9anime" | "Zoro" | "Gogoanime"
 
 interface Document {
     webkitExitFullscreen: ExitFullscreen;
@@ -12,6 +13,13 @@ interface HTMLElement {
     webkitRequestFullscreen: RequestFullscreen;
     mozRequestFullScreen: RequestFullscreen;
     msRequestFullscreen: RequestFullscreen;
+}
+
+interface DiscoverData {
+    id: string,
+    image: string,
+    name: string,
+    label: string
 }
 
 interface createElementConfig {
@@ -124,7 +132,9 @@ interface cordovaWindow extends Window {
     returnExtensionNames: Function,
     returnDownloadQueue: Function,
     returnExtensionDisabled: Function,
+    getAnilistTrending: Function,
     listDir: Function,
+    back: Function,
     removeDirectory: Function,
     extractKey: Function,
     saveAsImport: Function,
@@ -134,6 +144,7 @@ interface cordovaWindow extends Window {
     setFmoviesBase: Function,
     updateBackgroundBlur: Function,
     makeRequest: Function,
+    MakeFetch: Function,
     resolveLocalFileSystemURL: Function
 }
 
@@ -151,6 +162,13 @@ interface sourceConfig {
     clicked: boolean,
     url?: string,
     name?: string,
+}
+
+interface RelationCardConfig {
+    id: string,
+    image: string,
+    name: string,
+    label?: string
 }
 
 interface modifiedString extends String {
@@ -188,14 +206,40 @@ interface extensionInfo {
     description: string,
     episodes: Array<extensionInfoEpisode>,
     mainName: string
-    totalPages? : number
-    pageInfo? : Array<PageInfo>
+    totalPages?: number
+    pageInfo?: Array<PageInfo>
     genres?: Array<string>
 }
 
-interface PageInfo{
-    pageSize : number,
-    pageName : string
+interface infoError extends Error {
+    url: string,
+    message: string
+}
+
+interface searchError extends Error {
+    url: string,
+}
+
+type ErrorPageConfig = {
+    hasLink: false,
+    hasReload: Boolean,
+    customConClass?: string,
+    linkClass?: string,
+    isError?: Boolean,
+    positive?: Boolean
+} | {
+    hasLink: true,
+    hasReload: Boolean,
+    clickEvent: Function,
+    customConClass?: string,
+    linkClass?: string,
+    isError?: Boolean,
+    positive?: Boolean
+}
+
+interface PageInfo {
+    pageSize: number,
+    pageName: string
 }
 
 interface extensionInfoEpisode {
@@ -203,7 +247,8 @@ interface extensionInfoEpisode {
     title: string,
     id?: string,
     thumbnail?: string,
-    description?: string
+    description?: string,
+    date?: Date
 }
 
 interface extensionVidSource {
